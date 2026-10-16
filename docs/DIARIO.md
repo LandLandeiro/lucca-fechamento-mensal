@@ -19,3 +19,8 @@ Log cronológico: hora, etapa, o que foi feito, como foi verificado, commit.
 - **Verificado:** `pytest`: 11 passed (inclui o `regras.yaml` real e as estruturas inválidas recusadas). Contagem: 38 regras (SEI 13, ASSUMO 2, CONFIRMADO 5, PENDENTE 18).
 - **Em aberto:** textos literais das perguntas e respostas e quem perguntou estão como `[colar do Slack]` no HIPOTESES (não inventados).
 - **Commit:** `registra respostas do financeiro e corrige status de premissas`.
+
+### ~20h55 · Decisões do Lucca (divergência, truncamento, IA)
+- **Feito:** D09 (truncar por transação, sem tolerância no checkout), D10 (divergência líquida com os estornos da própria venda no mês) e D11 (escopo e travas da IA, limiar 0,8) em DECISOES, `regras.yaml` (ASSUMO, `autor: Lucca`) e HIPOTESES (H10, H15, H16).
+- **Verificado:** `pytest`: 11 passed; `regras.yaml` valida, com 40 regras (SEI 13, ASSUMO 7, CONFIRMADO 5, PENDENTE 15).
+- **Commit:** `registra decisões de divergência, truncamento e uso de IA`.

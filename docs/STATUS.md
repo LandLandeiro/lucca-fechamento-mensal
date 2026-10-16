@@ -31,8 +31,8 @@
 
 ## Regras (`regras.yaml`)
 
-- 38 regras: SEI 13 · ASSUMO 2 · CONFIRMADO 5 · PENDENTE 18
-- Bloqueios para o mínimo (comissão CHECKOUT): `checkout.arredondamento_comissao_contratada` e `checkout.composicao_comissao` (antecipação/reversão) estão PENDENTE
+- 40 regras: SEI 13 · ASSUMO 7 · CONFIRMADO 5 · PENDENTE 15
+- Bloqueio para o mínimo (comissão CHECKOUT): `checkout.composicao_comissao` (antecipação/reversão) está PENDENTE. O arredondamento foi resolvido (D09)
 
 ## Números atuais
 

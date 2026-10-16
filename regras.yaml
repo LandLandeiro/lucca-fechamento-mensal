@@ -116,10 +116,11 @@ checkout:
     status: CONFIRMADO
     fonte: "Slack Helena 20:05"
     pergunta_ref: P03
-  arredondamento_comissao_contratada:   # bruto × contratada: truncar (como a Orbe) ou arredondar? não respondido em 20:05
-    valor: null
-    status: PENDENTE
-    fonte: null
+  arredondamento_comissao_contratada:   # bruto × contratada (Helena 20:05 não definiu o arredondamento)
+    valor: TRUNCAR_POR_TRANSACAO        # trunca no centavo cada transação, depois soma; nunca trunca o total
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca 16/10 ~20h55 (D09). Base: a Orbe trunca valor_taxa (1.001 linhas só truncamento reproduz; 0 só arredondamento; 942 ambos)"
     pergunta_ref: null
   composicao_comissao:      # quais tipo_lancamento entram (ANTECIPACAO e REVERSAO ANTECIPACAO não citadas em 20:05/20:06)
     valor: null
@@ -155,10 +156,20 @@ divergencias:
     status: PENDENTE
     fonte: "01_orbe: estornos repetem a taxa da venda original (ex.: L1069 → L406)"
     pergunta_ref: null
-  estorno_de_venda_divergente:  # entra como divergência negativa?
-    valor: null
-    status: PENDENTE
-    fonte: "01_orbe: 4 estornos da Rota Global, −R$ 98,44"
+  estorno_de_venda_divergente:
+    valor: >-
+      divergência calculada por transação e líquida com os estornos dela (id_referencia) no mesmo mês;
+      só vai para divergencias_taxa.csv se o líquido ≠ 0; venda e estorno continuam no rastro com a nota
+      "estornada em <data> por <id>"; estorno parcial ou estorno em mês seguinte: a divergência é listada
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca 16/10 ~20h55 (D10). Caso real: 4 estornos da Rota Global, −R$ 98,44"
+    pergunta_ref: null
+  tolerancia_checkout:      # consequência do truncamento por transação: comparação exata
+    valor: 0
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca 16/10 ~20h55 (D09): com o mesmo truncamento da Orbe não há ruído de arredondamento no checkout"
     pergunta_ref: null
 
 remessa:
@@ -236,8 +247,20 @@ contabil:
     pergunta_ref: null
 
 classificacao:
-  limiar_confianca_ia:      # decisão técnica do Lucca (abaixo → HUMANO + pendência)
-    valor: null
-    status: PENDENTE
-    fonte: null
+  uso_ia:
+    valor:
+      escopo: "só lançamentos que nenhuma regra de texto (contabil.padroes_de_descricao) cobre"
+      contas_permitidas: "lista fechada das contas lançáveis (plano_contas.contas_lancaveis)"
+      saida: "JSON validado por pydantic"
+      conferencia_no_codigo: ["conta existe", "conta é lançável", "natureza D/C coerente com o sinal do lançamento"]
+      cache: "respostas em cache por hash da linha"
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca 16/10 ~20h55 (D11)"
+    pergunta_ref: null
+  limiar_confianca_ia:      # abaixo → pendência (metodo HUMANO)
+    valor: 0.8
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca 16/10 ~20h55 (D11): confiança ≥ 0,8, senão pendência"
     pergunta_ref: null
