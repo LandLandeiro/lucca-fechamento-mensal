@@ -9,3 +9,12 @@ Thumbs.db
 .env.local
 .env*.local
 .vercel/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+# scripts de exploração local
+scratch/

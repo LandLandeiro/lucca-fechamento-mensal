@@ -1,0 +1,7 @@
+openpyxl>=3.1
+pyyaml>=6.0
+anthropic>=0.40
+pydantic>=2.6
+pytest>=8.0
+# opcional (bônus: visualizador da saída)
+# streamlit>=1.38

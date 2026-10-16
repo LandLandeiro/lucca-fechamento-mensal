@@ -1,6 +1,6 @@
 # Tarvo · fechamento de setembro/2026 (Desafio Barte AI)
 
-Leia `docs/case.md` (instruções oficiais) e `HIPOTESES.md` antes de qualquer tarefa. O data pack está em `data/` e **não pode ser alterado nem limpo à mão**: a solução lê os arquivos como chegam.
+Leia `docs/case.md` (instruções oficiais), `HIPOTESES.md`, `docs/PLANO.md` e `docs/EXPLORACAO.md` (formato real de cada arquivo, armadilhas, mapa, ambiguidades) antes de qualquer tarefa. O data pack está em `data/` e **não pode ser alterado nem limpo à mão**: a solução lê os arquivos como chegam.
 
 ## Regras deste projeto
 
@@ -17,3 +17,47 @@ Leia `docs/case.md` (instruções oficiais) e `HIPOTESES.md` antes de qualquer t
 - Antes de construir, diga o plano em poucas linhas. Explique decisões técnicas em 2–3 linhas para eu defender.
 - Quando eu pedir análise, não escreva código de solução.
 - Commits pequenos, em português. Nunca peça nem escreva a chave da API: ela está só no `.env.local`.
+
+## Estrutura
+
+```
+data/                 data pack original (somente leitura)
+docs/                 case.md, PLANO.md, EXPLORACAO.md, STATUS.md, DIARIO.md, DECISOES.md
+regras.yaml           regras de negócio como dado: valor, status (SEI|ASSUMO|CONFIRMADO), fonte, pergunta_ref
+src/tarvo/
+  __main__.py         CLI
+  modelo.py           dataclasses (Decimal, ref_origem em todo registro)
+  leitores/           um por arquivo; armadilhas de leitura na docstring
+  cadastro.py         CNPJ 14 dígitos, EC→CNPJ por chave, taxas com vigência
+  regras.py           carrega/valida regras.yaml
+  calculos/           comissoes, divergencias, notas (determinístico)
+  classificacao/      por_regra → por_ia (sobras) → HUMANO
+  pendencias.py       o que exige uma pessoa
+  saida/              escritor (formato fixo) e validador (rastro fecha)
+tests/                pytest
+saida/                CSVs gerados
+```
+
+Regra vazia (`valor: null`) em `regras.yaml` **não** se resolve no código: o cálculo dependente vira pendência e eu sou avisado.
+
+## Comandos (PowerShell, na raiz)
+
+```powershell
+.\.venv\Scripts\Activate.ps1                    # ativar o ambiente
+python -m tarvo --dados data --saida saida      # rodar o fechamento
+python -m tarvo --help
+pytest                                          # testes
+```
+
+Sem ativar: `.\.venv\Scripts\python.exe -m tarvo ...` e `.\.venv\Scripts\python.exe -m pytest`.
+Recriar o ambiente: `& "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe" -m venv .venv` → `pip install -r requirements.txt` → `pip install -e .` (o `python` do PATH é o atalho da Microsoft Store e não serve).
+
+## PROTOCOLO de fim de etapa
+
+Ao terminar cada etapa (E1, E2…), nesta ordem:
+
+1. **Testes:** `pytest` passando (todo bug corrigido ganha um teste antes da correção).
+2. **`docs/STATUS.md`:** checklist, contagem de regras por status, números atuais, próximo passo.
+3. **`docs/DIARIO.md`:** hora, etapa, o que foi feito, como foi verificado, commit.
+4. **`docs/DECISOES.md`:** só se houve decisão técnica (alternativa + motivo).
+5. **Commit** pequeno, em português, com o nome da etapa.
