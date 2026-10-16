@@ -1,0 +1,3 @@
+# O data pack tem que ficar exatamente como chegou (sem conversão de fim de linha nem encoding)
+data/** -text
+saida/*.csv text eol=lf
