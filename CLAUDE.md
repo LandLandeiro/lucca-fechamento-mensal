@@ -6,7 +6,7 @@ Leia `docs/case.md` (instruções oficiais), `HIPOTESES.md`, `docs/PLANO.md` e `
 
 1. **Regra de negócio não se inventa.** Se a regra não está nos dados nem em `HIPOTESES.md` como CONFIRMADO ou ASSUMO, pare e me diga — eu decido se pergunto ao financeiro ou assumo e registro.
 2. **Todo número de saída tem rastro** até as linhas de origem (`rastro.csv`); a soma das linhas por `id_saida` tem que bater com o número reportado. Total que não fecha = número inventado.
-3. **Dinheiro em centavos inteiros** nas contas; formatar só ao escrever a saída. Percentuais sem arredondar no meio do caminho.
+3. **Dinheiro em Decimal, quantizado em centavos na saída; nunca float.** Percentuais sem arredondar no meio do caminho.
 4. **Alarme falso conta contra.** Na dúvida, não afirme: vira linha em `pendencias.csv` com motivo e quem decide.
 5. **IA só onde há ambiguidade real** (ex.: classificar lançamento sem regra clara), sempre com `metodo` e `confianca`. Regra determinística primeiro.
 6. Formato de saída é fixo (ver `docs/case.md`): CSV com `;`, ponto decimal, datas AAAA-MM-DD, CNPJ só números (14 dígitos).
@@ -23,7 +23,7 @@ Leia `docs/case.md` (instruções oficiais), `HIPOTESES.md`, `docs/PLANO.md` e `
 ```
 data/                 data pack original (somente leitura)
 docs/                 case.md, PLANO.md, EXPLORACAO.md, STATUS.md, DIARIO.md, DECISOES.md
-regras.yaml           regras de negócio como dado: valor, status (SEI|ASSUMO|CONFIRMADO), fonte, pergunta_ref
+regras.yaml           regras de negócio como dado: valor, status (SEI|ASSUMO|CONFIRMADO|PENDENTE), fonte, pergunta_ref
 src/tarvo/
   __main__.py         CLI
   modelo.py           dataclasses (Decimal, ref_origem em todo registro)
@@ -38,7 +38,7 @@ tests/                pytest
 saida/                CSVs gerados
 ```
 
-Regra vazia (`valor: null`) em `regras.yaml` **não** se resolve no código: o cálculo dependente vira pendência e eu sou avisado.
+Perguntas ao financeiro: canal `#duvidas-hackathon-ai` (registro em `HIPOTESES.md`). Regra PENDENTE (`valor: null`) em `regras.yaml` **não** se resolve no código: o cálculo dependente vira pendência e eu sou avisado.
 
 ## Comandos (PowerShell, na raiz)
 

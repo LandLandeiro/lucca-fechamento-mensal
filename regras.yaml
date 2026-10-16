@@ -1,21 +1,22 @@
 # Regras do fechamento da Tarvo — regra de negócio é DADO, não código.
 #
 # Cada regra tem:
-#   valor        o que o código usa (null = ainda não decidido → o cálculo que depende dela vira pendência)
-#   status       SEI (está nos dados) | ASSUMO (premissa registrada em HIPOTESES.md) | CONFIRMADO (o financeiro respondeu)
-#                null enquanto valor for null
-#   fonte        arquivo + linha/célula, ou resposta do financeiro (com horário)
-#   pergunta_ref P01..P09 = perguntas em docs/EXPLORACAO.md §3 (vão para HIPOTESES.md quando postadas); null se não há pergunta
+#   valor        o que o código usa (null só quando status = PENDENTE → o cálculo dependente vira pendência)
+#   status       SEI (está nos dados) | ASSUMO (premissa registrada em HIPOTESES.md) |
+#                CONFIRMADO (o financeiro respondeu) | PENDENTE (sem valor; ninguém decidiu ainda)
+#   fonte        arquivo + linha/célula, ou "Slack Helena HH:MM" para resposta do financeiro
+#   pergunta_ref P01..P10 = tabela de perguntas em HIPOTESES.md; null se não há pergunta
 #
 # Nada aqui pode ser preenchido pelo código ou pela IA: quem decide é o Lucca (com o financeiro).
+# Validação da estrutura: src/tarvo/regras.py (carregar_regras).
 
 # ---------------------------------------------------------------------------
-# FATOS DOS DADOS (SEI)
+# FATOS DOS DADOS (SEI) E PREMISSAS (ASSUMO)
 # ---------------------------------------------------------------------------
 
 orbe:
   arredondamento_valor_taxa:
-    valor: TRUNCAR          # valor_taxa = bruto × taxa, truncado em 2 casas (ROUND_DOWN sobre o valor absoluto)
+    valor: TRUNCAR          # a Orbe calcula valor_taxa = bruto × taxa_aplicada truncado em 2 casas (ROUND_DOWN sobre o valor absoluto)
     status: SEI
     fonte: "01_orbe: 1.001 linhas só fecham truncando, 0 arredondando (ex.: TX88410128 5.773,57 × 3,79% = 218,818 → 218,81)"
     pergunta_ref: null
@@ -56,9 +57,9 @@ ponte:
     fonte: "anexo Operações: confere em 233/233 linhas; Spread R$ = ME × (TC − PTAX), Valor R$ = ME × TC"
     pergunta_ref: null
   tolerancia_spread_pct:
-    valor: 0.00005          # fração: 0,005 p.p.; ruído máximo observado 0,000016; menor diferença contratual real 0,0005
-    status: SEI
-    fonte: "anexo Operações: taxas com 4 casas geram ruído de até 0,0016 p.p. (≈200 alarmes falsos, R$ 1,67, se comparar sem tolerância)"
+    valor: 0.00005          # fração: 0,005 p.p.; menor diferença contratual real observada: 0,0005
+    status: ASSUMO
+    fonte: "taxas da Ponte com 4 casas, ruído até 0,0016 p.p."
     pergunta_ref: null
   participacao_tarvo:
     valor: 0.50
@@ -72,8 +73,13 @@ ponte:
     pergunta_ref: null
   tomador_nf_remessa:
     valor: {cnpj: "75374179000146", nome: "Ponte Câmbio S.A."}
+    status: ASSUMO
+    fonte: "e-mail Ponte: 'mediante recebimento da nota fiscal de intermediação'"
+    pergunta_ref: null
+  status_ressalva_segue_liquidacao:
+    valor: true
     status: SEI
-    fonte: "03_email corpo: repasse 'mediante recebimento da nota fiscal de intermediação'; assinatura 'CNPJ 75.374.179/0001-46'"
+    fonte: "03_email corpo: 'Lembramos que operações com status \"APROVADO C/ RESSALVA\" seguem normalmente para liquidação.'"
     pergunta_ref: null
   linhas_que_nao_sao_dados:
     valor: ["Total de operações:", "Spread total R$:"]
@@ -101,117 +107,137 @@ extratos:
     pergunta_ref: null
 
 # ---------------------------------------------------------------------------
-# REGRAS DE NEGÓCIO (vazias até decisão)
+# REGRAS DE NEGÓCIO
 # ---------------------------------------------------------------------------
 
 checkout:
-  composicao_comissao:      # quais tipo_lancamento entram e com qual sinal (VENDA, ESTORNO, ANTECIPACAO, REVERSAO ANTECIPACAO)
-    valor: null
-    status: null
-    fonte: null
-    pergunta_ref: null      # candidata a ASSUMO (Orbe já traz estorno/reversão negativos) — Lucca decide
-  estorno_de_venda_de_mes_anterior:
-    valor: null
-    status: null
-    fonte: "01_orbe: 9 estornos de vendas de agosto (ex.: L39 TX88444848), taxa −R$ 941,70"
-    pergunta_ref: null
-  base_comissao_e_nf:       # taxa cobrada pela Orbe ou contratada; 1 NF por lojista ou MDR e antecipação separadas
-    valor: null
-    status: null
-    fonte: null
+  base_comissao:
+    valor: "bruto × taxa contratada, por transação"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:05"
     pergunta_ref: P03
-  comissao_e_valor_taxa_integral:   # a Orbe não retém custo próprio
+  arredondamento_comissao_contratada:   # bruto × contratada: truncar (como a Orbe) ou arredondar? não respondido em 20:05
     valor: null
-    status: null
+    status: PENDENTE
+    fonte: null
+    pergunta_ref: null
+  composicao_comissao:      # quais tipo_lancamento entram (ANTECIPACAO e REVERSAO ANTECIPACAO não citadas em 20:05/20:06)
+    valor: null
+    status: PENDENTE
+    fonte: null
+    pergunta_ref: null
+  estorno:
+    valor: "abate a comissão no mês do estorno, pela taxa contratada vigente na data da venda original; agosto não reabre"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:06"
+    pergunta_ref: P10
+  comissao_e_valor_taxa_integral:   # premissa anterior (a Orbe não retém custo); ver base_comissao 20:05
+    valor: null
+    status: PENDENTE
     fonte: null
     pergunta_ref: null
 
-divergencias:
-  data_referencia_vigencia: # data da venda (data_venda_original no estorno) ou data do movimento
+notas:
+  estrutura_nf_checkout:    # 1 NF por lojista com MDR + antecipação, ou separadas
     valor: null
-    status: null
+    status: PENDENTE
+    fonte: "aguardando resposta à pergunta MN AI 20:26 (notas)"
+    pergunta_ref: P03
+
+divergencias:
+  tratamento:
+    valor: "taxa cobrada ≠ contratada é divergência, listada com transação e valor; nunca devolução automática"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:05 ('Isso eu decido, não vai automático')"
+    pergunta_ref: P03
+  data_referencia_vigencia: # venda: data_movimento; estorno: data da venda original (20:06)
+    valor: null
+    status: PENDENTE
     fonte: "01_orbe: estornos repetem a taxa da venda original (ex.: L1069 → L406)"
     pergunta_ref: null
   estorno_de_venda_divergente:  # entra como divergência negativa?
     valor: null
-    status: null
+    status: PENDENTE
     fonte: "01_orbe: 4 estornos da Rota Global, −R$ 98,44"
     pergunta_ref: null
 
 remessa:
   spread_negativo:
     valor: null
-    status: null
-    fonte: "anexo Operações R96, R141, R205, R228 (obs 'Taxa travada no pedido (D-1)')"
+    status: PENDENTE
+    fonte: "anexo Operações R96, R141, R205, R228 (obs 'Taxa travada no pedido (D-1)'); aguardando pergunta MN AI 20:30 (spread)"
     pergunta_ref: P01
   spread_padrao:
     valor: null
-    status: null
-    fonte: "02_taxas R29 J='padrão'; R9 e R16 vazios; R32 '* spread em branco = padrão'"
+    status: PENDENTE
+    fonte: "02_taxas R29 J='padrão'; R9 e R16 vazios; R32 '* spread em branco = padrão'; aguardando pergunta MN AI 20:30 (spread)"
     pergunta_ref: P06
-  status_aprovado_com_ressalva:
+  status_aprovado_com_ressalva:   # a operação entra na comissão? (o fato de seguir para liquidação é SEI em ponte.status_ressalva_segue_liquidacao)
     valor: null
-    status: null
-    fonte: "03_email corpo: 'APROVADO C/ RESSALVA seguem normalmente para liquidação'; 16 operações"
+    status: PENDENTE
+    fonte: "anexo: 16 operações 'APROVADO C/ RESSALVA'"
     pergunta_ref: null
   liquidacao_no_mes_seguinte:
     valor: null
-    status: null
+    status: PENDENTE
     fonte: "anexo: 6 operações contratadas em 30/09, liquidadas em 01/10; TED Meridiano MRD2026090688 de 30/09 as inclui"
     pergunta_ref: null
   operacao_duplicada:
     valor: null
-    status: null
+    status: PENDENTE
     fonte: "anexo R76/R77 PC-0926-0162 (obs 'reprocessada'); 05b MRD2026090550 pagou uma vez (faltam R$ 55.811,47)"
     pergunta_ref: null
   arredondamento_participacao:  # meio centavo no 50%: por operação ou no total do lojista
     valor: null
-    status: null
+    status: PENDENTE
     fonte: null
     pergunta_ref: null
 
 cadastro:
-  ec_sem_cadastro:          # EC Orbe → CNPJ quando a planilha não tem o EC
-    valor: null
-    status: null
-    fonte: "01_orbe ECs 1043300981, 1043396662, 1038867654; 02_taxas R8, R9, R28"
+  mapeamento_ec_confirmado: # EC Orbe sem EC na planilha → linha da aba "Taxas vigentes" (vínculo explícito do cliente, não semelhança)
+    valor:
+      "1043300981": "Novo Horizonte Intercambio"
+      "1043396662": "Horizonte Viagens"
+      "1038867654": "Kiwi Experience"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:24 (1043300981 e 1043396662 são empresas diferentes)"
     pergunta_ref: P05
   lojista_sem_contrato_vigente:
-    valor: null
-    status: null
-    fonte: "01_orbe EC 1076801732 ATLAS IDIOMAS; só na aba 'ANTIGO 2025 - nao usar' R8"
+    valor: {"1076801732": "NAO_FATURAR_PENDENCIA"}   # Atlas Idiomas
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:24 ('Não fatura a Atlas até o comercial confirmar')"
     pergunta_ref: P04
   condicao_especial_casa_do_estudante:
     valor: null
-    status: null
-    fonte: "02_taxas comentário A13, obs R13"
+    status: PENDENTE
+    fonte: "02_taxas comentário A13, obs R13; perguntado 20:36"
     pergunta_ref: P07
   renegociacao_rota_global:
     valor: null
-    status: null
-    fonte: "01_orbe +0,50 p.p. desde 12/09 (ex.: L1056 TX88428676 4,09% × 3,59%); 02_taxas R10"
+    status: PENDENTE
+    fonte: "01_orbe +0,50 p.p. desde 12/09 (ex.: L1056 TX88428676 4,09% × 3,59%); 02_taxas R10; perguntado 20:36"
     pergunta_ref: P08
 
 contabil:
   pagamento_de_obrigacao_do_mes_anterior:   # baixa de passivo/recebível ou despesa/receita
     valor: null
-    status: null
-    fonte: "05a L15, L42, L54, L55, L57, L86, L87; 05b MRD2026090132"
+    status: PENDENTE
+    fonte: "05a L15, L42, L54, L55, L57, L86, L87; 05b MRD2026090132; perguntado 20:36"
     pergunta_ref: P02
-  devolucao_pix_lojista:
+  creditos_sem_origem:      # PIX sem identificação, devolução PIX Mundo Aberto, transferência sem par no Meridiano
     valor: null
-    status: null
-    fonte: "05a L65 'DEVOLUCAO PIX - MUNDO ABERTO INTERC' +12.400,00"
+    status: PENDENTE
+    fonte: "05a L50 (+7.350,00), L65 (+12.400,00), L92 (−300.000,00); perguntado 20:36"
     pergunta_ref: P09
   padroes_de_descricao:     # descrição → conta (preenchido na E6, cada padrão com fonte)
     valor: null
-    status: null
+    status: PENDENTE
     fonte: null
     pergunta_ref: null
 
 classificacao:
   limiar_confianca_ia:      # decisão técnica do Lucca (abaixo → HUMANO + pendência)
     valor: null
-    status: null
+    status: PENDENTE
     fonte: null
     pergunta_ref: null

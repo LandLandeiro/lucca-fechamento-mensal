@@ -1,9 +1,9 @@
 # Status
 
-> Painel atualizado ao fim de cada etapa. Última atualização: 16/10 20h30 (E0).
+> Painel atualizado ao fim de cada etapa. Última atualização: 16/10 20h41 (E0 + respostas do financeiro).
 
 **Nível atual:** nenhum (estrutura pronta, sem cálculo)
-**Próximo passo:** E1: postar as perguntas P01–P09 no `#tarvo-financeiro` (20h30–22h30), depois os leitores da Orbe e das taxas + cadastro.
+**Próximo passo:** E1: leitores da Orbe e das taxas + cadastro. Acompanhar em `#duvidas-hackathon-ai` as respostas a P01/P06 (MN AI 20:30), à estrutura de NF (MN AI 20:26) e às minhas de 20:36 (P02, P07, P08, P09).
 
 ## Mínimo
 
@@ -31,7 +31,8 @@
 
 ## Regras (`regras.yaml`)
 
-- SEI preenchidas: 14 · ASSUMO: 0 · CONFIRMADO: 0 · vazias: 20 (P01–P09 aguardando resposta)
+- 38 regras: SEI 13 · ASSUMO 2 · CONFIRMADO 5 · PENDENTE 18
+- Bloqueios para o mínimo (comissão CHECKOUT): `checkout.arredondamento_comissao_contratada` e `checkout.composicao_comissao` (antecipação/reversão) estão PENDENTE
 
 ## Números atuais
 
