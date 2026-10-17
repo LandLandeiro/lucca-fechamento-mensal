@@ -153,3 +153,8 @@ Log cronológico: hora, etapa, o que foi feito, como foi verificado, commit.
 - **Feito:** mensagem da organização (09:21) em `docs/FINANCEIRO_SLACK.md`; README com "Como a banca roda" no topo, seção "Chave de API" e extras listados; resumo do fechamento no fim da CLI (`formatos.fmt_brl`); teste do resumo.
 - **Verificado:** nenhuma chave real no repositório (`git ls-files`: só `.env.example`, com a chave vazia; `git grep "sk-ant"`: nada). Os 6 arquivos com os nomes exatos do case; extras: `contestacao_ponte.csv`, `sugestoes_regra.csv` e, com a flag, `pendencias_resolvidas.csv`. CSVs de `saida/` iguais. `pytest`: 187 passed.
 - **Commit:** `requisito de entrega: README (banca, chave de API, extras) e resumo do fechamento na tela`.
+
+### 17/10 ~10h10–10h30 · Documentação para a banca
+- **Feito:** `docs/CAUSA_RAIZ.md` (para o CFO: Casa, Rota, Bridge, Mundo Aberto, Atlas e a planilha, com as frases da Helena; por que o processo não pega; o que a solução muda; proposta de processo em 3 itens). `PROMPTS/MOMENTOS.md` reescrito com os 4 momentos mais fortes e os demais em resumo. README: tabela "Para a banca: onde ver cada critério". Cálculo e saída não mudaram.
+- **Verificado:** todo número da causa raiz recalculado de `saida/` (Casa 116 · 15.397,42; Rota 79 · 1.546,28; Bridge 5 · 29,95; Mundo Aberto 23 · 1.418,85; metade 709,46; Atlas 7.876,05 e 57 transações; repasses L34 e L60) e os 9 `id_saida` citados existem; commits citados no MOMENTOS conferidos.
+- **Commit:** `documentação para a banca: causa raiz, momentos e onde ver cada critério`.

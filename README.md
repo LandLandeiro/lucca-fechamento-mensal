@@ -18,6 +18,20 @@ python -m tarvo --dados data --saida saida
 
 A saída gerada é idêntica à pasta `saida/` entregue; o CI confere isso a cada commit. Não precisa de chave de API (ver [Chave de API](#chave-de-api)). Para outro mês, troque `--dados data` pela pasta do mês: nada é fixo para setembro. No fim, a tela mostra um resumo do fechamento (comissões, notas, divergências, lançamentos, pendências e onde estão os arquivos).
 
+## Para a banca: onde ver cada critério
+
+A tabela é a porta de entrada; os arquivos detalhados são a evidência.
+
+| Critério do case | Onde ver | O que mostra |
+|---|---|---|
+| Correção dos números (25%) | `saida/` + `docs/AUDITORIA.md` + CI | Os 6 arquivos, cada número com a linha de origem no `rastro.csv`; auditoria independente com 0 violações; o CI refaz a saída do zero em Windows e Linux a cada commit e confere que é idêntica |
+| Uso de IA (20%) | `PROMPTS/MOMENTOS.md` + `PROMPTS/` | Onde a IA errou e como foi corrigida, onde ela sugeriu e o código provou antes de aceitar, e o histórico completo das sessões |
+| Causa raiz (15%) | `docs/CAUSA_RAIZ.md` | Por que o fechamento erra (o contrato muda e ninguém avisa quem cobra), com os casos de setembro em reais e o que precisa mudar no processo |
+| Hipóteses (10%) | `HIPOTESES.md` + `regras.yaml` | O que é fato, o que é premissa e o que o financeiro confirmou, com fonte; cada regra do cálculo com status SEI/ASSUMO/CONFIRMADO |
+| Perguntar antes de construir (10%) | `HIPOTESES.md` (seção "Perguntas ao financeiro") + `docs/FINANCEIRO_SLACK.md` | As perguntas feitas, as respostas literais da Helena e o que cada resposta mudou na solução |
+| Raciocínio e comunicação (10%) | este README + `docs/PLANO.md` + `docs/DECISOES.md` | Como rodar, como fechar outubro e onde a IA atua; o plano; cada decisão técnica com alternativa e motivo |
+| Tempo e pontualidade (10%) | histórico de commits + `docs/DIARIO.md` | O que foi feito em cada etapa, com hora, verificação e commit |
+
 ## Chave de API
 
 **É opcional.** Sem chave, a solução roda inteira e a saída é a mesma.
