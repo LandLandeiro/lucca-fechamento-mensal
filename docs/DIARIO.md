@@ -84,3 +84,9 @@ Log cronológico: hora, etapa, o que foi feito, como foi verificado, commit.
 - **Alarme falso evitado:** a 1ª execução acusou divergência de aportes de −394.222,69 da EduAbroad, mas os aportes dela só não tinham sido identificados (nome do banco "EDU ABROAD"); somados à mão, batem com as operações. Lojista sem aporte identificado, havendo PIX RECEB sem regra, agora fica "não conferido" (D33).
 - **Commit:** `E6b parte 1: extratos classificados por regra, com conferências`.
 
+### ~23h30–23h40 · Decisões da E6b parte 1
+- **Feito:** H36: EduAbroad sem alias; plano da parte 2 registrado (D37). H37: regra RENDIMENTO APLIC → 3.2.01. H38: resgate de 392,00 acima do aplicado fica em 1.1.02.001, sem pendência (saldo aplicado anterior a 01/09, D36). Atlas: lojistas do extrato = planilha vigente ∪ nomes da Orbe dos ECs sem vínculo (D35); L34 e L60 → 2.1.01.001 por regra; pendência de faturamento mantida.
+- **Verificado:** 7 linhas sem regra (só EduAbroad), como esperado. `pytest`: 148 passed. Validador OK.
+- **Diferenças levadas ao Lucca:** (1) a união com **todos** os nomes da Orbe resolveria também a EduAbroad ("EDU ABROAD CONSULTORIA" é o nome da Orbe do EC dela), contra a D37 e o esperado; restringi aos ECs sem vínculo. (2) Pendências: **15**, não 16 (eram 19; saíram 3 SEM_REGRA — L34, L60, MRD2026090680 — e a do resgate).
+- **Commit:** `decisões da E6b parte 1: rendimento, resgate, Atlas e plano da EduAbroad`.
+

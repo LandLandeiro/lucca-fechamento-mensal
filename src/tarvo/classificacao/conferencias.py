@@ -7,8 +7,9 @@
    operações únicas da Ponte (a duplicata conta uma vez). Sobra igual a um aporte → pendência
    desse aporte; outra sobra ≠ 0 → pendência do lojista. Lojista sem nenhum aporte identificado,
    havendo PIX RECEB sem regra, fica "não conferido" (sem pendência: seria alarme falso).
-3. Aplicação × resgate (FIFO): resgate acima do saldo aplicado no mês → pendência com
-   proposta (o excesso seria rendimento 3.2.01); a linha não é dividida.
+3. Aplicação × resgate (FIFO): resgate acima do saldo aplicado no mês é sempre reportado; vira
+   pendência só se `resgate_acima_do_aplicado` = PENDENCIA (em set/2026: SALDO_APLICADO_ANTERIOR,
+   D36). A linha nunca é dividida.
 """
 
 from __future__ import annotations
@@ -56,6 +57,7 @@ def conferir(
     operacoes_unicas: list[tuple[OperacaoPonte, str]],
     nomes: dict[str, str],
     aportes_nao_identificados: list[LancamentoBancario] | None = None,
+    resgate_acima: str = "PENDENCIA",
 ) -> ResultadoConferencias:
     """Roda as três conferências. `regra_por_lancamento` (banco, ref) → nome da regra aplicada."""
     res = ResultadoConferencias()
@@ -156,7 +158,7 @@ def conferir(
             if ap[1] == 0:
                 fila.pop(0)
         res.resgates.append({"resgate": lan, "consumidas": consumidas, "excesso": falta})
-        if falta > 0:
+        if falta > 0 and resgate_acima == "PENDENCIA":
             pid = f"PEN-RESGATE_ACIMA_DO_APLICADO-{lan.banco}-{lan.ref_origem}"
             orig = ", ".join(f"{a.ref_origem} ({fmt_dinheiro(u)})" for a, u in consumidas) or "nenhuma"
             res.pendencias.append(Pendencia(

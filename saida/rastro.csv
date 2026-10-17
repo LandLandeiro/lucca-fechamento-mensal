@@ -4676,8 +4676,6 @@ PEN-NF_NEGATIVA-00520815000100;01_orbe_relatorio_comissoes_set2026.csv;TX8844462
 PEN-NF_NEGATIVA-00520815000100;01_orbe_relatorio_comissoes_set2026.csv;TX88444796;0.00;1911;VENDA;3292.86;0;regras.yaml cadastro.condicao_especial_casa_do_estudante (MDR, 2026-09-01–2026-12-31);
 PEN-NF_NEGATIVA-00520815000100;01_orbe_relatorio_comissoes_set2026.csv;TX88444507;0.00;1920;VENDA;2968.04;0;regras.yaml cadastro.condicao_especial_casa_do_estudante (MDR, 2026-09-01–2026-12-31);
 PEN-PIX_SEM_IDENTIFICACAO-AURORA-L50;05a_extrato_banco_aurora_cc4471_set2026.csv;L50;7350.00;50;EXTRATO AURORA;;;PIX recebido sem identificação: não é receita até alguém identificar (Helena 20:49, Q-F 4a);
-PEN-RESGATE_ACIMA_DO_APLICADO-MERIDIANO-MRD2026090254;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090143;-161736.00;200;EXTRATO MERIDIANO;;;aplicação consumida (FIFO);
-PEN-RESGATE_ACIMA_DO_APLICADO-MERIDIANO-MRD2026090254;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090254;162128.00;328;EXTRATO MERIDIANO;;;resgate;
 PEN-SEM_CONTRATO_VIGENTE-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;TX88421353;45.11;608;VENDA;1292.63;;taxa cobrada pela Orbe (valor_taxa);
 PEN-SEM_CONTRATO_VIGENTE-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;TX88423234;339.06;681;VENDA;7551.55;;taxa cobrada pela Orbe (valor_taxa);
 PEN-SEM_CONTRATO_VIGENTE-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;TX88418299;38.21;687;VENDA;957.70;;taxa cobrada pela Orbe (valor_taxa);
@@ -4736,13 +4734,10 @@ PEN-SEM_CONTRATO_VIGENTE-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;TX
 PEN-SEM_CONTRATO_VIGENTE-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;TX88444140;30.56;1928;VENDA;875.69;;taxa cobrada pela Orbe (valor_taxa);
 PEN-SEM_CONTRATO_VIGENTE-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;TX88413380;60.07;1944;VENDA;1721.25;;taxa cobrada pela Orbe (valor_taxa);
 PEN-SEM_REGRA-AURORA-L28;05a_extrato_banco_aurora_cc4471_set2026.csv;L28;-14147.48;28;EXTRATO AURORA;;;lançamento sem regra;
-PEN-SEM_REGRA-AURORA-L34;05a_extrato_banco_aurora_cc4471_set2026.csv;L34;-112220.15;34;EXTRATO AURORA;;;lançamento sem regra;
-PEN-SEM_REGRA-AURORA-L60;05a_extrato_banco_aurora_cc4471_set2026.csv;L60;-137081.62;60;EXTRATO AURORA;;;lançamento sem regra;
 PEN-SEM_REGRA-AURORA-L69;05a_extrato_banco_aurora_cc4471_set2026.csv;L69;-47889.99;69;EXTRATO AURORA;;;lançamento sem regra;
 PEN-SEM_REGRA-MERIDIANO-MRD2026090036;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090036;170670.73;80;EXTRATO MERIDIANO;;;lançamento sem regra;
 PEN-SEM_REGRA-MERIDIANO-MRD2026090180;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090180;52359.01;240;EXTRATO MERIDIANO;;;lançamento sem regra;
 PEN-SEM_REGRA-MERIDIANO-MRD2026090340;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090340;110194.48;424;EXTRATO MERIDIANO;;;lançamento sem regra;
 PEN-SEM_REGRA-MERIDIANO-MRD2026090484;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090484;21752.32;592;EXTRATO MERIDIANO;;;lançamento sem regra;
 PEN-SEM_REGRA-MERIDIANO-MRD2026090636;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090636;39246.15;760;EXTRATO MERIDIANO;;;lançamento sem regra;
-PEN-SEM_REGRA-MERIDIANO-MRD2026090680;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090680;3912.66;816;EXTRATO MERIDIANO;;;lançamento sem regra;
 PEN-TRANSFERENCIA_EM_TRANSITO-AURORA-L92;05a_extrato_banco_aurora_cc4471_set2026.csv;L92;-300000.00;92;EXTRATO AURORA;;;transferência sem par no Meridiano;

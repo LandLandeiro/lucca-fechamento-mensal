@@ -130,6 +130,9 @@ def test_normalizar_nome():
     ("LAN-MERIDIANO-MRD2026090292", "4.2.05", "meridiano.seguro"),
     ("LAN-MERIDIANO-MRD2026090586", "4.3.01", "meridiano.iof"),
     ("LAN-MERIDIANO-MRD2026090425", "2.1.02.001", "meridiano.aporte_lojista"),  # "PONTE AEREA" sem acento
+    ("LAN-MERIDIANO-MRD2026090680", "3.2.01", "meridiano.rendimento_aplicacao"),  # H37
+    ("LAN-AURORA-L34", "2.1.01.001", "aurora.repasse_lojista"),  # Atlas: nome da Orbe do EC sem vínculo (D35)
+    ("LAN-AURORA-L60", "2.1.01.001", "aurora.repasse_lojista"),
 ])
 def test_regra_por_caso_de_setembro(saida, ida, conta, regra):
     l = _lan(saida[0], ida)
@@ -146,13 +149,12 @@ def test_lado_pelo_sinal(saida):
 def test_sem_regra_vai_para_humano_e_pendencia(saida):
     pasta, _ = saida
     humanos = sorted(l["id_saida"] for l in _csv(pasta, "lancamentos_classificados.csv") if l["metodo"] == "HUMANO")
-    assert humanos == sorted([
-        "LAN-AURORA-L28", "LAN-AURORA-L34", "LAN-AURORA-L60", "LAN-AURORA-L69",  # EduAbroad, Atlas
+    assert humanos == sorted([  # só EduAbroad: vai para a IA na parte 2 (D37)
+        "LAN-AURORA-L28", "LAN-AURORA-L69",
         "LAN-MERIDIANO-MRD2026090036", "LAN-MERIDIANO-MRD2026090180", "LAN-MERIDIANO-MRD2026090340",
-        "LAN-MERIDIANO-MRD2026090484", "LAN-MERIDIANO-MRD2026090636",  # EduAbroad
-        "LAN-MERIDIANO-MRD2026090680",  # RENDIMENTO APLIC AUTOMATICA: nenhuma regra listada
+        "LAN-MERIDIANO-MRD2026090484", "LAN-MERIDIANO-MRD2026090636",
     ])
-    l = _lan(pasta, "LAN-AURORA-L34")
+    l = _lan(pasta, "LAN-AURORA-L28")
     assert (l["conta_codigo"], l["confianca"]) == ("", "")
     pend = {p["id_saida"] for p in _csv(pasta, "pendencias.csv")}
     assert {f"PEN-SEM_REGRA-{h[4:]}" for h in humanos} <= pend
@@ -204,8 +206,8 @@ def test_resgate_acima_do_aplicado(saida):
     _, r = saida
     resgates = {x["resgate"].ref_origem: x["excesso"] for x in r["extratos"]["conf"].resgates}
     assert resgates == {"MRD2026090254": Decimal("392.00"), "MRD2026090445": 0, "MRD2026090670": 0}
-    p = next(p for p in _csv(saida[0], "pendencias.csv") if p["tipo"] == "RESGATE_ACIMA_DO_APLICADO")
-    assert p["valor_brl"] == "392.00" and "Não dividi a linha" in p["motivo"]
+    # D36: saldo aplicado anterior a 01/09 → reportado, sem pendência
+    assert not any(p["tipo"] == "RESGATE_ACIMA_DO_APLICADO" for p in _csv(saida[0], "pendencias.csv"))
     assert _lan(saida[0], "LAN-MERIDIANO-MRD2026090254")["conta_codigo"] == "1.1.02.001"  # linha inteira
 
 
@@ -249,3 +251,18 @@ def test_validador_extratos_recusa(saida, tmp_path, aurora, meridiano, plano):
     assert any("1 lançamentos sem classificação" in e for e in erros)
     assert any("AURORA: Σ lançamentos" in e for e in erros)
     assert any("conta 4.2 não existe ou não aceita lançamento" in e for e in erros)
+
+
+def test_nomes_da_orbe_so_para_ec_sem_vinculo(cadastro, orbe, regras):
+    import copy
+    from tarvo.cadastro import adicionar_nomes_orbe
+    cad = copy.deepcopy(cadastro)
+    adicionar_nomes_orbe(cad, orbe.transacoes, regras)
+    assert set(cad.nomes_extras) == {"EC1076801732"}  # só a Atlas: os outros ECs já têm CNPJ na planilha
+    assert lojista_por_nome_bancario(cad, "ATLAS IDIOMAS LTDA")[0] == "EC1076801732"
+    assert lojista_por_nome_bancario(cad, "EDU ABROAD CONSULTORIA LTD")[0] is None  # fica para a IA (D37)
+
+
+def test_total_de_pendencias(saida):
+    tipos = sorted(p["tipo"] for p in _csv(saida[0], "pendencias.csv"))
+    assert len(tipos) == 15 and tipos.count("SEM_REGRA") == 7

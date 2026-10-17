@@ -49,6 +49,18 @@ class Cadastro:
     por_ec: dict[str, str] = field(default_factory=dict)  # EC → CNPJ
     linhas_por_cnpj: dict[str, list[tuple[TaxaContratada, Vigencia | None]]] = field(default_factory=dict)
     avisos: list[Aviso] = field(default_factory=list)
+    # nomes de lojistas fora da aba vigente, por identificador "EC<n>" (só para achar o lojista no extrato)
+    nomes_extras: dict[str, set[str]] = field(default_factory=dict)
+
+
+def adicionar_nomes_orbe(cadastro: Cadastro, transacoes, regras: dict) -> None:
+    """D35: para os ECs da Orbe SEM vínculo com a planilha (ex.: Atlas), os nomes da Orbe entram na
+    lista de lojistas usada pelas regras de repasse/aporte do extrato, com identificador "EC<n>".
+    ECs já ligados a um CNPJ não ganham nomes extras (o vínculo deles é o da planilha)."""
+    valor_da_regra(regras, "classificacao_extratos.lojistas_do_extrato")
+    for t in transacoes:
+        if t.cod_estabelecimento not in cadastro.por_ec:
+            cadastro.nomes_extras.setdefault(f"EC{t.cod_estabelecimento}", set()).add(t.nome_estabelecimento)
 
 
 def interpretar_vigencia(texto: str | None) -> Vigencia | None:
@@ -131,11 +143,12 @@ def lojista_por_nome_bancario(cadastro: Cadastro, texto: str) -> tuple[str | Non
     if not alvo:
         return None, "nome vazio"
     achados: dict[str, str] = {}
-    for cnpj, linhas in cadastro.linhas_por_cnpj.items():
-        for linha, _ in linhas:
-            nome = normalizar_nome(linha.lojista)
-            if nome.startswith(alvo) or (alvo.startswith(nome) and (len(alvo) == len(nome) or alvo[len(nome)] == " ")):
-                achados[cnpj] = linha.lojista
+    candidatos = [(cnpj, l.lojista) for cnpj, linhas in cadastro.linhas_por_cnpj.items() for l, _ in linhas]
+    candidatos += [(ident, nome) for ident, nomes in cadastro.nomes_extras.items() for nome in sorted(nomes)]
+    for ident, nome_original in candidatos:
+        nome = normalizar_nome(nome_original)
+        if nome.startswith(alvo) or (alvo.startswith(nome) and (len(alvo) == len(nome) or alvo[len(nome)] == " ")):
+            achados[ident] = nome_original
     if len(achados) == 1:
         cnpj, nome = next(iter(achados.items()))
         return cnpj, f"prefixo exato de {nome!r}"

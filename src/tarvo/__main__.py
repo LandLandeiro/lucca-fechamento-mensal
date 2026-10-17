@@ -13,7 +13,7 @@ import sys
 from decimal import Decimal
 from pathlib import Path
 
-from tarvo.cadastro import montar_cadastro, normalizar_nome
+from tarvo.cadastro import adicionar_nomes_orbe, montar_cadastro, normalizar_nome
 from tarvo.calculos.comissoes import comissao_checkout, ordem_comissao
 from tarvo.calculos.divergencias import divergencias_checkout, divergencias_remessa
 from tarvo.calculos.notas import conferencia_repasse, notas_a_emitir
@@ -130,6 +130,7 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
             pend_leitura.append(Pendencia(f"PEN-LEITURA_INVALIDA-{ext.banco}-{li.ref_origem}", "LEITURA_INVALIDA",
                                           f"{ext.arquivo}:L{li.linha_arquivo}", None, f"lançamento não lido: {li.motivo}",
                                           "analista (conferir o extrato com o banco)"))
+    adicionar_nomes_orbe(cadastro, orbe.transacoes, regras)  # D35: ex.: Atlas
     classif = [classificar_por_regra(ext.lancamentos, ext.linhas_arquivo, plano, regras, cadastro, competencia)
                for ext in (aurora, meridiano)]
     regra_por_lanc = {(l["banco"], l["ref_origem"]): l["regra_aplicada"] for c in classif for l in c.linhas}
@@ -140,6 +141,7 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
         cls_remessa.elegiveis + cls_remessa.negativos,
         {cnpj: lj.nome for cnpj, lj in cadastro.lojistas.items()},
         [lan for c in classif for lan, _ in c.sem_regra if normalizar_nome(lan.descricao).startswith("PIX RECEB ")],
+        valor_da_regra(regras, "classificacao_extratos.conferencias")["resgate_acima_do_aplicado"],
     )
     lancamentos = [l for c in classif for l in c.linhas]
 
@@ -314,7 +316,7 @@ def _imprimir_extratos(r: dict) -> None:
     for x in conf.resgates:
         orig = ", ".join(f"{a.ref_origem} {fmt_dinheiro(u)}" for a, u in x["consumidas"])
         print(f"    resgate {x['resgate'].ref_origem} {x['resgate'].data.isoformat()} {fmt_dinheiro(x['resgate'].valor):>11}"
-              f" ← {orig}" + (f"  EXCESSO {fmt_dinheiro(x['excesso'])}" if x["excesso"] else ""))
+              f" ← {orig}" + (f"  EXCESSO {fmt_dinheiro(x['excesso'])} (saldo aplicado anterior, D36)" if x["excesso"] else ""))
     diverg = [a for a in conf.aportes if a["sobra"] != 0]
     print(f"  aportes × operações da Ponte: {len(conf.aportes)} lojistas, {len(diverg)} com diferença")
     for a in diverg:

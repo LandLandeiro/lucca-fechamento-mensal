@@ -1,9 +1,9 @@
 # Status
 
-> Painel atualizado ao fim de cada etapa. Última atualização: 16/10 ~23h15 (E6b parte 1: extratos por regra).
+> Painel atualizado ao fim de cada etapa. Última atualização: 16/10 ~23h35 (decisões da E6b parte 1).
 
 **Nível atual:** **Alvo** (todos os 6 CSVs gerados e validados); lançamentos por REGRA, com as sobras em HUMANO
-**Próximo passo:** E6b parte 2 (17/10): IA nas 10 sobras (D11/D12); Lucca decide as propostas H36 (alias EDU ABROAD), H37 (rendimento) e H38 (resgate).
+**Próximo passo:** E6b parte 2 (17/10): IA nas 7 sobras (EduAbroad), com o fluxo da D37 (IA sugere o vínculo, o código confere pelos aportes × Ponte, Lucca aprova).
 
 ## Mínimo
 
@@ -24,12 +24,12 @@
 - [ ] Amostra de divergências conferida pelo Lucca
 - [x] `notas_a_emitir.csv` (E6a): 20 notas CHECKOUT (R$ 207.045,23) + 1 nota REMESSA para a Ponte (R$ 39.543,45)
 - [x] Leitores Aurora, Meridiano, plano de contas (com testes)
-- [x] `lancamentos_classificados.csv` parte 1 (REGRA): 184 lançamentos, 174 por regra, 10 HUMANO + pendência
+- [x] `lancamentos_classificados.csv` parte 1 (REGRA): 184 lançamentos, 177 por regra, 7 HUMANO + pendência (só EduAbroad)
 - [ ] `lancamentos_classificados.csv` parte 2 (IA nas sobras)
 
 ## Extra
 
-- [x] `pendencias.csv` com motivo e quem decide: 19 pendências (checkout, remessa, notas, extratos)
+- [x] `pendencias.csv` com motivo e quem decide: 15 pendências (checkout, remessa, notas, extratos)
 - [ ] Rastro de 100% dos números
 - [ ] Roda em outubro sem mudar código: arquivos achados por prefixo, competência lida do relatório da Ponte, vigências e regras lidas do `regras.yaml`; falta testar com um arquivo de outro mês
 
@@ -91,11 +91,11 @@ Todos conferidos no centavo contra a previsão independente do Lucca antes do co
 
 ### Lançamentos classificados (E6b parte 1: só REGRA)
 
-- **AURORA: 84 linhas, 80 por regra, 4 HUMANO.** Σ −2.532.423,41 = saldo final − saldo anterior ✓. Regras: repasse_lojista 40, orbe_recebivel 21, transferencia_meridiano 4, tarifa 2 e 1 cada (folha, ISS, INSS, FGTS, IRRF, PIS, COFINS, condomínio, cloud, assinatura, contabilidade, PIX sem identificação, devolução)
-- **MERIDIANO: 100 linhas, 94 por regra, 6 HUMANO.** Sem saldo inicial no OFX (inicial implícito 204.118,03, D34). Regras: aporte_lojista 59, liquidacao_ponte 21, mesma_titularidade 3, aplicação 3, resgate 3, tarifa 2, repasse_comissao_ponte 1, seguro 1, IOF 1
-- **Sem regra (10):** PIX ENVIADO EDU ABROAD (L28, L69) e PIX RECEB EDU ABROAD (MRD…0036, 0180, 0340, 0484, 0636): "EDU ABROAD" não é prefixo exato de "EduAbroad"; PIX ENVIADO ATLAS IDIOMAS (L34, L60): Atlas fora da aba vigente; RENDIMENTO APLIC AUTOMATICA (MRD…0680): nenhuma regra
+- **AURORA: 84 linhas, 82 por regra, 2 HUMANO.** Σ −2.532.423,41 = saldo final − saldo anterior ✓. Regras: repasse_lojista 42 (inclui a Atlas, D35), orbe_recebivel 21, transferencia_meridiano 4, tarifa 2 e 1 cada (folha, ISS, INSS, FGTS, IRRF, PIS, COFINS, condomínio, cloud, assinatura, contabilidade, PIX sem identificação, devolução)
+- **MERIDIANO: 100 linhas, 95 por regra, 5 HUMANO.** Sem saldo inicial no OFX (inicial implícito 204.118,03, D34). Regras: aporte_lojista 59, liquidacao_ponte 21, mesma_titularidade 3, aplicação 3, resgate 3, tarifa 2, repasse_comissao_ponte 1, seguro 1, IOF 1, rendimento_aplicacao 1 (H37)
+- **Sem regra (7, só EduAbroad):** PIX ENVIADO EDU ABROAD (L28, L69) e PIX RECEB EDU ABROAD (MRD…0036, 0180, 0340, 0484, 0636): "EDU ABROAD" não é prefixo exato de "EduAbroad"; vão para a IA na parte 2 (D37)
 - **Transferências:** L12 → MRD2026090107, L44 → MRD2026090274, L58 → MRD2026090454 (mesmo dia); **L92 (−300.000,00) sem par → pendência em trânsito (cai em 01/10)**
 - **Aportes × Ponte:** 14 lojistas; Ponte Aérea com +18.240,00 = PIX MRD2026090425 sem operação → pendência; EduAbroad não conferida (aportes ainda não identificados; D33); Bagagem fecha (duplicata conta uma vez)
-- **Aplicação × resgate (FIFO):** resgate MRD2026090254 (09/09, 162.128,00) excede em **392,00** a aplicação de 05/09 → pendência com proposta (rendimento?), linha inteira em 1.1.02.001; os outros dois resgates cabem no saldo aplicado
-- **Pendências novas dos extratos: 15** (10 SEM_REGRA, PIX sem identificação 7.350,00, devolução Mundo Aberto 12.400,00, transferência em trânsito −300.000,00, aporte sem operação 18.240,00, resgate acima do aplicado 392,00)
+- **Aplicação × resgate (FIFO):** resgate MRD2026090254 (09/09, 162.128,00) excede em **392,00** a aplicação de 05/09 → saldo aplicado anterior a 01/09, linha inteira em 1.1.02.001, sem pendência (D36); os outros dois resgates cabem no saldo aplicado
+- **Pendências dos extratos: 11** (7 SEM_REGRA da EduAbroad, PIX sem identificação 7.350,00, devolução Mundo Aberto 12.400,00, transferência em trânsito −300.000,00, aporte sem operação 18.240,00). **Total no `pendencias.csv`: 15** (+ Atlas sem contrato, nota negativa da Casa, conferência do repasse, excesso da Mundo Aberto)
 

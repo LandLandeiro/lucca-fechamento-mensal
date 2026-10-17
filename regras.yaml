@@ -500,7 +500,13 @@ classificacao_extratos:
       valor: {padrao: "^RESGATE AUTOMATICO", sinal: "+", conta: "1.1.02.001"}
       status: ASSUMO
       autor: Lucca
-      fonte: "plano 1.1.02.001; resgate acima do saldo aplicado (FIFO) vira pendência com proposta, sem dividir a linha; caso: 05b MRD2026090254"
+      fonte: "plano 1.1.02.001; resgate acima do saldo aplicado no mês fica inteiro aqui (saldo aplicado anterior a 01/09, D36); caso: 05b MRD2026090254"
+      pergunta_ref: null
+    rendimento_aplicacao:
+      valor: {padrao: "^RENDIMENTO APLIC", sinal: "+", conta: "3.2.01"}
+      status: ASSUMO
+      autor: Lucca
+      fonte: "decisão Lucca ~23h30 (H37): plano 3.2.01 'Rendimentos de aplicações'; caso: 05b MRD2026090680"
       pergunta_ref: null
     aporte_lojista:
       valor: {padrao: "^PIX RECEB (?P<lojista>.+)$", sinal: "+", conta: "2.1.02.001", lojista: true}
@@ -512,8 +518,31 @@ classificacao_extratos:
     valor:
       transferencia_entre_contas: "cada TRANSF Aurora→Meridiano casa com um TED de mesma titularidade de mesmo valor em até 1 dia útil; sem par → pendência (em trânsito)"
       aportes_ponte: "por lojista, Σ PIX RECEB no Meridiano × Σ (Valor R$ + IOF) das operações únicas da Ponte; a sobra igual a um aporte → pendência daquele aporte; outra sobra → pendência do lojista"
-      aplicacao_resgate: "FIFO entre aplicações e resgates; resgate acima do saldo aplicado → pendência com proposta (excesso como rendimento 3.2.01?), sem dividir a linha"
+      aplicacao_resgate: "FIFO entre aplicações e resgates do mês; resgate acima do saldo aplicado no mês é reportado, sem pendência e sem dividir a linha"
+      resgate_acima_do_aplicado: SALDO_APLICADO_ANTERIOR   # SALDO_APLICADO_ANTERIOR (só reporta) | PENDENCIA
     status: ASSUMO
     autor: Lucca
-    fonte: "decisão Lucca ~23h (E6b); Slack Helena 20:49 (Q-F 4c): 'A transferência saiu do Aurora em 30/09 e cai no Meridiano em 01/10'"
+    fonte: >-
+      decisão Lucca ~23h (E6b) e ~23h30 (D36: o excesso de 392,00 do resgate de 09/09 é saldo aplicado anterior a 01/09;
+      base: o extrato tem linha própria de rendimento (MRD2026090680) e o saldo inicial implícito é 204.118,03);
+      Slack Helena 20:49 (Q-F 4c): 'A transferência saiu do Aurora em 30/09 e cai no Meridiano em 01/10'
     pergunta_ref: P09
+  lojistas_do_extrato:      # D35
+    valor: "planilha vigente ∪ nomes da Orbe dos ECs sem vínculo na planilha (identificador EC<n>)"
+    status: ASSUMO
+    autor: Lucca
+    fonte: >-
+      decisão Lucca ~23h30: o repasse é devido independente do faturamento (Helena 20:24 disse 'não fatura', não
+      'não repassa'); caso: Atlas (EC 1076801732), 05a L34 e L60. Restrito aos ECs sem vínculo: os ECs já ligados
+      à planilha não ganham nomes extras (senão 'EDU ABROAD CONSULTORIA' da Orbe resolveria a EduAbroad, que fica
+      para o fluxo da IA, D37)
+    pergunta_ref: P04
+  vinculo_bancario_por_ia:  # D37 (plano para a parte 2)
+    valor: >-
+      nome do extrato sem lojista (ex.: 'EDU ABROAD CONSULTORIA'): a IA sugere o vínculo nome → CNPJ; o código confere
+      Σ PIX RECEB desse nome × Σ (Valor R$ + IOF) das operações da Ponte do CNPJ; o Lucca aprova; o vínculo vira alias
+      explícito no regras.yaml (como cadastro.mapeamento_ec_confirmado)
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca ~23h30 (H36): não criar alias agora"
+    pergunta_ref: null
