@@ -65,6 +65,6 @@ def test_resumo_para_o_financeiro(tmp_path, capsys):
                    "checkout, devolver aos lojistas:          R$ 16.972,57  (210 transações)",
                    "recuperar da Orbe (contrato):            R$ 1.575,80",
                    "custo para a Tarvo (condição especial):    R$ 15.396,77", "por regra 184, por IA conferida 0, por decisão de uma pessoa 0",
-                   "Pendências: 16", "os 6 do fechamento: comissoes_por_lojista.csv"):
+                   "Pendências: 15", "os 6 do fechamento: comissoes_por_lojista.csv"):
         assert trecho in resumo, trecho
     assert "−" not in resumo  # console cp1252 do Windows não tem o sinal de menos tipográfico

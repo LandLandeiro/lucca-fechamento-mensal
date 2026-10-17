@@ -35,7 +35,7 @@ from tarvo.leitores.plano_contas import contas_lancaveis, ler_plano_contas
 from tarvo.leitores.ponte_email import ler_email, ler_operacoes
 from tarvo.leitores.taxas import ler_taxas_vigentes
 from tarvo.modelo import Aviso, Pendencia
-from tarvo.pendencias import (consolidar_pendencias, ler_pendencias_anteriores, pendencia_para_linha, pendencia_provisao,
+from tarvo.pendencias import (consolidar_pendencias, ler_pendencias_anteriores, pendencia_para_linha,
                               refs_das_pendencias)
 from tarvo.regras import RegraInvalida, RegraPendente, carregar_regras, valor_da_regra
 from tarvo.saida.escritor import escrever_saida
@@ -243,13 +243,12 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         feriados,
     )
     lancamentos = [l for c in classif for l in c.linhas]
-    provisao = pendencia_provisao(competencia, lancamentos, regras)  # D72 (Q-R 3)
     conf.resolvidas.extend(resolvidas_sem_contrato(retomadas, cadastro, competencia))
 
     pendencias = consolidar_pendencias(
         checkout.pendencias, juncao.pendencias, sep.pendencias, divergencias.pendencias, alertas.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura,
         notas.pendencias, pend_repasse,
-        div_remessa.pendencias_derivadas, contestacao.pendencias, *[c.pendencias for c in classif], conf.pendencias, [provisao],
+        div_remessa.pendencias_derivadas, contestacao.pendencias, *[c.pendencias for c in classif], conf.pendencias,
     )
     divs = divergencias.linhas + div_remessa.linhas
     rastro = sorted(

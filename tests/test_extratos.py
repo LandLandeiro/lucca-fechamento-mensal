@@ -271,7 +271,7 @@ def test_nomes_da_orbe_pelo_ec(cadastro, orbe, regras):
 
 def test_total_de_pendencias(saida):
     tipos = sorted(p["tipo"] for p in _csv(saida[0], "pendencias.csv"))
-    assert len(tipos) == 16 and "IA_REPROVADA" not in tipos and "SEM_REGRA" not in tipos
+    assert len(tipos) == 15 and "IA_REPROVADA" not in tipos and "SEM_REGRA" not in tipos
     assert tipos.count("CONTESTACAO_PONTE") == 3
 
 
@@ -525,9 +525,7 @@ def test_devolucao_volta_para_a_conta_do_repasse(saida, regras):
     assert "Q-R 2" in regras["classificacao_extratos.aurora.devolucao_pix_lojista"]["aceite"]
 
 
-def test_provisao_do_mes_vira_pendencia_sem_valor(saida):
-    """D72 (Q-R 3, 'Sempre'): a provisão de folha e impostos de setembro não está no pacote → pendência sem valor."""
-    (p,) = [p for p in _csv(saida[0], "pendencias.csv") if p["tipo"] == "PROVISAO_DO_MES"]
-    assert p["id_saida"] == "PEN-PROVISAO_DO_MES-2026-09" and p["valor_brl"] == "" and p["quem_decide"] == "Helena"
-    assert p["motivo"].startswith("provisão de folha e impostos de setembro: valores fora do pacote")
-    assert p["ref_origem"].split("|") == ["L15", "L42", "L54", "L55", "L57", "L86", "L87"]  # as baixas de agosto
+def test_provisao_do_mes_fica_fora_do_fechamento(saida, regras):
+    """D78 (Q-AE 2): 'Fica fora do fechamento de vocês' — nenhuma pendência de provisão."""
+    assert not [p for p in _csv(saida[0], "pendencias.csv") if p["tipo"] == "PROVISAO_DO_MES"]
+    assert "Q-AE 2" in regras["contabil.provisao_do_mes"]["fonte"]

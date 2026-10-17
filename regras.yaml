@@ -504,14 +504,11 @@ cadastro:
     pergunta_ref: P08
 
 contabil:
-  provisao_do_mes:          # D72 (Q-R 3)
-    valor:
-      fato: "todo mês a folha e os impostos do mês ficam provisionados no fechamento; o pagamento no mês seguinte baixa a provisão"
-      pacote: "o pacote do mês não traz folha nem apuração de impostos do próprio mês: pendência para a Helena, sem valor"
-      referencia: [aurora.folha_mes_anterior, aurora.iss, aurora.inss, aurora.fgts, aurora.irrf, aurora.pis, aurora.cofins]
+  provisao_do_mes:          # D72, retirada na D78 (Q-AE 2)
+    valor: "fora do fechamento: a provisão de folha e impostos do mês é feita pela contabilidade com a Helena, com a folha e as guias (fora do pacote); o fechamento classifica o que passou nos extratos"
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 09:48 (Q-R 3): 'Sempre. Todo mês a folha e os impostos do mês ficam provisionados no fechamento, e o pagamento no mês seguinte baixa a provisão.' Pendência sem valor: decisão Lucca 17/10 (D72), nada estimado"
+    fonte: "Slack Helena 11:49 (Q-AE 2): 'Fica fora do fechamento de vocês. A provisão de setembro quem faz é a contabilidade, comigo, com a folha e as guias, e isso não está no pacote. O fechamento de vocês classifica o que passou nos extratos.' Antes (D72): pendência sem valor, pela Q-R 3"
     pergunta_ref: null
   obrigacoes_mes_anterior_fatos:
     valor: >-
