@@ -50,4 +50,28 @@ Uma sessão nova de IA, só com o case, os dados e as falas da Helena (sem `regr
 
 Onde fica cada tipo de afirmação, com as contagens: README, seção "Fato, resposta e premissa".
 
-## Checkpoint 2 · 17/10, 16:00
+## Checkpoint 2 · 17/10, 15:38
+
+Postado às 15:38 de 17/10, dentro do prazo: a organização mudou o prazo do Checkpoint 2 de 15:30 para 16:00 no canal de avisos (`#hackathon-avisos`). Texto literal:
+
+---
+
+Checkpoint 2 · Lucca Landeiro (time solo)
+
+O que já funciona
+- Fechamento completo em um comando: comissão das duas linhas, 237 divergências transação por transação, 21 notas (R$ 243.284,29), 184 lançamentos classificados e 15 pendências com motivo e quem decide. Todo número tem rastro que fecha com as linhas de origem.
+- O arquivo 06 da Orbe (ajustes tardios) entrou sem mudar código: −R$ 3.304,39 nas notas, com a regra da Helena para antes e depois da aprovação.
+- Roda em outubro: teste com um mês sintético (lojista novo, nome novo resolvido pela IA, Atlas com contrato).
+- Seu ponto 1: cada regra está marcada como fato, premissa ou resposta do financeiro (CONFIRMADO 52, ASSUMO 38, SEI 13), com a citação literal da Helena e teste.
+- Seu ponto 2: uma auditoria cega, feita por outra sessão sem o regras.yaml nem o código, escreveu as regras do zero e chegou às mesmas notas no centavo. As diferenças de regra que ela achou foram tratadas (docs/auditoria_regras).
+- Painel só de leitura (o que depende de quem e a busca de rastro) e CI verde em Windows e Linux.
+
+O que mudou no plano
+- Bridge: deixou de ser "condição não informada" e virou erro da Orbe com contrato ("o que decide é o contrato"). R$ 1.575,80 a recuperar da Orbe, somando Rota e Bridge.
+- Casa do Estudante: concessão do comercial, custo da própria Tarvo (R$ 15.396,77), sem recuperação da Orbe.
+- Entraram o painel e os rascunhos de contestação; a provisão saiu, porque fica fora do fechamento.
+- Continua fora: conciliação parcela por parcela, e as decisões da Helena viram pendência.
+
+Próximo: auditoria final, congelar às 17h e pitch.
+
+---

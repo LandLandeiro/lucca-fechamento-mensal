@@ -3,7 +3,7 @@
 > Painel atualizado ao fim de cada etapa. Última atualização: 17/10 16:10 (auditoria final docs × saída: números de "Números atuais" refeitos com o arquivo 06; clone limpo). Antes: 17/10 15:25 (painel na main; respostas Q-AI a Q-AM, D91–D96).
 
 **Nível atual:** **Alvo** (todos os 6 CSVs gerados e validados); os 184 lançamentos por REGRA (D52); IA só para nome que nenhuma regra reconhece
-**Próximo passo:** Checkpoint 2 no thread; código congelado às 17h; exports PROMPTS/01 e PROMPTS/05; entrega às 18h30.
+**Próximo passo:** código congelado às 17h; exports PROMPTS/01 e PROMPTS/05; entrega às 18h30.
 
 **Clone limpo (17/10 15:51–15:56, HEAD `1454222`):** clone do GitHub numa pasta nova, venv novo, passos do README; fechamento sem chave em ~1 s, `VALIDADOR: OK`, `saida/` idêntica byte a byte à commitada, `pytest` 303 passed em 97 s.
 
