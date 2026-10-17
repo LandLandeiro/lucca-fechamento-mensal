@@ -226,7 +226,8 @@ def test_rascunhos_de_contestacao(saida):
     assert sorted(p.name for p in pasta.glob("*.md")) == [
         "orbe_rota_global.md", "ponte_duplicata.md", "ponte_mundo_aberto.md", "ponte_spreads_negativos.md"]
     totais = {p.stem: re.search(r"total_brl=(-?\d+\.\d{2})", p.read_text(encoding="utf-8")).group(1) for p in pasta.glob("*.md")}
-    assert totais == {"orbe_rota_global": "1546.28", "ponte_mundo_aberto": "1418.85", "ponte_spreads_negativos": "-1834.05",
+    assert totais == {"orbe_rota_global": "1545.86",  # D74: recuperar = valor a devolver
+                       "ponte_mundo_aberto": "1418.85", "ponte_spreads_negativos": "-1834.05",
                       "ponte_duplicata": "821.88"}
     for nome, total in totais.items():
         assert sum(Decimal(l["valor_brl"]) for l in _csv(pasta, f"{nome}.csv")) == Decimal(total)

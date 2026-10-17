@@ -506,15 +506,18 @@ def _imprimir_resumo(r: dict, saida: Path) -> None:
     print(f"Comissão de remessa (50% do spread):    {fmt_brl(r['remessa']['total']):>16}  ({len(r['remessa']['comissoes'])} lojistas)")
     print(f"Notas fiscais a emitir:                 {fmt_brl(sum((n['valor_brl'] for n in notas), ZERO)):>16}  ({len(notas)} notas)")
     print("Taxa cobrada diferente do contrato (a Helena decide cada caso):")
-    rotulos = {  # D63: a natureza separa o que se cobra da Orbe do que só se devolve ao lojista
-        "contrato_orbe": ("checkout, a cobrar da Orbe:", "transações"),
-        "condicao_nao_informada": ("checkout, devolver sem cobrar a Orbe:", "transações"),
+    devolver = sum((d["valor_a_devolver_brl"] for d in div_c), ZERO)  # D74: toda divergência de checkout
+    recuperar = sum((d["valor_a_devolver_brl"] for d in div_c if d["natureza"] == "contrato_orbe"), ZERO)
+    print(f"  {'checkout, devolver aos lojistas:':<38}{fmt_brl(devolver):>16}  ({len(div_c)} transações)")
+    print(f"  {'  recuperar da Orbe (contrato):':<38}{fmt_brl(recuperar):>16}")
+    print(f"  {'  custo para a Tarvo (Orbe não avisada):':<38}{fmt_brl(devolver - recuperar):>16}")
+    rotulos = {  # D63: na remessa, a natureza diz o que se contesta com a Ponte
         "spread_acima_contrato": ("remessa, contestar com a Ponte:", "operações"),
         "spread_abaixo_contrato": ("remessa, cobrado a menos:", "operações"),
         "spread_negativo": ("remessa, spread negativo (vs. contrato):", "operações"),
     }
     for natureza, (rotulo, unidade) in rotulos.items():
-        sel = [d["diferenca_brl"] for d in div_c + div_r if d["natureza"] == natureza]
+        sel = [d["diferenca_brl"] for d in div_r if d["natureza"] == natureza]
         if sel:
             print(f"  {rotulo:<38}{fmt_brl(sum(sel, ZERO)):>16}  ({len(sel)} {unidade})")
     print(f"Lançamentos dos extratos: {len(r['lancamentos'])} (por regra {metodos['REGRA']}, por IA conferida "

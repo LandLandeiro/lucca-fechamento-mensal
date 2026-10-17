@@ -282,3 +282,16 @@ def test_valor_a_devolver_separado_da_diferenca_da_q_h(divs):
     assert tot == {"00520815000100": [116, Decimal("15397.42"), Decimal("15396.77")],
                    "95927868000148": [79, Decimal("1546.28"), Decimal("1545.86")],
                    "22224579000109": [5, Decimal("29.95"), Decimal("29.94")]}
+
+
+def test_devolver_e_recuperar(divs):
+    """D74 (Q-A, Q-U 4): toda divergência de checkout é devolução ao lojista; contrato_orbe também se recupera da
+    Orbe (o mesmo valor); condicao_nao_informada não. Devolver − recuperar = Casa + Bridge (Orbe não avisada)."""
+    devolver = sum(d["valor_a_devolver_brl"] for d in divs.linhas)
+    recuperar = sum(d["valor_a_devolver_brl"] for d in divs.linhas if d["natureza"] == "contrato_orbe")
+    assert (devolver, recuperar, devolver - recuperar) == (Decimal("16972.57"), Decimal("1545.86"), Decimal("15426.71"))
+    pend = {p.id_saida: p for p in divs.pendencias}
+    rota = pend["PEN-DIVERGENCIA_CHECKOUT-95927868000148"].motivo
+    assert "Devolver 1545.86 ao lojista" in rota and "recuperar o mesmo valor da Orbe" in rota and "Q-U 4" in rota
+    casa = pend["PEN-DIVERGENCIA_CHECKOUT-00520815000100"].motivo
+    assert "Devolver 15396.77 ao lojista" in casa and "nada a recuperar da Orbe" in casa

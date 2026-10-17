@@ -206,15 +206,18 @@ def _pendencias_por_lojista(res: ResultadoDivergencias, condicoes: dict[str, dic
                 if aviso:
                     fato += f". {aviso}"
             texto = (f"{nome}: {fato}. {nat['condicao_nao_informada']['citacao_fonte']}: "
-                     f"'{nat['condicao_nao_informada']['citacao']}'. Devolver {fmt_dinheiro(abs(total))} ao lojista; não "
-                     f"cobrar da Orbe e sem rascunho para a Orbe")
+                     f"'{nat['condicao_nao_informada']['citacao']}'. Devolver {fmt_dinheiro(abs(total))} ao lojista "
+                     f"(a Orbe liquida o líquido: o lojista já recebeu a menos, {cfg['liquido_fonte']}); nada a recuperar "
+                     f"da Orbe e sem rascunho para ela: custo da Tarvo por a Orbe não ter sido avisada")
             if cond is None:
                 texto += (f". Se o aviso à Orbe foi antes de alguma das {n} transações ({datas[0].strftime('%d/%m')}–"
                           f"{datas[-1].strftime('%d/%m')}), essa parte vira cobrança da Orbe. Data do aviso em aberto")
         else:
             quem = cfg["quem_decide"]
-            texto = (f"{nome}: a Orbe cobrou {fmt_dinheiro(abs(total))} {sentido} que o contrato em {n} transações. "
-                     f"{cfg['citacao_fonte']}: '{cfg['citacao']}'")
+            texto = (f"{nome}: a Orbe descontou {fmt_dinheiro(abs(total))} {sentido} que o contrato em {n} transações. "
+                     f"Devolver {fmt_dinheiro(abs(total))} ao lojista (a Orbe liquida o líquido: o lojista já recebeu a "
+                     f"menos, {cfg['liquido_fonte']}) e recuperar o mesmo valor da Orbe (rascunho em rascunhos/; o valor "
+                     f"não soma duas vezes). {cfg['citacao_fonte']}: '{cfg['citacao']}'")
         texto += ". Detalhe por transação em divergencias_taxa.csv (DIV-<id_transacao>)"
         pid = f"PEN-DIVERGENCIA_CHECKOUT-{cnpj}"
         if len({k for (c, k) in grupos if c == cnpj}) > 1:

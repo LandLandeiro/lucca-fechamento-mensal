@@ -267,6 +267,7 @@ divergencias:
       quem_decide: Helena
       citacao: "Se a Orbe cobrou a mais, a diferença volta para o lojista e eu cobro a Orbe. Isso eu decido, não vai automático."
       citacao_fonte: "Helena 20:05"
+      liquido_fonte: "Helena 10:44, Q-U 4"   # 'A Orbe já liquida o líquido ... o lojista já recebeu a menos e eu preciso devolver'
       condicao_especial: "quem decide e o texto vêm da condição (cadastro.condicoes_especiais: quem_decide_divergencia, citacao)"
     status: ASSUMO
     autor: Lucca
@@ -290,12 +291,13 @@ divergencias:
     pergunta_ref: P12
   natureza:                 # D63: coluna `natureza` de divergencias_taxa.csv (lista fechada)
     valor:
-      contrato_orbe: "checkout: a Orbe aplicou taxa diferente do contrato que ela conhecia; a Helena cobra a Orbe e devolve ao lojista (Helena 20:05)"
+      contrato_orbe: "checkout: a Orbe aplicou taxa diferente do contrato que ela conhecia; devolver ao lojista E recuperar o mesmo valor da Orbe (Helena 20:05; Q-U 4: a Orbe liquida o líquido); D74"
       condicao_nao_informada:
         definicao: >-
           checkout: a taxa contratada vem de uma condição que a Orbe não recebeu: condição especial do regras.yaml,
           ou a Orbe aplicou exatamente a taxa da linha anterior da planilha (vigência já encerrada na data).
-          Devolver ao lojista; nunca cobrar da Orbe; sem rascunho para a Orbe
+          Só devolver ao lojista (o lojista recebeu o líquido, Q-U 4); nada a recuperar da Orbe; sem rascunho para a
+          Orbe. Devolver − recuperar = este valor: o custo para a Tarvo de a Orbe não ter sido avisada (D74)
         quem_decide: "Helena + comercial"
         citacao: "A Orbe cobrou certo pela planilha, porque ninguém avisou da isenção. Não há o que cobrar da Orbe: é devolução ao lojista, pendência minha com o comercial."
         citacao_fonte: "Helena 09:44, Q-N 1"
