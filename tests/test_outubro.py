@@ -1,7 +1,7 @@
 """Ponta a ponta em outubro: o mesmo código e o mesmo regras.yaml fecham um mês novo (DADO SINTÉTICO DE TESTE).
 
 A fixture é gerada a partir de setembro por `tests/fixtures/gerar_outubro.py` (datas deslocadas um mês +
-4 novidades). Sem rede e sem chave: a IA só responde pelo cache, e em outubro nenhuma linha precisa dela.
+5 novidades). Sem rede e sem chave: a IA é um cliente mockado, e só o PIX de nome novo (Nórdica) vai para ela.
 """
 
 import csv
@@ -11,9 +11,22 @@ from decimal import Decimal
 import pytest
 
 from tarvo.__main__ import executar
+from tarvo.classificacao.por_ia import SugestaoIA
 from conftest import DADOS, RAIZ
 
-CASA, BRIDGE, EDU = "00520815000100", "22224579000109", "16181276000153"
+CASA, BRIDGE, EDU, NORDICA = "00520815000100", "22224579000109", "16181276000153", "14760206000124"
+
+
+class IAFalsa:
+    """Responde o que uma IA responderia para o nome novo: aporte da Nórdica. Nunca toca a rede."""
+
+    def __init__(self):
+        self.chamadas = []
+
+    def sugerir(self, sistema, entrada):
+        self.chamadas.append(entrada)
+        return SugestaoIA(conta_codigo="2.1.02.001", lojista_cnpj=NORDICA, justificativa="aporte da Nórdica (sigla NEI)",
+                          confianca=0.9), {"input_tokens": 1000, "output_tokens": 100}
 
 
 def _gerador():
@@ -27,7 +40,9 @@ def _gerador():
 def outubro(tmp_path_factory):
     dados = _gerador().gerar(DADOS, tmp_path_factory.mktemp("dados_outubro"))
     saida = tmp_path_factory.mktemp("saida_outubro")
-    resumo = executar(dados, saida, RAIZ / "regras.yaml")
+    ia = IAFalsa()
+    resumo = executar(dados, saida, RAIZ / "regras.yaml", cliente_ia=ia, cache_ia=tmp_path_factory.mktemp("cache_outubro"))
+    resumo["ia_falsa"] = ia
 
     def ler(nome):
         with open(saida / nome, encoding="utf-8", newline="") as f:
@@ -71,12 +86,25 @@ def test_estorno_da_bridge_usa_a_taxa_antiga(outubro):
     assert not any(d["ref_origem"] == "TX89500001" for d in ler("divergencias_taxa.csv"))
 
 
-def test_pix_da_eduabroad_por_regra_com_o_alias(outubro):
-    resumo, ler = outubro
+def test_pix_da_eduabroad_por_regra(outubro):
+    _, ler = outubro
     edu = [l for l in ler("lancamentos_classificados.csv") if "EDU ABROAD" in l["descricao"]]
     assert len(edu) == 7 and all(l["metodo"] == "REGRA" for l in edu)
     assert {l["regra_aplicada"] for l in edu if l["banco"] == "MERIDIANO"} == {"meridiano.aporte_lojista"}
-    assert not resumo["extratos"]["ia"].decisoes  # nenhuma linha foi para a IA
+
+
+def test_pix_de_nome_novo_vai_para_a_ia_e_o_codigo_prova(outubro):
+    """A IA só recebe o que nenhuma regra reconhece: o aporte com nome novo. A soma dos aportes da Nórdica
+    (4 por regra + 1 pela IA) bate com as operações dela na Ponte, então a sugestão é aceita (D42)."""
+    resumo, ler = outubro
+    assert [c["descricao"] for c in resumo["ia_falsa"].chamadas] == ["PIX RECEB NEI EDUCACAO INTERNACIONAL"]
+    (l,) = [l for l in ler("lancamentos_classificados.csv") if l["descricao"] == "PIX RECEB NEI EDUCACAO INTERNACIONAL"]
+    assert (l["metodo"], l["conta_codigo"], l["confianca"]) == ("IA", "2.1.02.001", "0.90")
+    (d,) = resumo["extratos"]["ia"].decisoes
+    assert d.aceita and any(item == "c" and ok for item, ok, _ in d.checagens)
+    (s,) = ler("sugestoes_regra.csv")
+    assert (s["tipo"], s["padrao_ou_nome"], s["lojista_cnpj"], s["status"]) == (
+        "ALIAS_LOJISTA", "NEI EDUCACAO INTERNACIONAL", NORDICA, "PROPOSTA")
 
 
 def test_ted_de_300_mil_por_regra(outubro):

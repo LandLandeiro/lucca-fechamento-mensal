@@ -591,41 +591,48 @@ classificacao_extratos:
       394.222,69 = Σ (Valor R$ + IOF) das operações da EduAbroad na Ponte; EduAbroad com vendas na Orbe no mês.
       Casa por prefixo exato em fronteira de palavra (D31), como os nomes da planilha
     pergunta_ref: null
-  lojistas_do_extrato:      # D35
-    valor: "planilha vigente ∪ nomes da Orbe dos ECs sem vínculo na planilha (identificador EC<n>)"
+  lojistas_do_extrato:      # D35, corrigida pela D52
+    valor: >-
+      planilha vigente ∪ nomes do relatório da Orbe de todos os ECs, pelo EC (nunca por semelhança): EC ligado a
+      um CNPJ → o nome vale para esse CNPJ; EC sem vínculo na planilha → identificador EC<n>
     status: ASSUMO
     autor: Lucca
     fonte: >-
-      decisão Lucca ~23h30: o repasse é devido independente do faturamento (Helena 20:24 disse 'não fatura', não
-      'não repassa'); caso: Atlas (EC 1076801732), 05a L34 e L60. Restrito aos ECs sem vínculo: os ECs já ligados
-      à planilha não ganham nomes extras (senão 'EDU ABROAD CONSULTORIA' da Orbe resolveria a EduAbroad, que fica
-      para o fluxo da IA, D37)
+      decisão Lucca ~23h30 (D35): o repasse é devido independente do faturamento (Helena 20:24 disse 'não fatura',
+      não 'não repassa'); caso: Atlas (EC 1076801732), 05a L34 e L60. Correção 17/10 (D52): a D35 restringia os
+      nomes aos ECs sem vínculo para a EduAbroad passar pela IA; um revisor independente mostrou que a regra
+      resolvia ('EDU ABROAD CONSULTORIA' é o nome da Orbe do EC 1020660828, ligado à EduAbroad na planilha);
+      restringir a regra para a IA ter trabalho foi um erro nosso. Regra primeiro, sempre
     pergunta_ref: P04
   vinculo_bancario_por_ia:  # D37, executado na E6b parte 2 (D42)
     valor: >-
-      nome do extrato sem lojista (ex.: 'EDU ABROAD CONSULTORIA'): a IA sugere o vínculo nome → CNPJ; o código confere
-      (classificacao.verificacao_ia); aceito, vale no mês como metodo=IA e vira linha ALIAS_LOJISTA em
-      sugestoes_regra.csv (PROPOSTA); o Lucca aprova e o alias vira regra no mês seguinte. Nenhum alias aplicado no mês
+      nome do extrato que nenhuma regra reconhece (nome novo, que não está na planilha nem no relatório da Orbe):
+      a IA sugere o vínculo nome → CNPJ; o código confere (classificacao.verificacao_ia); aceito, vale no mês como
+      metodo=IA e vira linha ALIAS_LOJISTA em sugestoes_regra.csv (PROPOSTA); o Lucca aprova e o alias vira regra
+      no mês seguinte. Nenhum alias aplicado no mês
     status: ASSUMO
     autor: Lucca
-    fonte: "decisão Lucca ~23h30 (H36): não criar alias agora; pedido Lucca 17/10 (E6b parte 2): sugestões para outubro"
+    fonte: "decisão Lucca ~23h30 (H36): não criar alias agora; pedido Lucca 17/10 (E6b parte 2): sugestões para outubro; D52: só para nome que nenhuma regra reconhece"
     pergunta_ref: null
 
 # ---------------------------------------------------------------------------
 # DECISÕES HUMANAS POR LINHA (não são regras): valem só para a linha exata
 # (banco, ref_origem, data, descrição e valor iguais); fora disso não se aplicam.
-# Saem com metodo HUMANO, a conta decidida e confiança vazia.
+# Saem com metodo HUMANO, a conta decidida e confiança 1.00 (decisão registrada).
+# Decisão com `substituida` é histórico: não se aplica nem gera aviso.
 # ---------------------------------------------------------------------------
 
 decisoes_humanas:
-  aurora_L28_2026_09:       # D44
+  aurora_L28_2026_09:       # D44; substituída pela regra (D52)
     valor: {banco: AURORA, ref_origem: L28, data: "2026-09-09", descricao: "PIX ENVIADO EDU ABROAD CONSULTORIA LTD", valor: "-14147.48", conta: "2.1.01.001", lojista_cnpj: "16181276000153"}
+    substituida: "substituída pela regra classificacao_extratos.aurora.repasse_lojista (nome da Orbe do EC 1020660828; correção da D35, D52)"
     status: ASSUMO
     autor: Lucca
     fonte: "decisão Lucca 17/10; evidência: SUG-001 (Σ PIX RECEB = Σ Valor+IOF da Ponte, 394.222,69) + EduAbroad com vendas na Orbe no mês"
     pergunta_ref: null
-  aurora_L69_2026_09:       # D44
+  aurora_L69_2026_09:       # D44; substituída pela regra (D52)
     valor: {banco: AURORA, ref_origem: L69, data: "2026-09-23", descricao: "PIX ENVIADO EDU ABROAD CONSULTORIA LTD", valor: "-47889.99", conta: "2.1.01.001", lojista_cnpj: "16181276000153"}
+    substituida: "substituída pela regra classificacao_extratos.aurora.repasse_lojista (nome da Orbe do EC 1020660828; correção da D35, D52)"
     status: ASSUMO
     autor: Lucca
     fonte: "decisão Lucca 17/10; evidência: SUG-001 (Σ PIX RECEB = Σ Valor+IOF da Ponte, 394.222,69) + EduAbroad com vendas na Orbe no mês"

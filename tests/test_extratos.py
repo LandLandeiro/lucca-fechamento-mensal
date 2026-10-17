@@ -146,25 +146,20 @@ def test_lado_pelo_sinal(saida):
     assert _lan(saida[0], "LAN-MERIDIANO-MRD2026090003")["contrapartida_banco"] == "1.1.01.002"
 
 
-def test_sobras_com_o_cache_commitado_da_ia(saida):
-    """E6b parte 2 (D42), resposta real em cache_ia/: os 5 aportes da EduAbroad passam na prova (Σ = Ponte) e
-    viram IA; os 2 PIX ENVIADO (a IA recusou o vínculo) têm decisão humana explícita do Lucca (D44)."""
+def test_eduabroad_por_regra_pelo_nome_da_orbe(saida):
+    """D52 (corrige a D35): 'EDU ABROAD CONSULTORIA' é o nome da Orbe do EC 1020660828, ligado à EduAbroad na
+    planilha; as 7 linhas casam por REGRA, a IA fica com 0 linhas e as decisões L28/L69 não se aplicam."""
     pasta, r = saida
     lan = {l["id_saida"]: l for l in _csv(pasta, "lancamentos_classificados.csv")}
-    humanos = sorted(k for k, l in lan.items() if l["metodo"] == "HUMANO")
-    assert humanos == ["LAN-AURORA-L28", "LAN-AURORA-L69"]
-    for h in humanos:
-        assert (lan[h]["conta_codigo"], lan[h]["confianca"], lan[h]["lado_contrapartida"]) == ("2.1.01.001", "", "D")
-        assert lan[h]["regra_aplicada"] == f"decisoes_humanas.aurora_{h[11:]}_2026_09"
-    ia = sorted(k for k, l in lan.items() if l["metodo"] == "IA")
-    assert ia == ["LAN-MERIDIANO-MRD2026090036", "LAN-MERIDIANO-MRD2026090180", "LAN-MERIDIANO-MRD2026090340",
-                  "LAN-MERIDIANO-MRD2026090484", "LAN-MERIDIANO-MRD2026090636"]
-    assert all(lan[k]["conta_codigo"] == "2.1.02.001" and Decimal(lan[k]["confianca"]) >= Decimal("0.8") for k in ia)
-    pend = {p["id_saida"] for p in _csv(pasta, "pendencias.csv")}
-    assert not any("AURORA-L28" in p or "AURORA-L69" in p for p in pend)
-    assert len(r["extratos"]["ia"].decisoes) == 5 and r["extratos"]["ia"].chamadas_api == 0  # decididas não vão à IA
-    edu = next(a for a in r["extratos"]["conf"].aportes if a["cnpj"] == "16181276000153")
-    assert edu["sobra"] == 0 and not edu["nao_conferido"]
+    assert {l["metodo"] for l in lan.values()} == {"REGRA"}
+    edu = {k: l for k, l in lan.items() if "EDU ABROAD" in l["descricao"]}
+    assert len(edu) == 7
+    assert {(l["banco"], l["regra_aplicada"], l["conta_codigo"]) for l in edu.values()} == {
+        ("AURORA", "aurora.repasse_lojista", "2.1.01.001"), ("MERIDIANO", "meridiano.aporte_lojista", "2.1.02.001")}
+    assert r["extratos"]["ia"].decisoes == []
+    assert not [a for a in r["avisos"] if "decisoes_humanas" in a.local]  # substituídas: nem aviso
+    aporte = next(a for a in r["extratos"]["conf"].aportes if a["cnpj"] == "16181276000153")
+    assert aporte["aportes"] == aporte["operacoes"] == Decimal("394222.69") and aporte["sobra"] == 0
 
 
 def _lanc(desc, valor, ref="X1", data=date(2026, 9, 10)):
@@ -261,14 +256,17 @@ def test_validador_extratos_recusa(saida, tmp_path, aurora, meridiano, plano):
     assert any("conta 4.2 não existe ou não aceita lançamento" in e for e in erros)
 
 
-def test_nomes_da_orbe_so_para_ec_sem_vinculo(cadastro, orbe, regras):
+def test_nomes_da_orbe_pelo_ec(cadastro, orbe, regras):
+    """D52: EC ligado → o nome da Orbe vale para o CNPJ do EC; EC sem vínculo (Atlas) → "EC<n>"."""
     import copy
     from tarvo.cadastro import adicionar_nomes_orbe
     cad = copy.deepcopy(cadastro)
     adicionar_nomes_orbe(cad, orbe.transacoes, regras)
-    assert set(cad.nomes_extras) == {"EC1076801732"}  # só a Atlas: os outros ECs já têm CNPJ na planilha
+    assert cad.nomes_orbe["16181276000153"] == {"EDU ABROAD CONSULTORIA", "EDUABROAD"}
+    assert cad.nomes_orbe["EC1076801732"] == {"ATLAS IDIOMAS"}
     assert lojista_por_nome_bancario(cad, "ATLAS IDIOMAS LTDA")[0] == "EC1076801732"
-    assert lojista_por_nome_bancario(cad, "EDU ABROAD CONSULTORIA LTD")[0] is None  # fica para a IA (D37)
+    assert lojista_por_nome_bancario(cad, "EDU ABROAD CONSULTORIA LTD")[0] == "16181276000153"
+    assert lojista_por_nome_bancario(cadastro, "EDU ABROAD CONSULTORIA LTD")[0] is None  # só a planilha: não casa
 
 
 def test_total_de_pendencias(saida):
@@ -301,9 +299,17 @@ def test_alias_edu_abroad_so_a_partir_de_outubro(cadastro, regras, data, banco, 
         assert r.lojista_por_lancamento[(banco, "X1")] == "16181276000153"
 
 
-def test_sugestao_aprovada_no_csv(saida):
-    (s,) = _csv(saida[0], "sugestoes_regra.csv")
-    assert (s["id_sugestao"], s["status"]) == ("SUG-001", "APROVADA") and "vigência 2026-10-01" in s["aprovacao"]
+def test_setembro_sem_sugestao_de_regra(saida):
+    """Nenhuma linha foi para a IA, então não há alias a propor (o arquivo sai só com o cabeçalho)."""
+    assert _csv(saida[0], "sugestoes_regra.csv") == []
+
+
+def _regras_com_decisao_ativa(regras):
+    """Cópia das regras com a decisão L28 sem a marca `substituida` (para testar o mecanismo)."""
+    import copy
+    r = copy.deepcopy(regras)
+    del r["decisoes_humanas.aurora_L28_2026_09"]["substituida"]
+    return r
 
 
 def test_decisao_humana_so_vale_para_a_linha_exata(cadastro, regras):
@@ -314,11 +320,32 @@ def test_decisao_humana_so_vale_para_a_linha_exata(cadastro, regras):
     from tarvo.modelo import LancamentoBancario
     from datetime import date as _date
     plano = contas_lancaveis(ler_plano_contas(next(DADOS.glob("04_*"))))
+    ativa = _regras_com_decisao_ativa(regras)
     lan = LancamentoBancario("AURORA", "L28", _date(2026, 9, 9), "PIX ENVIADO EDU ABROAD CONSULTORIA LTD", Decimal("-1.00"), None, "t")
-    r = classificar_por_regra([lan], {"L28": 28}, plano, regras, cadastro, (2026, 9))
-    avisos = aplicar_decisoes_humanas([r], regras, (2026, 9))
+    r = classificar_por_regra([lan], {"L28": 28}, plano, ativa, cadastro, (2026, 9))
+    avisos = aplicar_decisoes_humanas([r], ativa, (2026, 9))
     assert r.linhas[0]["conta_codigo"] == "" and r.sem_regra
     assert any("aurora_L28_2026_09" in a for a in avisos)
+    # a linha exata recebe a decisão (HUMANO com a conta decidida)
+    lan = LancamentoBancario("AURORA", "L28", _date(2026, 9, 9), "PIX ENVIADO EDU ABROAD CONSULTORIA LTD", Decimal("-14147.48"), None, "t")
+    r = classificar_por_regra([lan], {"L28": 28}, plano, ativa, cadastro, (2026, 9))
+    assert aplicar_decisoes_humanas([r], ativa, (2026, 9)) == []
+    assert (r.linhas[0]["metodo"], r.linhas[0]["conta_codigo"]) == ("HUMANO", "2.1.01.001")
+
+
+def test_decisao_substituida_nao_se_aplica_nem_avisa(cadastro, regras):
+    """D52: L28/L69 ficam no regras.yaml como histórico ('substituída pela regra')."""
+    from tarvo.classificacao.decisoes import aplicar_decisoes_humanas
+    from tarvo.classificacao.por_regra import classificar_por_regra
+    from tarvo.leitores.plano_contas import contas_lancaveis, ler_plano_contas
+    from tarvo.modelo import LancamentoBancario
+    from datetime import date as _date
+    assert "substituída pela regra" in regras["decisoes_humanas.aurora_L28_2026_09"]["substituida"]
+    plano = contas_lancaveis(ler_plano_contas(next(DADOS.glob("04_*"))))
+    lan = LancamentoBancario("AURORA", "L28", _date(2026, 9, 9), "PIX ENVIADO EDU ABROAD CONSULTORIA LTD", Decimal("-14147.48"), None, "t")
+    r = classificar_por_regra([lan], {"L28": 28}, plano, regras, cadastro, (2026, 9))  # cadastro sem nomes da Orbe
+    assert aplicar_decisoes_humanas([r], regras, (2026, 9)) == []
+    assert r.linhas[0]["metodo"] == "HUMANO" and r.linhas[0]["conta_codigo"] == ""
 
 
 def test_validador_recusa_humano_com_conta_sem_decisao(saida, tmp_path):
@@ -331,9 +358,10 @@ def test_validador_recusa_humano_com_conta_sem_decisao(saida, tmp_path):
     with open(caminho, encoding="utf-8", newline="") as f:
         linhas = list(_csvmod.reader(f, delimiter=";"))
     col = linhas[0].index("regra_aplicada")
+    col_metodo = linhas[0].index("metodo")
     for l in linhas[1:]:
-        if l[0] == "LAN-AURORA-L28":
-            l[col] = ""
+        if l[0] == "LAN-AURORA-L28":  # HUMANO com conta, sem decisão registrada
+            l[col], l[col_metodo] = "", "HUMANO"
     with open(caminho, "w", encoding="utf-8", newline="") as f:
         _csvmod.writer(f, delimiter=";", lineterminator="\n").writerows(linhas)
     from tarvo.leitores.plano_contas import contas_lancaveis, ler_plano_contas

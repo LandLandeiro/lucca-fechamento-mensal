@@ -46,3 +46,19 @@ def cadastro(taxas, regras):
 @pytest.fixture(scope="session")
 def checkout(orbe, cadastro, regras):
     return comissao_checkout(orbe.transacoes, cadastro, regras)
+
+
+def copiar_dados(destino: Path, trocas: dict[str, list[tuple[bytes, bytes]]] | None = None) -> Path:
+    """Cópia do data pack em `destino` (o `data/` original nunca muda), com trocas de bytes por arquivo
+    ({padrão glob: [(antes, depois)]}); cada `antes` tem que existir no arquivo."""
+    destino.mkdir(parents=True, exist_ok=True)
+    for src in DADOS.iterdir():
+        if src.is_file():
+            conteudo = src.read_bytes()
+            for padrao, pares in (trocas or {}).items():
+                if src.match(padrao):
+                    for antes, depois in pares:
+                        assert antes in conteudo, (src.name, antes)
+                        conteudo = conteudo.replace(antes, depois)
+            (destino / src.name).write_bytes(conteudo)
+    return destino

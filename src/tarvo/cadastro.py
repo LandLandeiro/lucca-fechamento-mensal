@@ -49,18 +49,19 @@ class Cadastro:
     por_ec: dict[str, str] = field(default_factory=dict)  # EC → CNPJ
     linhas_por_cnpj: dict[str, list[tuple[TaxaContratada, Vigencia | None]]] = field(default_factory=dict)
     avisos: list[Aviso] = field(default_factory=list)
-    # nomes de lojistas fora da aba vigente, por identificador "EC<n>" (só para achar o lojista no extrato)
-    nomes_extras: dict[str, set[str]] = field(default_factory=dict)
+    # nomes do relatório da Orbe por CNPJ (EC ligado) ou "EC<n>" (EC sem vínculo): só para achar o lojista no extrato
+    nomes_orbe: dict[str, set[str]] = field(default_factory=dict)
 
 
 def adicionar_nomes_orbe(cadastro: Cadastro, transacoes, regras: dict) -> None:
-    """D35: para os ECs da Orbe SEM vínculo com a planilha (ex.: Atlas), os nomes da Orbe entram na
-    lista de lojistas usada pelas regras de repasse/aporte do extrato, com identificador "EC<n>".
-    ECs já ligados a um CNPJ não ganham nomes extras (o vínculo deles é o da planilha)."""
+    """Os nomes do relatório da Orbe entram na lista de lojistas das regras de repasse/aporte do extrato
+    (`classificacao_extratos.lojistas_do_extrato`; D52 corrige a D35). O vínculo é o EC, nunca semelhança:
+    EC ligado a um CNPJ → o nome vale para esse CNPJ (ex.: "EDU ABROAD CONSULTORIA", EC 1020660828 →
+    EduAbroad); EC sem vínculo (ex.: Atlas) → identificador "EC<n>"."""
     valor_da_regra(regras, "classificacao_extratos.lojistas_do_extrato")
     for t in transacoes:
-        if t.cod_estabelecimento not in cadastro.por_ec:
-            cadastro.nomes_extras.setdefault(f"EC{t.cod_estabelecimento}", set()).add(t.nome_estabelecimento)
+        ident = cadastro.por_ec.get(t.cod_estabelecimento) or f"EC{t.cod_estabelecimento}"
+        cadastro.nomes_orbe.setdefault(ident, set()).add(t.nome_estabelecimento)
 
 
 def interpretar_vigencia(texto: str | None) -> Vigencia | None:
@@ -145,7 +146,7 @@ def lojista_por_nome_bancario(cadastro: Cadastro, texto: str, aliases=()) -> tup
         return None, "nome vazio"
     achados: dict[str, str] = {}
     candidatos = [(cnpj, l.lojista) for cnpj, linhas in cadastro.linhas_por_cnpj.items() for l, _ in linhas]
-    candidatos += [(ident, nome) for ident, nomes in cadastro.nomes_extras.items() for nome in sorted(nomes)]
+    candidatos += [(ident, nome) for ident, nomes in cadastro.nomes_orbe.items() for nome in sorted(nomes)]
     candidatos += list(aliases)
     for ident, nome_original in candidatos:
         nome = normalizar_nome(nome_original)

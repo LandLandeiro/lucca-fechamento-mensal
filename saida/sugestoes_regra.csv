@@ -1,2 +1,1 @@
-id_sugestao;tipo;banco;padrao_ou_nome;conta_codigo;status;regra_afetada;lojista_cnpj;lojista;qtd_lancamentos;valor_total;refs;evidencia;aprovacao
-SUG-001;ALIAS_LOJISTA;MERIDIANO;EDU ABROAD CONSULTORIA L;2.1.02.001;APROVADA;classificacao_extratos.meridiano.aporte_lojista;16181276000153;EduAbroad;5;394222.69;MRD2026090036, MRD2026090180, MRD2026090340, MRD2026090484, MRD2026090636;Σ PIX RECEB atribuídos a EduAbroad 394222.69 (regra 0.00 + IA 394222.69) = Σ (Valor R$ + IOF) das operações na Ponte 394222.69;classificacao_extratos.aliases_lojista 'EDU ABROAD CONSULTORIA', vigência 2026-10-01
+id_sugestao;tipo;banco;padrao_ou_nome;conta_codigo;status

@@ -4,7 +4,8 @@ Cada decisão vale só para a linha exata (banco, ref_origem, data, descrição 
 A linha sai com metodo HUMANO, a conta decidida, confiança vazia e `regra_aplicada` =
 `decisoes_humanas.<chave>`; a pendência SEM_REGRA dela sai da lista. Decisão da competência que
 não acha a sua linha vira aviso (nunca se aplica a outra linha). Roda antes da IA: linha
-decidida não vai para a IA.
+decidida não vai para a IA. Decisão com `substituida` (ex.: L28/L69, que a regra passou a cobrir na
+D52) é histórico: não se aplica nem gera aviso.
 """
 
 from __future__ import annotations
@@ -20,7 +21,7 @@ PREFIXO = "decisoes_humanas."
 
 def aplicar_decisoes_humanas(classif: list, regras: dict, competencia: tuple[int, int]) -> list[str]:
     """Aplica as decisões in place nos resultados de `classificar_por_regra`; devolve avisos."""
-    decisoes = {k: valor_da_regra(regras, k) for k in regras if k.startswith(PREFIXO)}
+    decisoes = {k: valor_da_regra(regras, k) for k in regras if k.startswith(PREFIXO) and not regras[k].get("substituida")}
     usadas: set[str] = set()
     for c in classif:
         for lan, motivo in list(c.sem_regra):

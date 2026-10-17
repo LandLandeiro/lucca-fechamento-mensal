@@ -7,8 +7,10 @@ cada arquivo como chega (encoding, separador, fim de linha), e acrescenta quatro
         05/09, crédito à vista, 2,59%): tem que usar a taxa antiga, pela data da venda original;
   (iii) no Meridiano, em 01/10, "TED RECEBIDA TARVO PAGAMENTOS LTDA - MESMA TITULARIDADE" de
         300.000,00 (a transferência que estava em trânsito no fim de setembro);
-  (iv)  PIX recebidos "EDU ABROAD CONSULTORIA" no Meridiano (os 5 de setembro, deslocados): em
-        outubro o alias aprovado (vigência 01/10) vale.
+  (iv)  PIX recebidos "EDU ABROAD CONSULTORIA" no Meridiano (os 5 de setembro, deslocados): casam por
+        regra pelo nome da Orbe ligado ao EC (D52);
+  (v)   um PIX com nome NOVO: o primeiro aporte da Nórdica chega como "PIX RECEB NEI EDUCACAO
+        INTERNACIONAL", que não está na planilha nem na Orbe; vai para a IA (mockada no teste).
 Os identificadores que carregam o mês são renumerados para não colidir com setembro (TX88… → TX89…,
 TX87… → TX88…, AN88… → AN89…, PC-0926 → PC-1026, MRD202609 → MRD202610). Determinístico: o .xlsx e
 o .eml saem com datas internas fixas.
@@ -43,6 +45,7 @@ VENDAS_EC_NOVO = [
     f"TX89500003;20/10/2026;{EC_NOVO};{NOME_EC_NOVO};VENDA;PIX;1;;800,00;0,89;7,12;792,88;;",
 ]
 FITID_TED_300K = "MRD2026100001"
+NOME_NOVO_ANTES, NOME_NOVO = "PIX RECEB NORDICA EDUCACAO INTERNA", "PIX RECEB NEI EDUCACAO INTERNACIONAL"
 
 
 def mais_um_mes(d: date) -> date:
@@ -105,7 +108,8 @@ def meridiano(origem: Path, destino: Path) -> None:
     texto = texto.replace("<DTEND>20261030235959", "<DTEND>20261031235959")
     texto = texto.replace("<DTASOF>20261030235959", "<DTASOF>20261031235959")
     texto = renumerar(RE_MY.sub(_my, texto))
-    nl = "\r\n" if "\r\n" in texto else "\n"
+    texto = texto.replace(NOME_NOVO_ANTES, NOME_NOVO, 1)  # (v) só o primeiro aporte da Nórdica
+    nl ="\r\n" if "\r\n" in texto else "\n"
     assert FITID_TED_300K not in texto
     ted = nl.join(["<STMTTRN>", "<TRNTYPE>CREDIT", "<DTPOSTED>20261001100000[-3:BRT]", "<TRNAMT>300000.00",
                    f"<FITID>{FITID_TED_300K}", "<CHECKNUM>300000", "<MEMO>TED RECEBIDA TARVO PAGAMENTOS LTDA - MESMA TITULARIDADE",
@@ -174,12 +178,13 @@ LEIA_ME = """# DADO SINTÉTICO DE TESTE: não é dado real da Tarvo
 
 Gerado por `tests/fixtures/gerar_outubro.py` a partir do data pack de setembro (`data/`), só para provar
 que o fechamento roda em outubro sem mudar código (`tests/test_outubro.py`). As datas foram deslocadas
-um mês (set → out), os identificadores com o mês foram renumerados, e há quatro novidades:
+um mês (set → out), os identificadores com o mês foram renumerados, e há cinco novidades:
 
 1. um EC novo (1099000001, "ESCOLA NOVA INTERCAMBIO"), sem cadastro na planilha;
 2. um estorno em 08/10 da venda TX88415459 da Bridge, de 05/09 (antes da taxa nova de 15/09);
 3. no Meridiano, em 01/10, a TED de 300.000,00 de mesma titularidade (a transferência que estava em trânsito);
-4. PIX recebidos "EDU ABROAD CONSULTORIA" (o alias aprovado vale a partir de 01/10).
+4. PIX recebidos "EDU ABROAD CONSULTORIA" (casam pelo nome da Orbe ligado ao EC);
+5. um aporte da Nórdica com nome novo ("PIX RECEB NEI EDUCACAO INTERNACIONAL"), que vai para a IA.
 
 Os valores, a planilha de taxas e o plano de contas são os de setembro. Não use estes números para nada além de teste.
 """

@@ -1,4 +1,9 @@
-"""IA nas sobras (E6b parte 2, D42): a IA sugere, o código prova. Sem rede: cliente mockado + cache em pasta temporária."""
+"""IA nas sobras (E6b parte 2, D42): a IA sugere, o código prova. Sem rede: cliente mockado + cache em pasta temporária.
+
+Em setembro nenhuma linha precisa da IA: a regra reconhece a EduAbroad pelo nome da Orbe ligado ao EC (D52).
+Aqui o caso é o que a IA existe para resolver: um nome NOVO no extrato. Numa cópia do data pack, os 7 PIX da
+EduAbroad chegam como "EDU ABROAD INTL SERVICOS", que não está na planilha, no relatório da Orbe nem nos aliases.
+"""
 
 import csv
 from decimal import Decimal
@@ -7,12 +12,15 @@ import pytest
 
 from tarvo.__main__ import executar, main
 from tarvo.classificacao.por_ia import SugestaoIA, ler_chave
-from conftest import DADOS, RAIZ
+from conftest import DADOS, RAIZ, copiar_dados
 
 EDU = "16181276000153"  # EduAbroad
 MUNDO_ABERTO = "17217888000111"
 SOBRAS = {"AURORA-L28", "AURORA-L69", "MERIDIANO-MRD2026090036", "MERIDIANO-MRD2026090180",
           "MERIDIANO-MRD2026090340", "MERIDIANO-MRD2026090484", "MERIDIANO-MRD2026090636"}
+NOME_NOVO = "EDU ABROAD INTL SERVICOS"
+TROCAS = {"05a_*.csv": [(b"PIX ENVIADO EDU ABROAD CONSULTORIA LTD", b"PIX ENVIADO " + NOME_NOVO.encode())],
+          "05b_*.ofx": [(b"PIX RECEB EDU ABROAD CONSULTORIA L", b"PIX RECEB " + NOME_NOVO.encode())]}
 
 
 class ClienteFalso:
@@ -39,17 +47,15 @@ def _csv(pasta, nome):
         return list(csv.DictReader(f, delimiter=";"))
 
 
-def _regras_sem_decisoes(tmp_path):
-    """regras.yaml sem `decisoes_humanas` (última seção): as 7 linhas da EduAbroad voltam a ser sobras da IA."""
-    texto = (RAIZ / "regras.yaml").read_text(encoding="utf-8")
-    caminho = tmp_path / "regras_sem_decisoes.yaml"
-    caminho.write_text(texto[:texto.index("\ndecisoes_humanas:")] + "\n", encoding="utf-8")
-    return caminho
+def _dados_nome_novo(tmp_path):
+    destino = tmp_path / "dados_nome_novo"
+    return destino if destino.exists() else copiar_dados(destino, TROCAS)
 
 
 def _rodar(tmp_path, nome, cliente, cache=None):
     pasta = tmp_path / nome
-    r = executar(DADOS, pasta, _regras_sem_decisoes(tmp_path), cliente_ia=cliente, cache_ia=cache or (tmp_path / "cache"))
+    r = executar(_dados_nome_novo(tmp_path), pasta, RAIZ / "regras.yaml", cliente_ia=cliente,
+                 cache_ia=cache or (tmp_path / "cache"))
     lan = {f"{l['banco']}-{l['ref_origem']}": l for l in _csv(pasta, "lancamentos_classificados.csv")}
     pend = {p["id_saida"]: p for p in _csv(pasta, "pendencias.csv")}
     return r, pasta, lan, pend
@@ -69,11 +75,11 @@ def test_i_sugestao_valida_vira_ia_e_vai_para_o_cache(tmp_path):
     assert edu["aportes"] == edu["operacoes"] == Decimal("394222.69") and not edu["nao_conferido"]
     d = next(d for d in r["extratos"]["ia"].decisoes if d.lan.ref_origem == "MRD2026090036")
     assert any(item == "c" and ok and "394222.69 (regra 0.00 + IA 394222.69) = Σ (Valor R$ + IOF) das operações na Ponte 394222.69" in det for item, ok, det in d.checagens)
-    # aprendizado: alias proposto, não aplicado
+    # aprendizado: alias proposto (nome novo), não aplicado no mês
     sug = _csv(pasta, "sugestoes_regra.csv")
     assert {(s["tipo"], s["banco"], s["padrao_ou_nome"], s["lojista_cnpj"], s["status"]) for s in sug} == {
-        ("ALIAS_LOJISTA", "AURORA", "EDU ABROAD CONSULTORIA LTD", EDU, "APROVADA"),  # alias de outubro (D44)
-        ("ALIAS_LOJISTA", "MERIDIANO", "EDU ABROAD CONSULTORIA L", EDU, "APROVADA"),
+        ("ALIAS_LOJISTA", "AURORA", NOME_NOVO, EDU, "PROPOSTA"),
+        ("ALIAS_LOJISTA", "MERIDIANO", NOME_NOVO, EDU, "PROPOSTA"),
     }
     assert len(list((tmp_path / "cache").glob("*.json"))) == 7
     # reexecução sem cliente: tudo do cache, mesmo resultado, zero chamadas
@@ -127,7 +133,15 @@ def test_sem_chave_e_sem_cache_vira_humano_com_aviso(tmp_path):
 def test_cli_sem_ia_sai_com_zero(tmp_path):
     assert main(["--dados", str(DADOS), "--saida", str(tmp_path / "s"), "--sem-ia"]) == 0
     pend = _csv(tmp_path / "s", "pendencias.csv")
-    assert sum(1 for p in pend if p["tipo"] == "SEM_REGRA") == 5  # L28 e L69 têm decisão humana (D44)
+    assert not [p for p in pend if p["tipo"] == "SEM_REGRA"]  # setembro: tudo por regra (D52)
+
+
+def test_setembro_nao_manda_nada_para_a_ia(tmp_path):
+    """D52: regra primeiro, sempre. Com o nome da Orbe ligado ao EC, as 7 linhas da EduAbroad são REGRA."""
+    r = executar(DADOS, tmp_path / "s", RAIZ / "regras.yaml", cliente_ia=ClienteFalso(valida), cache_ia=tmp_path / "c")
+    assert r["extratos"]["ia"].decisoes == [] and r["extratos"]["ia"].chamadas_api == 0
+    lan = {f"{l['banco']}-{l['ref_origem']}": l for l in _csv(tmp_path / "s", "lancamentos_classificados.csv")}
+    assert all(lan[k]["metodo"] == "REGRA" for k in SOBRAS)
 
 
 def test_chave_vem_do_env_local_e_nunca_aparece(tmp_path, monkeypatch, capsys):

@@ -131,6 +131,7 @@ def _linha(ida, lan, conta, metodo, confianca, regra, status, conta_banco) -> di
         "descricao": lan.descricao, "valor": lan.valor, "conta_codigo": conta, "metodo": metodo,
         "confianca": confianca, "regra_aplicada": regra, "status_regra": status,
         "contrapartida_banco": conta_banco, "lado_contrapartida": lado if conta else "",
+        "sugestao_ia": "", "justificativa_ia": "",  # colunas fixas: preenchidas por por_ia quando a IA responde
     }
 
 
