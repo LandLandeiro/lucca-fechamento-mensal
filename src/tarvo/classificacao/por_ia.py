@@ -33,7 +33,7 @@ import os
 import re
 from dataclasses import dataclass, field
 from datetime import date
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Optional, Protocol
 
@@ -140,18 +140,26 @@ def obter_sugestao(
     if caminho.exists():
         try:
             dados = json.loads(caminho.read_text(encoding="utf-8"))
-            return RespostaIA(SugestaoIA.model_validate(dados["resposta"]), dados.get("uso", {}), "CACHE")
+            return RespostaIA(_em_duas_casas(SugestaoIA.model_validate(dados["resposta"])), dados.get("uso", {}), "CACHE")
         except (ValueError, KeyError) as e:
             raise ErroIA(f"cache ilegível ({caminho.name}): {e}") from e
     if cliente is None:
         raise ErroIA("sem chave da API e sem resposta em cache")
     sugestao, uso = cliente.sugerir(sistema, entrada)
+    sugestao = _em_duas_casas(sugestao)  # antes de gravar: o cache nunca guarda 0.855
     cache_dir.mkdir(parents=True, exist_ok=True)
     caminho.write_text(json.dumps({
         "prompt_versao": prompt.versao, "prompt_sha256": prompt.sha256, "modelo": modelo, "linha": entrada,
         "resposta": sugestao.model_dump(), "uso": uso, "gerado_em": date.today().isoformat(),
     }, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return RespostaIA(sugestao, uso, "API")
+
+
+def _em_duas_casas(s: SugestaoIA) -> SugestaoIA:
+    """Confiança em 2 casas (arredondamento comum), como sai no CSV: 0.855 → 0.86. Sem isso, a saída
+    recusava a fração de centavo e um cache com 3 casas quebrava toda execução seguinte."""
+    c = Decimal(str(s.confianca)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return s.model_copy(update={"confianca": float(c)})
 
 
 class ClienteAnthropic:

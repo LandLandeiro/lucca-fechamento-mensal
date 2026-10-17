@@ -154,3 +154,27 @@ def test_chave_vem_do_env_local_e_nunca_aparece(tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("TARVO_SEM_REDE", "1")
     assert ler_chave(env) is None  # testes: nunca rede
     assert "chave-de-teste-123" not in capsys.readouterr().out
+
+
+def test_confianca_com_tres_casas_e_quantizada_antes_do_cache(tmp_path):
+    """Bug (avaliação simulada): 0.855 ia para o cache e a saída recusava a fração de centavo, quebrando toda
+    execução seguinte. Agora: 2 casas antes de gravar (0.855 → 0.86), e o cache sai com 0.86."""
+    import json
+    cliente = ClienteFalso(lambda e: valida(e).model_copy(update={"confianca": 0.855}))
+    r, _, lan, _ = _rodar(tmp_path, "q", cliente)
+    assert r["erros_validacao"] == []
+    assert all(lan[k]["metodo"] == "IA" and lan[k]["confianca"] == "0.86" for k in SOBRAS)
+    assert {json.loads(p.read_text(encoding="utf-8"))["resposta"]["confianca"] for p in (tmp_path / "cache").glob("*.json")} == {0.86}
+
+
+def test_cache_antigo_com_tres_casas_e_lido_sem_erro(tmp_path):
+    """Um cache gravado antes da correção (0.857) é lido e arredondado (0.86), sem derrubar a execução."""
+    import json
+    _rodar(tmp_path, "a", ClienteFalso(valida))
+    for p in (tmp_path / "cache").glob("*.json"):
+        dados = json.loads(p.read_text(encoding="utf-8"))
+        dados["resposta"]["confianca"] = 0.857
+        p.write_text(json.dumps(dados), encoding="utf-8")
+    r, _, lan, _ = _rodar(tmp_path, "b", None)
+    assert r["erros_validacao"] == [] and r["extratos"]["ia"].chamadas_api == 0
+    assert all(lan[k]["confianca"] == "0.86" for k in SOBRAS)
