@@ -160,19 +160,10 @@ NATUREZAS = ("contrato_orbe", "condicao_nao_informada", "spread_acima_contrato",
 
 
 def _natureza_checkout(c: ComissaoTransacao, aplicada: Decimal, cadastro: Cadastro) -> str:
-    """D63 (`divergencias.natureza`): `condicao_nao_informada` quando a taxa contratada veio de condição especial
-    (a Orbe não tem como saber, Q-N 1) ou quando a Orbe aplicou exatamente a taxa da linha anterior da planilha
-    (vigência já encerrada na data: a condição nova não chegou à Orbe, Q-T 1); senão `contrato_orbe`."""
-    if c.condicao is not None:
-        return "condicao_nao_informada"
-    data = c.data_ref or c.transacao.data_movimento
-    anteriores = [(v.fim, l) for l, v in cadastro.linhas_por_cnpj.get(c.cnpj, [])
-                  if v is not None and v.fim is not None and v.fim < data]
-    if anteriores:
-        _, linha = max(anteriores, key=lambda x: x[0])
-        if linha.taxas.get(c.coluna) == aplicada:
-            return "condicao_nao_informada"
-    return "contrato_orbe"
+    """D63, corrigida pela D76 (`divergencias.natureza`): `condicao_nao_informada` só quando a taxa contratada veio
+    de uma condição especial do comercial, fora do contrato (Casa: "Quem abriu mão da receita fomos nós", Q-AA 1);
+    toda outra divergência é `contrato_orbe`, com ou sem aviso à Orbe ("O que decide é o contrato, não o aviso")."""
+    return "condicao_nao_informada" if c.condicao is not None else "contrato_orbe"
 
 
 def _pendencias_por_lojista(res: ResultadoDivergencias, condicoes: dict[str, dict | None], regras: dict) -> None:
@@ -193,25 +184,14 @@ def _pendencias_por_lojista(res: ResultadoDivergencias, condicoes: dict[str, dic
         datas = sorted(d["data"] for d in divs)
         sentido = "a mais" if total > 0 else "a menos"
         if natureza == "condicao_nao_informada":
-            quem = (cond or {}).get("quem_decide_divergencia") or nat["condicao_nao_informada"]["quem_decide"]
-            if cond is not None:
-                vig = cond["vigencia"]
-                fato = (f"o contrato tem condição especial ({cond.get('descricao', 'regras.yaml')}, {vig['inicio']} a "
-                        f"{vig['fim']}) e a Orbe cobrou {fmt_dinheiro(total)} em {n} transações. "
-                        f"{cond.get('citacao_fonte', 'regras.yaml')}: '{cond.get('citacao', '')}'")
-            else:
-                fato = (f"a planilha tem taxa nova e a Orbe aplicou a taxa anterior em {n} transações "
-                        f"({datas[0].isoformat()} a {datas[-1].isoformat()}), cobrando {fmt_dinheiro(total)} {sentido}")
-                aviso = nat["condicao_nao_informada"].get("avisos_conhecidos", {}).get(cnpj)
-                if aviso:
-                    fato += f". {aviso}"
-            texto = (f"{nome}: {fato}. {nat['condicao_nao_informada']['citacao_fonte']}: "
-                     f"'{nat['condicao_nao_informada']['citacao']}'. Devolver {fmt_dinheiro(abs(total))} ao lojista "
-                     f"(a Orbe liquida o líquido: o lojista já recebeu a menos, {cfg['liquido_fonte']}); nada a recuperar "
-                     f"da Orbe e sem rascunho para ela: custo da Tarvo por a Orbe não ter sido avisada")
-            if cond is None:
-                texto += (f". Se o aviso à Orbe foi antes de alguma das {n} transações ({datas[0].strftime('%d/%m')}–"
-                          f"{datas[-1].strftime('%d/%m')}), essa parte vira cobrança da Orbe. Data do aviso em aberto")
+            quem = cond.get("quem_decide_divergencia") or nat["condicao_nao_informada"]["quem_decide"]
+            vig = cond["vigencia"]
+            texto = (f"{nome}: o contrato tem condição especial ({cond.get('descricao', 'regras.yaml')}, {vig['inicio']} a "
+                     f"{vig['fim']}) e a Orbe cobrou {fmt_dinheiro(total)} em {n} transações. "
+                     f"{cond.get('citacao_fonte', 'regras.yaml')}: '{cond.get('citacao', '')}'. "
+                     f"{nat['condicao_nao_informada']['citacao_fonte']}: '{nat['condicao_nao_informada']['citacao']}'. "
+                     f"Devolver {fmt_dinheiro(abs(total))} ao lojista (a Orbe liquida o líquido: o lojista já recebeu a "
+                     f"menos, {cfg['liquido_fonte']}); nada a recuperar da Orbe e sem rascunho para ela: custo da Tarvo")
         else:
             quem = cfg["quem_decide"]
             texto = (f"{nome}: a Orbe descontou {fmt_dinheiro(abs(total))} {sentido} que o contrato em {n} transações. "

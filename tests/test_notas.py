@@ -224,9 +224,9 @@ def test_rascunhos_de_contestacao(saida):
     import re
     pasta = saida[0] / "rascunhos"
     assert sorted(p.name for p in pasta.glob("*.md")) == [
-        "orbe_rota_global.md", "ponte_duplicata.md", "ponte_mundo_aberto.md", "ponte_spreads_negativos.md"]
+        "orbe_escola_bridge.md", "orbe_rota_global.md", "ponte_duplicata.md", "ponte_mundo_aberto.md", "ponte_spreads_negativos.md"]
     totais = {p.stem: re.search(r"total_brl=(-?\d+\.\d{2})", p.read_text(encoding="utf-8")).group(1) for p in pasta.glob("*.md")}
-    assert totais == {"orbe_rota_global": "1545.86",  # D74: recuperar = valor a devolver
+    assert totais == {"orbe_rota_global": "1545.86", "orbe_escola_bridge": "29.94",  # D74, D76: recuperar = a devolver
                        "ponte_mundo_aberto": "1418.85", "ponte_spreads_negativos": "-1834.05",
                       "ponte_duplicata": "821.88"}
     for nome, total in totais.items():

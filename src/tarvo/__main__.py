@@ -539,7 +539,7 @@ def _imprimir_resumo(r: dict, saida: Path) -> None:
     recuperar = sum((d["valor_a_devolver_brl"] for d in div_c if d["natureza"] == "contrato_orbe"), ZERO)
     print(f"  {'checkout, devolver aos lojistas:':<38}{fmt_brl(devolver):>16}  ({len(div_c)} transações)")
     print(f"  {'  recuperar da Orbe (contrato):':<38}{fmt_brl(recuperar):>16}")
-    print(f"  {'  custo para a Tarvo (Orbe não avisada):':<38}{fmt_brl(devolver - recuperar):>16}")
+    print(f"  {'  custo para a Tarvo (condição especial):':<38}{fmt_brl(devolver - recuperar):>16}")
     rotulos = {  # D63: na remessa, a natureza diz o que se contesta com a Ponte
         "spread_acima_contrato": ("remessa, contestar com a Ponte:", "operações"),
         "spread_abaixo_contrato": ("remessa, cobrado a menos:", "operações"),

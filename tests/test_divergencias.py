@@ -127,7 +127,7 @@ def test_uma_pendencia_por_lojista_para_decidir(divs):
     assert {(k, p.valor_brl, p.quem_decide) for k, p in pend.items()} == {
         ("PEN-DIVERGENCIA_CHECKOUT-00520815000100", Decimal("15396.77"), "Helena + comercial"),  # D71: valor a devolver
         ("PEN-DIVERGENCIA_CHECKOUT-95927868000148", Decimal("1545.86"), "Helena"),
-        ("PEN-DIVERGENCIA_CHECKOUT-22224579000109", Decimal("29.94"), "Helena + comercial"),  # D63: condição não informada
+        ("PEN-DIVERGENCIA_CHECKOUT-22224579000109", Decimal("29.94"), "Helena"),  # D76: contrato (aditivo assinado)  # D63: condição não informada
     }
     casa = pend["PEN-DIVERGENCIA_CHECKOUT-00520815000100"]
     assert "O que foi cobrado eu devolvo ao lojista, junto com o comercial." in casa.motivo
@@ -199,11 +199,12 @@ def test_natureza_de_cada_divergencia(divs):
     por_lojista = {}
     for d in divs.linhas:
         por_lojista.setdefault(d["cnpj"], set()).add(d["natureza"])
-    assert por_lojista == {"00520815000100": {"condicao_nao_informada"}, "22224579000109": {"condicao_nao_informada"},
-                           "95927868000148": {"contrato_orbe"}}
+    assert por_lojista == {"00520815000100": {"condicao_nao_informada"}, "22224579000109": {"contrato_orbe"},
+                           "95927868000148": {"contrato_orbe"}}  # D76: "O que decide é o contrato, não o aviso" (Q-AA 1)
     bridge = {p.id_saida: p for p in divs.pendencias}["PEN-DIVERGENCIA_CHECKOUT-22224579000109"]
-    assert "A Bridge foi avisada alguns dias depois de 15/09" in bridge.motivo and "Não há o que cobrar da Orbe" in bridge.motivo
-    assert "Devolver 29.94 ao lojista" in bridge.motivo and "data do aviso em aberto" in bridge.motivo.lower()
+    assert "Devolver 29.94 ao lojista" in bridge.motivo and "recuperar o mesmo valor da Orbe" in bridge.motivo
+    casa = {p.id_saida: p for p in divs.pendencias}["PEN-DIVERGENCIA_CHECKOUT-00520815000100"]
+    assert "Quem abriu mão da receita fomos nós" in casa.motivo
 
 
 def test_natureza_da_remessa(divr_saida):
@@ -289,7 +290,7 @@ def test_devolver_e_recuperar(divs):
     Orbe (o mesmo valor); condicao_nao_informada não. Devolver − recuperar = Casa + Bridge (Orbe não avisada)."""
     devolver = sum(d["valor_a_devolver_brl"] for d in divs.linhas)
     recuperar = sum(d["valor_a_devolver_brl"] for d in divs.linhas if d["natureza"] == "contrato_orbe")
-    assert (devolver, recuperar, devolver - recuperar) == (Decimal("16972.57"), Decimal("1545.86"), Decimal("15426.71"))
+    assert (devolver, recuperar, devolver - recuperar) == (Decimal("16972.57"), Decimal("1575.80"), Decimal("15396.77"))
     pend = {p.id_saida: p for p in divs.pendencias}
     rota = pend["PEN-DIVERGENCIA_CHECKOUT-95927868000148"].motivo
     assert "Devolver 1545.86 ao lojista" in rota and "recuperar o mesmo valor da Orbe" in rota and "Q-U 4" in rota

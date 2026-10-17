@@ -10,7 +10,7 @@ Todos os números abaixo saíram do fechamento de setembro (`saida/`), com a lin
 |---|---|---|---|
 | **Casa do Estudante** | O comercial zerou a tarifa de setembro a dezembro para segurar o cliente. A Orbe não soube e cobrou normalmente. Helena: *"Ninguém avisou a Orbe, então ela cobrou. O que foi cobrado eu devolvo ao lojista"* | R$ 15.397,42 cobrados a mais em 116 transações (a devolver: R$ 15.396,77) | `divergencias_taxa.csv`, ex.: `DIV-AN88445802` (contrato 0%, Orbe 2,1%, R$ 1.206,58) |
 | **Rota Global** | A partir de 12/09 a Orbe passou a cobrar +0,50 ponto (ex.: 3,59% → 4,09%). Helena: *"Não mudou nada no contrato da Rota este ano."* | R$ 1.546,28 a mais em 79 transações (a devolver e recuperar da Orbe: R$ 1.545,86) | `divergencias_taxa.csv`, ex.: `DIV-TX88440860` |
-| **Escola Bridge** | A planilha tem taxa nova (2,19%) a partir de 15/09; a Orbe seguiu cobrando a antiga (2,59%) até 18/09 e só aplica a nova a partir de 23/09. Helena: *"A Bridge foi avisada alguns dias depois de 15/09"* | R$ 29,95 a mais em 5 vendas (a devolver: R$ 29,94) | `divergencias_taxa.csv`, ex.: `DIV-TX88428053` |
+| **Escola Bridge** | A planilha tem taxa nova (2,19%) a partir de 15/09; a Orbe seguiu cobrando a antiga (2,59%) até 18/09 e só aplica a nova a partir de 23/09. Helena: *"A Bridge foi avisada alguns dias depois de 15/09"* | R$ 29,95 a mais em 5 vendas (a devolver e recuperar da Orbe: R$ 29,94; há aditivo assinado) | `divergencias_taxa.csv`, ex.: `DIV-TX88428053` |
 | **Mundo Aberto** (remessa) | Helena: *"A Mundo Aberto negociou 1,20% em julho e a Ponte já devia estar aplicando"*; a Ponte seguiu em ~1,5% | R$ 1.418,85 pagos a mais pelo lojista em 23 operações; a nossa metade, R$ 709,46, fica pendente até a Ponte devolver | `divergencias_taxa.csv`, ex.: `DIV-PC-0926-0011`; `pendencias.csv`: `PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111` e `PEN-EXCESSO_REMESSA-17217888000111` |
 | **Atlas Idiomas** | Transaciona desde 10/09 sem contrato na planilha vigente (só aparece na aba antiga). Helena: *"não tenho contrato assinado dela na vigente. Não sei qual taxa vale. Não fatura a Atlas até o comercial confirmar."* Mesmo assim, a Tarvo já repassou dinheiro a ela | R$ 7.876,05 cobrados pela Orbe em 57 transações, sem nota; repasses de R$ 112.220,15 e R$ 137.081,62 | `pendencias.csv`: `PEN-SEM_CONTRATO_VIGENTE-EC1076801732`; `lancamentos_classificados.csv`: `LAN-AURORA-L34`, `LAN-AURORA-L60` |
 
@@ -32,17 +32,17 @@ Todos os números abaixo saíram do fechamento de setembro (`saida/`), com a lin
 ## O que a solução muda
 
 - **Um cadastro único de regras** (`regras.yaml`): cada regra tem valor, fonte (quem disse, quando) e, quando cabe, vigência. A condição da Casa vale de 01/09 a 31/12; o alias de um lojista vale a partir de 01/10. Quando o financeiro corrigiu o arredondamento, mudou uma linha, não o programa.
-- **A comparação automática todo mês:** cada transação é recalculada pela taxa contratada na data da venda, e toda diferença vira uma linha em `divergencias_taxa.csv`, com transação, valor e natureza. Toda divergência de checkout é devolução ao lojista, porque a Orbe liquida o líquido e o lojista já recebeu a menos (Q-U 4); só a parte em que a Orbe conhecia o contrato se recupera dela (Rota). Nada é devolvido ou cobrado sozinho; os rascunhos de contestação (`saida/rascunhos/`) saem prontos para a Helena revisar.
+- **A comparação automática todo mês:** cada transação é recalculada pela taxa contratada na data da venda, e toda diferença vira uma linha em `divergencias_taxa.csv`, com transação, valor e natureza. Toda divergência de checkout é devolução ao lojista, porque a Orbe liquida o líquido e o lojista já recebeu a menos (Q-U 4); a parte que tem contrato se recupera da Orbe, com ou sem aviso (Rota e Bridge: "O que decide é o contrato, não o aviso", Helena, Q-AA 1). Nada é devolvido ou cobrado sozinho; os rascunhos de contestação (`saida/rascunhos/`) saem prontos para a Helena revisar.
 - **Os 8 dias:** casar nome com EC e CNPJ e recalcular a comissão (os 3 dias do checkout) e classificar os extratos linha a linha (2 dias) passam a ser o programa; sobra para as pessoas o que é decisão, em `pendencias.csv`.
 - **Pendência com responsável:** o que precisa de alguém vai para `pendencias.csv`, com motivo e quem decide (Helena, comercial, analista). As divergências de checkout entram como uma pendência por lojista (Casa e Bridge com "Helena + comercial"), e a antecipação da Atlas acima do que ela vendeu vira alerta para a Helena e o comercial. Em setembro, 16 pendências.
 
-**O custo de não avisar, em setembro** (valor descontado pela Orbe − comissão contratada, transação por transação):
+**O que fica com a Tarvo, em setembro** (valor descontado pela Orbe − comissão contratada, transação por transação):
 
 | | R$ |
 |---|---:|
 | Devolver aos lojistas (Casa 15.396,77 + Rota 1.545,86 + Bridge 29,94) | 16.972,57 |
-| Recuperar da Orbe (Rota: a Orbe conhecia o contrato) | 1.545,86 |
-| **Custo para a Tarvo: devolver − recuperar** (Casa + Bridge, a Orbe não foi avisada) | **15.426,71** |
+| Recuperar da Orbe (Rota 1.545,86 + Bridge 29,94: condição contratada) | 1.575,80 |
+| **Custo para a Tarvo: devolver − recuperar** (a Casa: concessão do comercial fora do contrato, "Quem abriu mão da receita fomos nós") | **15.396,77** |
 
 ## O que a solução não resolve (precisa de processo)
 

@@ -305,18 +305,16 @@ divergencias:
     pergunta_ref: P12
   natureza:                 # D63: coluna `natureza` de divergencias_taxa.csv (lista fechada)
     valor:
-      contrato_orbe: "checkout: a Orbe aplicou taxa diferente do contrato que ela conhecia; devolver ao lojista E recuperar o mesmo valor da Orbe (Helena 20:05; Q-U 4: a Orbe liquida o líquido); D74"
+      contrato_orbe: "checkout: a Orbe aplicou taxa diferente de uma condição contratada (com ou sem aviso: 'O que decide é o contrato, não o aviso', Helena 11:37, Q-AA 1); devolver ao lojista E recuperar o mesmo valor da Orbe (Helena 20:05; Q-U 4); D74, D76"
       condicao_nao_informada:
         definicao: >-
-          checkout: a taxa contratada vem de uma condição que a Orbe não recebeu: condição especial do regras.yaml,
-          ou a Orbe aplicou exatamente a taxa da linha anterior da planilha (vigência já encerrada na data).
-          Só devolver ao lojista (o lojista recebeu o líquido, Q-U 4); nada a recuperar da Orbe; sem rascunho para a
-          Orbe. Devolver − recuperar = este valor: o custo para a Tarvo de a Orbe não ter sido avisada (D74)
+          checkout: a taxa contratada vem de uma condição especial do comercial (cadastro.condicoes_especiais), fora do
+          contrato com a Orbe. Só devolver ao lojista (o lojista recebeu o líquido, Q-U 4); nada a recuperar da Orbe;
+          sem rascunho para a Orbe. Devolver − recuperar = este valor: o custo para a Tarvo (D74). D76: a Bridge saiu
+          daqui ("O que decide é o contrato, não o aviso", Q-AA 1)
         quem_decide: "Helena + comercial"
-        citacao: "A Orbe cobrou certo pela planilha, porque ninguém avisou da isenção. Não há o que cobrar da Orbe: é devolução ao lojista, pendência minha com o comercial."
-        citacao_fonte: "Helena 09:44, Q-N 1"
-        avisos_conhecidos:   # por CNPJ: o que se sabe do aviso à Orbe
-          "22224579000109": "Helena 09:53, Q-T 1: 'A Bridge foi avisada alguns dias depois de 15/09'"
+        citacao: "A Casa é outra coisa. É uma concessão do comercial, fora do contrato, para segurar o cliente. A Orbe cobrou o que estava contratado. Quem abriu mão da receita fomos nós, então a devolução sai do nosso bolso."
+        citacao_fonte: "Helena 11:37, Q-AA 1"
       spread_acima_contrato: "remessa: o lojista pagou spread acima do contratado; a Helena contesta com a Ponte (Helena 20:48, 20:58)"
       spread_abaixo_contrato: "remessa: o lojista pagou spread abaixo do contratado (não aconteceu em setembro)"
       spread_negativo: "remessa: spread negativo; o lojista não pagou a mais, o prejuízo é da Tarvo com a Ponte (Helena 09:44, Q-O); contestação"
