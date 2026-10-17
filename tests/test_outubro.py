@@ -203,3 +203,38 @@ def test_atlas_sem_orbe_anterior_avisa_e_nao_puxa(tmp_path_factory):
                  pendencias_anteriores=RAIZ / "saida" / "pendencias.csv", sem_ia=True)
     assert r["erros_validacao"] == []
     assert any("rode com --orbe-anterior" in a.mensagem for a in r["avisos"])
+
+
+def test_ajuste_sem_a_original_entra_pelo_valor_e_vira_pendencia(tmp_path):
+    """D94 (Q-AL 2, Helena 14:10): 'Se um dia acontecer, o ajuste entra pelo valor que veio e vira pendência para eu
+    pedir a original à Orbe.' Outubro sintético + um 06 com um estorno e uma reversão de outubro cujas originais
+    (TX89999990 e AN89999991) não estão em arquivo nenhum: as duas entram na comissão da Oxford (taxa contratada da
+    data original) e cada uma vira pendência AJUSTE_SEM_ORIGINAL para a Helena."""
+    dados = _gerador().gerar(DADOS, tmp_path / "dados")
+    cab = ("id_transacao;data_movimento;cod_estabelecimento;nome_estabelecimento;tipo_lancamento;modalidade;qtd_parcelas;"
+           "bandeira;valor_bruto;taxa_aplicada_pct;valor_taxa;valor_liquido;id_referencia;data_venda_original")
+    linhas = [cab,
+              "TX89999980;30/10/2026;1000960410;OXFORD PREP CURSOS;ESTORNO;CREDITO A VISTA;1;VISA;-1000,00;2,59;-25,90;-974,10;TX89999990;05/10/2026",
+              "AN89999981;30/10/2026;1000960410;OXFORD PREP CURSOS;REVERSAO ANTECIPACAO;;;;-10000,00;2,10;-210,00;-9790,00;AN89999991;20/10/2026"]
+    (dados / "06_orbe_ajustes_tardios_out2026.csv").write_bytes(("\r\n".join(linhas) + "\r\n").encode("utf-8"))
+    saida = tmp_path / "saida"
+    base = executar(_gerador().gerar(DADOS, tmp_path / "dados_base"), tmp_path / "saida_base", RAIZ / "regras.yaml",
+                    cliente_ia=IAFalsa(), cache_ia=tmp_path / "cache_base")
+    r = executar(dados, saida, RAIZ / "regras.yaml", cliente_ia=IAFalsa(), cache_ia=tmp_path / "cache")
+    assert r["erros_validacao"] == []
+
+    def ler(pasta, nome):
+        with open(pasta / nome, encoding="utf-8", newline="") as f:
+            return list(csv.DictReader(f, delimiter=";"))
+    pend = {p["id_saida"]: p for p in ler(saida, "pendencias.csv")}
+    est, rev = pend["PEN-AJUSTE_SEM_ORIGINAL-TX89999980"], pend["PEN-AJUSTE_SEM_ORIGINAL-AN89999981"]
+    # Oxford: crédito à vista e antecipação pela planilha (−1.000 × contratada; −10.000 × 2,10% = −210,00)
+    assert (rev["valor_brl"], rev["quem_decide"]) == ("-210.00", "Helena")
+    assert est["quem_decide"] == "Helena" and Decimal(est["valor_brl"]) < 0
+    assert "Pedir a original à Orbe" in est["motivo"] and "AN89999991" in rev["motivo"]
+    oxford = "23109187000161"
+    antes = next(c for c in ler(tmp_path / "saida_base", "comissoes_por_lojista.csv") if c["cnpj"] == oxford)
+    depois = next(c for c in ler(saida, "comissoes_por_lojista.csv") if c["cnpj"] == oxford)
+    assert Decimal(depois["comissao_brl"]) - Decimal(antes["comissao_brl"]) == Decimal(est["valor_brl"]) + Decimal("-210.00")
+    assert not any(p["tipo"] == "REVERSAO_SEM_ANTECIPACAO" for p in pend.values())
+    assert base["erros_validacao"] == []

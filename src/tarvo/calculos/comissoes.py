@@ -148,8 +148,13 @@ def separar_competencia(transacoes: list[TransacaoOrbe],
     return res
 
 
-def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regras: dict) -> ResultadoCheckout:
-    """Comissão CHECKOUT por lojista, com rastro e pendências."""
+def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regras: dict,
+                      ids_ajustes: frozenset[str] = frozenset()) -> ResultadoCheckout:
+    """Comissão CHECKOUT por lojista, com rastro e pendências.
+
+    D94 (Q-AL 2): estorno ou reversão do arquivo de ajustes (`ids_ajustes`) de uma transação do mesmo mês que não está
+    em nenhum arquivo da Orbe entra pelo valor que veio (bruto da própria linha × taxa contratada da data original)
+    e vira pendência AJUSTE_SEM_ORIGINAL para a Helena pedir a original à Orbe."""
     valor_da_regra(regras, "checkout.base_comissao")
     valor_da_regra(regras, "checkout.estorno")
     modo = modo_arredondamento(valor_da_regra(regras, "checkout.arredondamento_comissao_contratada"))
@@ -202,12 +207,20 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
                            QUEM_DECIDE_FINANCEIRO)
         return cnpj
 
+    por_id = {t.ref_origem: t for t in transacoes}
+
+    def sem_original(t: TransacaoOrbe) -> bool:  # D94: ajuste do mesmo mês cuja original não veio em arquivo nenhum
+        return (t.ref_origem in ids_ajustes and t.tipo_lancamento in ("ESTORNO", "REVERSAO ANTECIPACAO")
+                and (t.id_referencia or "") not in por_id and t.data_venda_original is not None
+                and (t.data_venda_original.year, t.data_venda_original.month) == (t.data_movimento.year, t.data_movimento.month))
+
+    ajustes_sem_original: list[str] = []
     reversoes: list[TransacaoOrbe] = []
     for t in transacoes:
         if t.tipo_lancamento not in tipos:
             pendente_transacao(t, "TIPO_NAO_PREVISTO", f"tipo_lancamento {t.tipo_lancamento!r} fora de checkout.composicao_comissao")
             continue
-        if t.tipo_lancamento == "REVERSAO ANTECIPACAO":
+        if t.tipo_lancamento == "REVERSAO ANTECIPACAO" and not sem_original(t):
             reversoes.append(t)  # depende da antecipação referenciada: segunda passada
             continue
         cnpj = cnpj_da(t)
@@ -219,6 +232,9 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
                 continue
             data_ref = t.data_venda_original
             nota = f"estorno de {t.id_referencia} (venda de {data_ref.isoformat()})"
+        elif t.tipo_lancamento == "REVERSAO ANTECIPACAO":  # só chega aqui sem a antecipação original (D94)
+            data_ref = t.data_venda_original
+            nota = f"reverte {t.id_referencia} (antecipação de {data_ref.isoformat()}, fora dos arquivos)"
         else:
             data_ref = t.data_movimento
             nota = ""
@@ -233,10 +249,11 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
             continue
         com = centavos(t.valor_bruto * enc.taxa, modo)
         nota = "; ".join(x for x in (nota, enc.fonte) if x)
+        if sem_original(t):
+            ajustes_sem_original.append(t.ref_origem)
         res.por_transacao[t.ref_origem] = ComissaoTransacao(t, cnpj, enc.taxa, com, nota, enc.fonte, enc.condicao,
                                                             coluna, data_ref)
 
-    por_id = {t.ref_origem: t for t in transacoes}
     for t in reversoes:
         ref = t.id_referencia
         original = por_id.get(ref) if ref else None
@@ -256,6 +273,18 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
 
     _marcar_estornadas(res)
     _agregar(res, cadastro)
+    for ref in ajustes_sem_original:  # D94: a comissão já conta; a pendência é para pedir a original
+        c = res.por_transacao[ref]
+        t = c.transacao
+        pid = f"PEN-AJUSTE_SEM_ORIGINAL-{ref}"
+        res.pendencias.append(Pendencia(
+            pid, "AJUSTE_SEM_ORIGINAL", ref, c.comissao,
+            f"{t.tipo_lancamento} {ref} do arquivo de ajustes ({t.nome_estabelecimento}) referencia {t.id_referencia}, que não "
+            f"está em nenhum arquivo da Orbe recebido: entrou pelo valor que veio (comissão {c.comissao}, já no total do "
+            f"lojista). Pedir a original à Orbe. Helena 14:10 (Q-AL 2): 'o ajuste entra pelo valor que veio e vira "
+            f"pendência para eu pedir a original à Orbe.'", "Helena",
+        ))
+        res.rastro.append(_linha_rastro(pid, t, c.comissao, c.taxa_contratada, c.nota))
     for pid, g in grupos.items():
         valor = sum((x.valor_taxa for x in g["itens"]), Decimal("0"))
         refs = ", ".join(x.ref_origem for x in g["itens"]) if len(g["itens"]) <= 3 else f"{len(g['itens'])} transações"

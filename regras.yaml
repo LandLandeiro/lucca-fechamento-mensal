@@ -38,6 +38,15 @@ orbe:
     aprovado_por: "Helena"   # Q-S: regra de fechamento = Helena
     fonte: "Slack Helena 13:34 (Q-AJ 1): 'Se chega antes de eu aprovar o fechamento, entra no mês do movimento, como agora. Se chegar depois da aprovação, entra no mês seguinte.' A opção da linha de comando é decisão Lucca 17/10 (D91)"
     pergunta_ref: P40
+  ajuste_sem_original:      # D94
+    valor: >-
+      estorno ou reversão do arquivo de ajustes de uma transação do mesmo mês que não está em nenhum arquivo da Orbe:
+      entra pelo valor que veio (bruto da linha × taxa contratada da data original, na comissão do lojista) e vira
+      pendência AJUSTE_SEM_ORIGINAL para a Helena pedir a original à Orbe
+    status: CONFIRMADO
+    aprovado_por: "Helena"   # Q-S: regra de fechamento = Helena
+    fonte: "Slack Helena 14:10 (Q-AL 2): 'Em setembro isso não acontece: todas as referências do arquivo de ajustes estão no relatório. Se um dia acontecer, o ajuste entra pelo valor que veio e vira pendência para eu pedir a original à Orbe.'"
+    pergunta_ref: P42
   id_repetido_entre_arquivos:   # D75
     valor: "id_transacao em mais de um arquivo da Orbe (01 e 06): nenhuma das linhas conta; pendência ID_REPETIDO_ORBE para a Helena"
     status: ASSUMO

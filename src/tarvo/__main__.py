@@ -140,7 +140,8 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     pend_ant = ler_pendencias_anteriores(pendencias_anteriores) if pendencias_anteriores else None
     orbe_ant = ler_orbe(orbe_anterior) if orbe_anterior else None
     retomadas, avisos_retomada = retomar_sem_contrato(pend_ant, orbe_ant, cadastro)  # D67 (Q-Q)
-    checkout = comissao_checkout(sep.dentro + [t for _, ts in retomadas for t in ts], cadastro, regras)
+    checkout = comissao_checkout(sep.dentro + [t for _, ts in retomadas for t in ts], cadastro, regras,
+                                 ids_ajustes=frozenset(t.ref_origem for lo in leituras_orbe[1:] for t in lo.transacoes))
     marcar_retomadas(checkout.rastro, retomadas, competencia)
     divergencias = divergencias_checkout(checkout, cadastro, regras)
     alertas = alerta_antecipacao(sep.dentro, cadastro, competencia, regras)  # D66: só avisa, não muda número
