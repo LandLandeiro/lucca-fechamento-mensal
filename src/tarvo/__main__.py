@@ -40,6 +40,7 @@ from tarvo.pendencias import (consolidar_pendencias, ler_pendencias_anteriores, 
 from tarvo.regras import RegraInvalida, RegraPendente, carregar_regras, valor_da_regra
 from tarvo.saida.escritor import escrever_saida
 from tarvo.saida.manifesto import escrever_manifesto, linhas_manifesto, registrar_execucao
+from tarvo.saida.rastro_regras import escrever_rastro_regras, linhas_rastro_regras
 from tarvo.painel import gerar_painel
 from tarvo.saida.rascunhos import gerar_rascunhos
 from tarvo.saida.validador import validar_saida
@@ -307,6 +308,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     }
     manifesto = linhas_manifesto(dados, lidos, regras_path, regras, extras_manifesto)
     escrever_manifesto(saida, manifesto)
+    escrever_rastro_regras(saida, linhas_rastro_regras(rastro, lancamentos, regras))  # D96 (Q-AM): regra de cada linha
     rascunhos = gerar_rascunhos(saida, divs, contestacao.linhas, competencia,  # D68 (Q-T 2, Q-X 1)
                                 valor_da_regra(regras, "ponte.tomador_nf_remessa")["nome"])
     refs_esperadas = {
