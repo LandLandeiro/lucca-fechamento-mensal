@@ -13,14 +13,15 @@ def test_regras_yaml_do_projeto_e_valido():
     regras = carregar_regras(RAIZ / "regras.yaml")
     assert regras["orbe.arredondamento_valor_taxa"]["status"] == "SEI"
     assert regras["ponte.tolerancia_spread_pct"]["status"] == "ASSUMO"
-    assert regras["ponte.tomador_nf_remessa"]["status"] == "ASSUMO"
+    assert regras["ponte.tomador_nf_remessa"]["status"] == "CONFIRMADO"
     assert regras["cadastro.mapeamento_ec_confirmado"]["status"] == "CONFIRMADO"
+    assert "checkout.comissao_e_valor_taxa_integral" not in regras  # removida (obsoleta desde 20:05)
 
 
 def test_regra_pendente_bloqueia_valor():
-    regras = carregar_regras(RAIZ / "regras.yaml")
+    regras = validar_regras({"g": {"r": {"valor": None, "status": "PENDENTE", "fonte": None, "pergunta_ref": None}}})
     with pytest.raises(RegraPendente):
-        valor_da_regra(regras, "remessa.spread_negativo")
+        valor_da_regra(regras, "g.r")
 
 
 def _regra(**kw):

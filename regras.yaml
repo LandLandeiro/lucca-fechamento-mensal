@@ -59,23 +59,28 @@ ponte:
   tolerancia_spread_pct:
     valor: 0.00005          # fração: 0,005 p.p.; menor diferença contratual real observada: 0,0005
     status: ASSUMO
-    fonte: "taxas da Ponte com 4 casas, ruído até 0,0016 p.p."
+    fonte: "taxas da Ponte com 4 casas, ruído até 0,0016 p.p.; a Helena aceitou critério nosso escrito com motivo (Slack Helena 20:58)"
     pergunta_ref: null
-  participacao_tarvo:
+  participacao_tarvo:       # comissão REMESSA = 50% do Spread R$ realizado
     valor: 0.50
-    status: SEI
-    fonte: "03_email corpo: 'participação de 50% (cinquenta por cento) do spread realizado'"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:48 (e 03_email corpo: 'participação de 50% (cinquenta por cento) do spread realizado')"
     pergunta_ref: null
   base_participacao:
     valor: SPREAD_REALIZADO   # coluna 'Spread R$', não 'Spread Estimado R$ (D-1)'
-    status: SEI
-    fonte: "03_email corpo: 'do spread realizado'"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:48 (e 03_email corpo: 'do spread realizado')"
     pergunta_ref: null
   tomador_nf_remessa:
-    valor: {cnpj: "75374179000146", nome: "Ponte Câmbio S.A."}
-    status: ASSUMO
-    fonte: "e-mail Ponte: 'mediante recebimento da nota fiscal de intermediação'"
-    pergunta_ref: null
+    valor:
+      cnpj: "75374179000146"
+      nome: "Ponte Câmbio S.A."
+      quantidade: "1 nota por mês"
+      valor_nota: "total da participação do mês"
+      discriminacao: "serviço + competência"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:47"
+    pergunta_ref: P03
   status_ressalva_segue_liquidacao:
     valor: true
     status: SEI
@@ -122,27 +127,34 @@ checkout:
     autor: Lucca
     fonte: "decisão Lucca 16/10 ~20h55 (D09). Base: a Orbe trunca valor_taxa (1.001 linhas só truncamento reproduz; 0 só arredondamento; 942 ambos)"
     pergunta_ref: null
-  composicao_comissao:      # quais tipo_lancamento entram (ANTECIPACAO e REVERSAO ANTECIPACAO não citadas em 20:05/20:06)
-    valor: null
-    status: PENDENTE
-    fonte: null
+  composicao_comissao:
+    valor:
+      VENDA: "entra (bruto × taxa contratada)"
+      ESTORNO: "entra, abatendo, pela taxa contratada da venda original"
+      ANTECIPACAO: "entra (mesma regra: bruto × taxa contratada de antecipação)"
+      REVERSAO ANTECIPACAO: "só anula a taxa da antecipação referenciada (id_referencia)"
+    status: CONFIRMADO
+    fonte: >-
+      Slack Helena 20:47. Verificado nos dados (16/10 ~21h): a Orbe aplica 2,10% sobre o valor_bruto da
+      própria linha de ANTECIPACAO, truncado (44 linhas: 27 só truncamento, 17 ambos, 0 só arredondamento);
+      as 6 reversões espelham bruto e taxa da antecipação referenciada. A linha de antecipação não tem
+      vínculo com as vendas antecipadas: a base disponível é o valor_bruto da linha
     pergunta_ref: null
   estorno:
     valor: "abate a comissão no mês do estorno, pela taxa contratada vigente na data da venda original; agosto não reabre"
     status: CONFIRMADO
     fonte: "Slack Helena 20:06"
     pergunta_ref: P10
-  comissao_e_valor_taxa_integral:   # premissa anterior (a Orbe não retém custo); ver base_comissao 20:05
-    valor: null
-    status: PENDENTE
-    fonte: null
-    pergunta_ref: null
 
 notas:
-  estrutura_nf_checkout:    # 1 NF por lojista com MDR + antecipação, ou separadas
-    valor: null
-    status: PENDENTE
-    fonte: "aguardando resposta à pergunta MN AI 20:26 (notas)"
+  estrutura_nf_checkout:
+    valor:
+      quantidade: "1 nota por lojista por mês"
+      valor_nota: "comissão do mês"
+      zero: "não emite"
+      negativo: "não emite; vira pendência para a Helena"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:47"
     pergunta_ref: P03
 
 divergencias:
@@ -174,29 +186,34 @@ divergencias:
 
 remessa:
   spread_negativo:
-    valor: null
-    status: PENDENTE
-    fonte: "anexo Operações R96, R141, R205, R228 (obs 'Taxa travada no pedido (D-1)'); aguardando pergunta MN AI 20:30 (spread)"
+    valor: "fora da comissão e da nota; vai para divergencias_taxa"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:48 (casos: anexo Operações R96, R141, R205, R228)"
     pergunta_ref: P01
-  spread_padrao:
-    valor: null
-    status: PENDENTE
-    fonte: "02_taxas R29 J='padrão'; R9 e R16 vazios; R32 '* spread em branco = padrão'; aguardando pergunta MN AI 20:30 (spread)"
+  spread_padrao:            # col. J 'padrão' ou em branco
+    valor: {spread_pct: 0.015, base: "PTAX"}
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:48 (casos: 02_taxas R29 J='padrão'; R9 e R16 vazios; nota R32)"
     pergunta_ref: P06
-  status_aprovado_com_ressalva:   # a operação entra na comissão? (o fato de seguir para liquidação é SEI em ponte.status_ressalva_segue_liquidacao)
-    valor: null
-    status: PENDENTE
-    fonte: "anexo: 16 operações 'APROVADO C/ RESSALVA'"
+  divergencia_spread:
+    valor: "spread aplicado ≠ contratado = divergência no valor cheio"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:58"
+    pergunta_ref: null
+  status_aprovado_com_ressalva:
+    valor: "não muda nada (tratada como APROVADO)"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:48"
     pergunta_ref: null
   liquidacao_no_mes_seguinte:
-    valor: null
-    status: PENDENTE
-    fonte: "anexo: 6 operações contratadas em 30/09, liquidadas em 01/10; TED Meridiano MRD2026090688 de 30/09 as inclui"
+    valor: "competência pela data de contratação"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:48 (caso: 6 operações contratadas em 30/09, liquidadas em 01/10)"
     pergunta_ref: null
   operacao_duplicada:
-    valor: null
-    status: PENDENTE
-    fonte: "anexo R76/R77 PC-0926-0162 (obs 'reprocessada'); 05b MRD2026090550 pagou uma vez (faltam R$ 55.811,47)"
+    valor: "número da operação é único: conta uma vez"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:48 (caso: anexo R76/R77 PC-0926-0162; 05b MRD2026090550 pagou uma vez)"
     pergunta_ref: null
   arredondamento_participacao:  # meio centavo no 50%: por operação ou no total do lojista
     valor: null
@@ -219,26 +236,46 @@ cadastro:
     fonte: "Slack Helena 20:24 ('Não fatura a Atlas até o comercial confirmar')"
     pergunta_ref: P04
   condicao_especial_casa_do_estudante:
-    valor: null
-    status: PENDENTE
-    fonte: "02_taxas comentário A13, obs R13; perguntado 20:36"
+    valor:
+      cnpj: "00520815000100"
+      taxa_contratada: {MDR: 0, ANTECIPACAO: 0}   # todas as colunas de MDR (débito, crédito, parcelado, Pix) e antecipação
+      vigencia: {inicio: 2026-09-01, fim: 2026-12-31}
+      remessa: "normal (spread da planilha)"
+      cobrado_pela_orbe: "tudo é divergência"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:49 (planilha: comentário A13, obs R13)"
     pergunta_ref: P07
   renegociacao_rota_global:
-    valor: null
-    status: PENDENTE
-    fonte: "01_orbe +0,50 p.p. desde 12/09 (ex.: L1056 TX88428676 4,09% × 3,59%); 02_taxas R10; perguntado 20:36"
+    valor: "contrato não mudou: os +0,50 p.p. desde 12/09 são divergência"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:49 (caso: 01_orbe L1056 TX88428676 4,09% × 3,59%; 02_taxas R10)"
     pergunta_ref: P08
 
 contabil:
-  pagamento_de_obrigacao_do_mes_anterior:   # baixa de passivo/recebível ou despesa/receita
-    valor: null
-    status: PENDENTE
-    fonte: "05a L15, L42, L54, L55, L57, L86, L87; 05b MRD2026090132; perguntado 20:36"
+  pagamento_de_obrigacao_do_mes_anterior:   # baixa de passivo provisionado (conta de contrapartida)
+    valor:
+      AURORA:
+        L15: "2.1.04.001"   # PAGTO SALARIOS - FOLHA 08/2026
+        L42: "2.1.03.003"   # PAGTO ISS SAO PAULO DAMSP 08/2026
+        L54: "2.1.04.002"   # GPS INSS 08/2026
+        L55: "2.1.04.003"   # GRF FGTS 08/2026
+        L57: "2.1.03.004"   # DEBITO DARF 0561 IRRF
+        L86: "2.1.03.001"   # DEBITO DARF 8109 PIS
+        L87: "2.1.03.002"   # DEBITO DARF 2172 COFINS
+      MERIDIANO:
+        MRD2026090132: {D: "1.1.01.002", C: "1.1.03.002"}   # TED RECEB PONTE CAMBIO SA REPASSE COMISSAO 08/2026
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:49"
     pergunta_ref: P02
-  creditos_sem_origem:      # PIX sem identificação, devolução PIX Mundo Aberto, transferência sem par no Meridiano
-    valor: null
-    status: PENDENTE
-    fonte: "05a L50 (+7.350,00), L65 (+12.400,00), L92 (−300.000,00); perguntado 20:36"
+  creditos_sem_origem:      # a Helena devolveu a decisão (20:49); decisão do Lucca
+    valor:
+      AURORA:
+        L50: {C: "1.1.09.002", pendencia: "PIX recebido sem identificação (CNPJ com DV inválido)"}
+        L65: {C: "2.1.01.001", pendencia: "motivo da devolução do PIX da Mundo Aberto"}
+        L92: {D: "1.1.09.001", nota: "cai no Meridiano em 01/10"}
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca; a Helena devolveu a decisão (Slack Helena 20:49)"
     pergunta_ref: P09
   padroes_de_descricao:     # descrição → conta (preenchido na E6, cada padrão com fonte)
     valor: null
@@ -252,11 +289,15 @@ classificacao:
       escopo: "só lançamentos que nenhuma regra de texto (contabil.padroes_de_descricao) cobre"
       contas_permitidas: "lista fechada das contas lançáveis (plano_contas.contas_lancaveis)"
       saida: "JSON validado por pydantic"
-      conferencia_no_codigo: ["conta existe", "conta é lançável", "natureza D/C coerente com o sinal do lançamento"]
+      conferencia_no_codigo: ["conta existe", "TIPO = ANALITICA", "ACEITA_LANCTO = S"]
+      lado_do_lancamento: >-
+        vem do sinal do movimento bancário: saída = crédito no banco e débito na contrapartida;
+        entrada = o inverso. A natureza (D/C) da conta NÃO é critério de rejeição
+        (pagar IRRF debita uma conta de natureza C)
       cache: "respostas em cache por hash da linha"
     status: ASSUMO
     autor: Lucca
-    fonte: "decisão Lucca 16/10 ~20h55 (D11)"
+    fonte: "decisão Lucca 16/10 ~20h55 (D11), corrigida ~21h (D12)"
     pergunta_ref: null
   limiar_confianca_ia:      # abaixo → pendência (metodo HUMANO)
     valor: 0.8
