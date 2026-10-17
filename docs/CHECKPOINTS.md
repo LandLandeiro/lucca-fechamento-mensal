@@ -36,6 +36,10 @@ Todas estão no regras.yaml; a mudança é uma linha e o validador refaz tudo.
 > Antes das 18h30: (1) confira as três premissas contra o que já foi respondido no canal e deixe explícito o que é fato, o que é premissa e o que é resposta do financeiro; (2) garanta que a conferência independente testa as regras, não só a conta, porque duas IAs partindo do mesmo `regras.yaml` erram juntas.
 > Pergunta para levar ao pitch: se uma regra estiver errada, o que na sua solução avisa a Helena antes de o lojista reclamar?
 
+### Conferência independente das regras (ponto 2 do Manuel)
+
+Uma sessão nova de IA, só com o case, os dados e as falas da Helena (sem `regras.yaml` nem código), escreveu as regras do zero e recalculou os totais; só depois comparou com a nossa solução. Resultado: notas 243.284,29, Ponte 39.543,45, devolução e lançamentos iguais no centavo; 0 diferenças altas; 7 médias, tratadas nas D84–D89 ou explicadas. Detalhe e o que fizemos com cada uma: `docs/auditoria_regras/README.md`.
+
 ### O que virou cada premissa (ponto 1 do Manuel)
 
 | Premissa do checkpoint | O que respondeu o canal | Como está hoje |

@@ -328,7 +328,8 @@ divergencias:
       decisão Lucca 17/10 (D63) sobre Q-N 1 e Q-V (Casa: separada das divergências de contrato, fora da cobrança da
       Orbe), Q-O (spread negativo é de outra natureza; pode ficar listado se estiver claro) e Q-T 1 (a Bridge foi
       avisada dias depois de 15/09; nos dados, a Orbe aplica 2,59% à vista até 18/09 e 2,19% a partir de 23/09).
-      A Bridge como condicao_nao_informada é leitura nossa: a data do aviso está em aberto (pergunta do Theo, 11:16)
+      A Bridge era condicao_nao_informada por leitura nossa; passou a contrato_orbe (D76) pela Q-AA 1 (Helena 11:37):
+      'O que decide é o contrato, não o aviso'
     pergunta_ref: null
   criterio_checkout:        # substitui a tolerância 0 (D09), removida (D27)
     valor: >-
