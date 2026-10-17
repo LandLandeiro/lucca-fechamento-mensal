@@ -14,7 +14,7 @@
 |---|---|
 | Notas a emitir | **R$ 243.284,29 em 21 notas** (20 de checkout, R$ 203.740,84; 1 para a Ponte, R$ 39.543,45), já com os 14 ajustes tardios da Orbe (arquivo 06: −R$ 3.304,39) |
 | Comissão | checkout R$ 203.735,34 (21 lojistas; a Casa fica em −5,50 e não emite nota); remessa R$ 39.543,45 (14 lojistas) |
-| Divergência de checkout | 210 transações (o estorno de venda divergente entra com valor negativo); devolver aos lojistas **R$ 16.972,57**; recuperar da Orbe **R$ 1.575,80** (Rota e Bridge: condição contratada); custo para a Tarvo **R$ 15.396,77** (Casa: concessão do comercial fora do contrato); as 118 linhas da Casa estão marcadas como isenção comercial, com natureza e motivo próprios, como a Helena autorizou (Q-AE 1: 'Se quiserem pôr as linhas também em divergências, marcadas como isenção, tudo bem') |
+| Divergência de checkout | 210 transações (o estorno de venda divergente entra com valor negativo); devolver aos lojistas **R$ 16.972,57**; recuperar da Orbe **R$ 1.575,80** (Rota e Bridge: condição contratada); custo para a Tarvo **R$ 15.396,77** (Casa: concessão do comercial fora do contrato); as 118 linhas da Casa estão marcadas pelo motivo ('Isenção comercial da Tarvo, não registrada na Orbe…'), como a Helena autorizou (Q-AE 1: 'Se quiserem pôr as linhas também em divergências, marcadas como isenção, tudo bem'); a coluna natureza mantém o rótulo técnico condicao_nao_informada, anterior à resposta da Q-AA (D76) |
 | Remessa | Mundo Aberto R$ 1.418,85 a contestar com a Ponte; 4 spreads negativos: −R$ 1.834,05 no relatório (o que aconteceu), −R$ 3.565,98 até o spread do contrato (o que se pede à Ponte); os 4 spreads negativos também aparecem em divergencias_taxa.csv com natureza spread_negativo, como a Helena permitiu (Q-O: 'desde que fique claro que é outra natureza') |
 | Lançamentos | 184 dos dois extratos, todos por regra (0 para a IA) |
 | Pendências | **15**, cada uma com valor, motivo e quem decide (Helena 10, Helena + comercial 2, analista 2, comercial 1) |
@@ -153,6 +153,7 @@ Setembro não tem linha para a IA. O outubro sintético (`tests/fixtures/outubro
 - **Sem agenda de recebíveis da Orbe**: checar a antecipação de todos os lojistas e conciliar a Orbe com o banco exige essa agenda, que não veio no pacote.
 - **Conciliação Orbe × banco parcela por parcela fica de fora** (Q-M): os créditos da Orbe no Aurora são só classificados.
 - **Dia útil só com os feriados nacionais por lei de 2026** (D59): Carnaval, Sexta-feira Santa e Corpus Christi não entram, e 2027 precisa ser acrescentado no `regras.yaml`.
+- **Rótulo da natureza nas linhas da Casa:** as 118 linhas da Casa estão marcadas pelo motivo ('Isenção comercial da Tarvo, não registrada na Orbe…'), como a Helena autorizou (Q-AE 1: 'Se quiserem pôr as linhas também em divergências, marcadas como isenção, tudo bem'); a coluna natureza mantém o rótulo técnico condicao_nao_informada, anterior à resposta da Q-AA (D76).
 
 ## Fato, resposta e premissa
 
