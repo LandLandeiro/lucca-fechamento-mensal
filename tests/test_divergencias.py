@@ -31,7 +31,8 @@ def test_venda_divergente_estornada_no_mes_lista_as_duas_com_sinal(divs):
     L1056 TX88428676: round(10.420,13 × (4,09% − 3,59%)) = 52,10; L1471 TX88446419 (estorno): −52,10 → líquido 0."""
     venda, estorno = _div(divs, "TX88428676"), _div(divs, "TX88446419")
     assert (venda["diferenca_brl"], estorno["diferenca_brl"]) == (Decimal("52.10"), Decimal("-52.10"))
-    assert estorno["direcao"] == "COBROU_A_MENOS" and "o líquido é 0" in estorno["motivo"]
+    assert estorno["direcao"] == "ESTORNO_DE_VENDA_ACIMA_DO_CONTRATO" and "o líquido é 0" in estorno["motivo"]  # D86
+    assert estorno["motivo"].startswith("estorno de venda cobrada acima do contrato (TX88428676)")
     assert estorno["liquida_com"] == "TX88428676" and venda["liquida_com"] == "TX88446419"
 
 

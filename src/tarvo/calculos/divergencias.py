@@ -108,7 +108,11 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
             aplicada = t.taxa_aplicada_pct / 100
             outros = [x.transacao.ref_origem for x in itens if x is not c]
             motivo = f"Orbe aplicou {fmt_pct(aplicada)}%; contratada {fmt_pct(c.taxa_contratada)}% ({c.fonte_taxa})"
-            if t.tipo_lancamento in ("ESTORNO", "REVERSAO ANTECIPACAO") and c is not cabeca:
+            estorno_de_acima = (t.tipo_lancamento in ("ESTORNO", "REVERSAO ANTECIPACAO") and c is not cabeca
+                                and difs[0] > 0 and d < 0)
+            if estorno_de_acima:  # D86: não é "a Orbe cobrou a menos" (Q-N 7), é o estorno de uma venda cobrada a mais
+                motivo = (f"estorno de venda cobrada acima do contrato ({cabeca_id}): " + motivo)
+            elif t.tipo_lancamento in ("ESTORNO", "REVERSAO ANTECIPACAO") and c is not cabeca:
                 motivo += f"; {t.tipo_lancamento.lower()} de {cabeca_id}"
             elif t.tipo_lancamento == "ESTORNO":
                 motivo += f"; estorno de venda de {t.data_venda_original.isoformat()} que não está no arquivo"
@@ -133,7 +137,8 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
                 "valor_taxa_orbe": t.valor_taxa,
                 # D71: o que o lojista perdeu de fato (a Orbe liquida o líquido, Q-U 4): valor cobrado − comissão contratada
                 "valor_a_devolver_brl": t.valor_taxa - c.comissao,
-                "direcao": "COBROU_A_MAIS" if d > 0 else "COBROU_A_MENOS",
+                "direcao": ("ESTORNO_DE_VENDA_ACIMA_DO_CONTRATO" if estorno_de_acima
+                            else "COBROU_A_MAIS" if d > 0 else "COBROU_A_MENOS"),
                 "liquida_com": ", ".join(outros),
                 "natureza": _natureza_checkout(c, aplicada, cadastro),
                 "motivo": motivo,

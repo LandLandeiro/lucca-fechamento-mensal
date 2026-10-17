@@ -359,7 +359,7 @@ def _imprimir_divergencias(r: dict) -> None:
         acc[2] += d["diferenca_brl"]
     for cnpj, (nome, n, total) in sorted(por_lojista.items(), key=lambda kv: (-kv[1][2], kv[0])):
         print(f"  {cnpj}  {nome[:40]:<40} {fmt_dinheiro(total):>12}  ({n} divergências)")
-    for direcao in ("COBROU_A_MAIS", "COBROU_A_MENOS"):
+    for direcao in ("COBROU_A_MAIS", "COBROU_A_MENOS", "ESTORNO_DE_VENDA_ACIMA_DO_CONTRATO"):
         sel = [d["diferenca_brl"] for d in divs if d["direcao"] == direcao]
         print(f"  {direcao:<16} {len(sel):>4} divergências  {fmt_dinheiro(sum(sel, ZERO)):>12}")
     fonte, com, div = r["conservacao"]
