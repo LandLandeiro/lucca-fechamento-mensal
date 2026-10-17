@@ -22,17 +22,17 @@ Os links "Rastro" usam `#notas?id=<ID>`, que abre a tela 4 já com a busca feita
 
 ## Mapeamento: pendência → destino do dinheiro (tela 1)
 
-O grupo sai do `tipo` da pendência e, em `DIVERGENCIA_CHECKOUT`, da `natureza`. A `natureza` é lida de `pendencias.csv`, se a coluna existir, ou das linhas de `divergencias_taxa.csv` cujo `ref_origem` está na pendência. Na main isso é a D63, com os valores `contrato_orbe` e `condicao_nao_informada`.
+O grupo sai do `tipo` da pendência e, nas divergências de checkout (`DIVERGENCIA_CHECKOUT` e, desde a D85, `DEVOLUCAO_CONCESSAO_COMERCIAL`), da `natureza`. A `natureza` é lida de `pendencias.csv`, se a coluna existir, ou das linhas de `divergencias_taxa.csv` cujo `ref_origem` está na pendência. Na main isso é a D63, com os valores `contrato_orbe` e `condicao_nao_informada`.
 
 | Grupo | Tipos | Soma no total? |
 |---|---|---|
-| Devolver ao lojista | **toda** `DIVERGENCIA_CHECKOUT`, pelo Σ `valor_a_devolver_brl` das transações dela em `divergencias_taxa.csv` (sem a coluna: `valor_brl` da pendência) | sim |
+| Devolver ao lojista | **toda** `DIVERGENCIA_CHECKOUT` e a `DEVOLUCAO_CONCESSAO_COMERCIAL` (a Casa, D85: tipo próprio, mesmo valor), pelo Σ `valor_a_devolver_brl` das transações dela em `divergencias_taxa.csv` (sem a coluna: `valor_brl` da pendência) | sim |
 | Recuperar da Orbe | a parte das `DIVERGENCIA_CHECKOUT` com natureza `contrato_orbe` (Σ `valor_a_devolver_brl` dessas linhas) | **não**: "é o mesmo valor que volta ao lojista" |
 | Repasse que voltou | `DEVOLUCAO_PIX_LOJISTA` | sim |
 | Contestar com a Ponte | `CONTESTACAO_PONTE` · `SPREAD_NEGATIVO_SEM_TRAVA` · `EXCESSO_REMESSA` | sim, exceto `EXCESSO_REMESSA` |
 | Receita parada | `SEM_CONTRATO_VIGENTE` · `NF_NEGATIVA` · `NOTA_BLOQUEADA` | sim |
 | Sem origem | `PIX_SEM_IDENTIFICACAO` · `TRANSFERENCIA_SEM_ORIGEM` · `SEM_REGRA` · `IA_REPROVADA` | sim |
-| Em trânsito | `TRANSFERENCIA_EM_TRANSITO` · `APORTE_SEM_OPERACAO` · `CONFERENCIA_REPASSE` | não |
+| Em trânsito | `TRANSFERENCIA_EM_TRANSITO` · `ACOMPANHAMENTO_APORTE` (D87; antes `APORTE_SEM_OPERACAO`) · `CONFERENCIA_REPASSE` | não |
 | Outras pendências | qualquer tipo novo (outubro não quebra) | sim |
 | (Alertas, à parte) | `ALERTA_*` | não, é informativo |
 | (fora dos grupos) | pendência sem valor (em setembro não há; a `PROVISAO_DO_MES` saiu das pendências) | aparece só no kanban |
@@ -49,7 +49,7 @@ A validar:
 
 - **`DEVOLUCAO_PIX_LOJISTA` (12.400,00, L65) saiu de "devolver ao lojista"** para um grupo próprio, "Repasse que voltou". Ela não é divergência de taxa: é dinheiro do lojista que o banco devolveu, com motivo ainda desconhecido (Q-F 4b). Se continuasse no grupo, "devolver" daria 29.372,57 e o custo para a Tarvo ficaria errado.
 - **`SEM_CONTRATO_VIGENTE`** (Atlas) entra em "receita parada" com o rótulo "taxa cobrada pela Orbe (referência); comissão a definir pelo comercial" (`ROTULO_VALOR`), na visão, no kanban e na tela 3.
-- O `APORTE_SEM_OPERACAO` da Ponte Aérea está em "em trânsito" pela Q-N 5 / Q-P 1: "dinheiro de uma remessa que sai em outubro".
+- O aporte de 18.240 da Ponte Aérea (`ACOMPANHAMENTO_APORTE` desde a D87) está em "em trânsito" pela Q-N 5 / Q-P 1: "dinheiro de uma remessa que sai em outubro".
 
 ## Premissas: de onde vem cada contagem (tela 1)
 
@@ -66,7 +66,7 @@ A ordem de avaliação é: `tipo` primeiro, depois `quem_decide`.
 | Com a {quem fecha} | `quem_decide` contém o nome de quem fecha (lido de `regras.yaml` → `divergencias.pendencia_por_lojista.valor.quem_decide`; senão, o `quem_decide` mais frequente). Também é o destino de tudo que nenhuma outra regra pega (Q-U 2: "eu confiro, decido as exceções") |
 | Com o comercial | `quem_decide` contém "comercial" e não contém quem fecha (ex.: `comercial`). "Helena + comercial" fica com a Helena, porque ela conduz: "pendência minha com o comercial" (Q-N 1) |
 | Com uma contraparte | tipo `CONTESTACAO_PONTE` ou `EXCESSO_REMESSA`, que dependem da Ponte |
-| Acompanhar | tipo `TRANSFERENCIA_EM_TRANSITO`, `CONFERENCIA_REPASSE` ou `APORTE_SEM_OPERACAO`; ou `quem_decide` com "analista"/"conferir" |
+| Acompanhar | tipo `TRANSFERENCIA_EM_TRANSITO`, `CONFERENCIA_REPASSE`, `ACOMPANHAMENTO_APORTE` ou `APORTE_SEM_OPERACAO`; ou `quem_decide` com "analista"/"conferir" |
 | Fechadas por regra | não é pendência. Um cartão por grupo do que o sistema decidiu sozinho: **um por extrato** (lançamentos com `metodo` REGRA, e um cartão "IA" se houver), listando cada regra com status, contagem e um exemplo; **um por exclusão `EXC-*`** do rastro (duplicata, spread negativo), com regra, status, fonte e exemplo; **um por condição especial** aplicada (nota do rastro `regras.yaml cadastro.condicoes_especiais[<id>]`). A chave da regra abre a busca, que mostra a fonte e os números que ela decide. Não soma ao total. Setembro: 5 cartões (Aurora 84 lançamentos em 17 regras, Meridiano 100 em 10, duplicata 1, spread negativo 4, Casa do Estudante 118 linhas) |
 
 O total de cada coluna é Σ |valor| das pendências que somam. O que não soma aparece como "+ R$ x à parte (n)", com o selo "não entra no total" no cartão.

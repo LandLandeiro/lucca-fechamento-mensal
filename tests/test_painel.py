@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from tarvo.leitores.orbe import ler_orbe
-from tarvo.painel import gerar_painel
+from tarvo.painel import TIPOS_DEVOLVER, gerar_painel
 from tarvo.painel.__main__ import main
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -166,7 +166,7 @@ def test_totais_das_colunas_e_grupos_batem_com_pendencias(painel):
     assert sum(Decimal(a["data-total"]) for a in grupos) == em_jogo
     nao_somam = {a["data-pendencia"] for a in cartoes if a["data-soma"] == "0"}
     tipos_fora = {pend[i]["tipo"] for i in nao_somam}
-    assert {"TRANSFERENCIA_EM_TRANSITO", "APORTE_SEM_OPERACAO"} & {l["tipo"] for l in pend.values()} <= tipos_fora
+    assert {"TRANSFERENCIA_EM_TRANSITO", "APORTE_SEM_OPERACAO", "ACOMPANHAMENTO_APORTE"} & {l["tipo"] for l in pend.values()} <= tipos_fora
 
 
 def test_contratado_bate_com_comissoes_divergencias_e_orbe(painel):
@@ -276,7 +276,7 @@ def test_campos_opcionais_aparecem_quando_existem(tmp_path):
     pasta = _copiar_saida(tmp_path / "saida")
     divs = _ler(pasta / "divergencias_taxa.csv")
     pend = _ler(pasta / "pendencias.csv")
-    casa = next(p for p in pend if p["tipo"] == "DIVERGENCIA_CHECKOUT" and "Ninguém avisou" in p["motivo"])
+    casa = next(p for p in pend if p["tipo"] in TIPOS_DEVOLVER and "Ninguém avisou" in p["motivo"])
     refs_casa = set(casa["ref_origem"].split("|"))
     for d in divs:
         d["natureza"] = "condicao_nao_informada" if d["ref_origem"] in refs_casa else (
@@ -316,7 +316,7 @@ def test_sem_campos_opcionais_as_secoes_somem(tmp_path):
     assert "rascunhos/" not in texto
     grupos = {a["data-grupo"]: a for a in p.com("data-grupo")}
     assert "recuperar_orbe" not in grupos  # sem natureza, nada se afirma sobre a Orbe
-    divergencias = [l for l in pend if l["tipo"] == "DIVERGENCIA_CHECKOUT"]
+    divergencias = [l for l in pend if l["tipo"] in TIPOS_DEVOLVER]
     assert Decimal(grupos["devolver_lojista"]["data-total"]) == sum(abs(Decimal(l["valor_brl"])) for l in divergencias)
 
 
@@ -335,7 +335,7 @@ def test_custo_para_a_tarvo_e_devolver_menos_recuperar(painel):
     assert Decimal(grupos["recuperar_orbe"]["data-total"]) == 0  # não soma: é o mesmo valor que volta ao lojista
     assert Decimal(grupos["recuperar_orbe"]["data-a-parte"]) == recuperar
     # as pendências de divergência carregam o mesmo valor a devolver (o kanban usa valor_brl)
-    pend = [l for l in _ler(pasta / "pendencias.csv") if l["tipo"] == "DIVERGENCIA_CHECKOUT"]
+    pend = [l for l in _ler(pasta / "pendencias.csv") if l["tipo"] in TIPOS_DEVOLVER]
     assert sum(Decimal(l["valor_brl"]) for l in pend) == devolver
     itens = [a for a in p.com("data-item", secao="visao")]
     assert {a["data-item"] for a in itens} >= {l["id_saida"] for l in pend}
@@ -412,3 +412,13 @@ def test_fim_de_linha_do_regras_e_do_hipoteses_nao_muda_o_painel(painel, tmp_pat
         gerados.append(destino.read_bytes())
     assert gerados[0] == gerados[1]
     assert gerados[0] == caminho.read_bytes()
+
+
+def test_todo_tipo_de_pendencia_da_saida_tem_destino(painel):
+    """Tipo renomeado na main (ex.: D85, D87) não cai calado em "Outras pendências": o painel tem que conhecê-lo."""
+    from tarvo.painel import GRUPO_POR_TIPO
+
+    pasta, _, _, _ = painel
+    tipos = {l["tipo"].upper() for l in _ler(pasta / "pendencias.csv")}
+    sem_destino = {t for t in tipos if t not in GRUPO_POR_TIPO and not t.startswith("ALERTA")}
+    assert not sem_destino, f"tipos sem grupo no painel: {sorted(sem_destino)}"

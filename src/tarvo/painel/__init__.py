@@ -46,8 +46,12 @@ GRUPOS = (  # (chave, rótulo, descrição)
     ("em_transito", "Em trânsito", "dinheiro que chega depois; conferir no mês seguinte"),
     ("outras", "Outras pendências", "tipo sem destino mapeado"),
 )
+# divergências de checkout que voltam ao lojista pelo valor_a_devolver_brl: as de contrato e, com tipo próprio desde a D85
+# (Q-N 1: "Deixem separado das divergências de contrato, com o valor"), a concessão do comercial
+TIPOS_DEVOLVER = frozenset(("DIVERGENCIA_CHECKOUT", "DEVOLUCAO_CONCESSAO_COMERCIAL"))
 GRUPO_POR_TIPO = {
     "DIVERGENCIA_CHECKOUT": "devolver_lojista",  # toda divergência de checkout (Q-A, Q-U 4); a natureza só decide o "recuperar"
+    "DEVOLUCAO_CONCESSAO_COMERCIAL": "devolver_lojista",  # Q-AA 1: "a devolução sai do nosso bolso"
     "DEVOLUCAO_PIX_LOJISTA": "repasse_devolvido",
     "CONTESTACAO_PONTE": "contestar_ponte",
     "EXCESSO_REMESSA": "contestar_ponte",
@@ -61,6 +65,7 @@ GRUPO_POR_TIPO = {
     "IA_REPROVADA": "sem_origem",
     "TRANSFERENCIA_EM_TRANSITO": "em_transito",
     "APORTE_SEM_OPERACAO": "em_transito",
+    "ACOMPANHAMENTO_APORTE": "em_transito",  # D87 (Q-N 5): remessa que sai no mês seguinte
     "CONFERENCIA_REPASSE": "em_transito",
 }
 # natureza (divergencias_taxa.csv, D63) que a Tarvo recupera da Orbe; o mesmo valor volta ao lojista, por isso não soma
@@ -73,6 +78,7 @@ ROTULO_VALOR = {"SEM_CONTRATO_VIGENTE": "taxa cobrada pela Orbe (referência); c
 NAO_SOMA = {
     "TRANSFERENCIA_EM_TRANSITO": "em trânsito entre contas próprias",
     "APORTE_SEM_OPERACAO": "aporte do lojista para remessa futura",
+    "ACOMPANHAMENTO_APORTE": "aporte do lojista para remessa futura",
     "CONFERENCIA_REPASSE": "já está na nota de remessa",
     "EXCESSO_REMESSA": "é a metade da Tarvo dentro do valor contestado",
 }
@@ -90,10 +96,12 @@ COLUNA_POR_TIPO = {
     "TRANSFERENCIA_EM_TRANSITO": "acompanhar",
     "CONFERENCIA_REPASSE": "acompanhar",
     "APORTE_SEM_OPERACAO": "acompanhar",
+    "ACOMPANHAMENTO_APORTE": "acompanhar",
 }
 
 TITULOS = {
     "DIVERGENCIA_CHECKOUT": "Taxa do checkout diferente do contrato",
+    "DEVOLUCAO_CONCESSAO_COMERCIAL": "Concessão do comercial: devolver ao lojista",
     "CONTESTACAO_PONTE": "Contestação com a Ponte",
     "EXCESSO_REMESSA": "Metade da Tarvo no spread cobrado a mais",
     "SEM_CONTRATO_VIGENTE": "Lojista sem contrato vigente: não fatura",
@@ -103,6 +111,7 @@ TITULOS = {
     "DEVOLUCAO_PIX_LOJISTA": "PIX de repasse devolvido",
     "TRANSFERENCIA_EM_TRANSITO": "Transferência entre contas em trânsito",
     "APORTE_SEM_OPERACAO": "Aporte de lojista sem operação de câmbio",
+    "ACOMPANHAMENTO_APORTE": "Aporte de lojista para remessa do mês seguinte",
     "CONFERENCIA_REPASSE": "Conferir o repasse da Ponte quando cair",
     "ALERTA_ANTECIPACAO": "Antecipação acima do que o lojista vendeu",
     "PROVISAO_DO_MES": "Provisão de folha e impostos do mês",
@@ -118,6 +127,7 @@ TITULO_NATUREZA = {"condicao_nao_informada": "Condição não informada à Orbe:
 # regra de cada número de saída (chave do regras.yaml); a nota do rastro, quando cita o regras.yaml, é mais específica
 REGRA_POR_TIPO_PENDENCIA = {
     "DIVERGENCIA_CHECKOUT": "divergencias.valor_a_devolver",
+    "DEVOLUCAO_CONCESSAO_COMERCIAL": "divergencias.valor_a_devolver",
     "ALERTA_ANTECIPACAO": "checkout.alerta_antecipacao",
     "PROVISAO_DO_MES": "contabil.provisao_do_mes",
     "CONTESTACAO_PONTE": "remessa.contestacao_ponte",
@@ -128,6 +138,7 @@ REGRA_POR_TIPO_PENDENCIA = {
     "CONFERENCIA_REPASSE": "notas.conferencia_repasse",
     "TRANSFERENCIA_EM_TRANSITO": "classificacao_extratos.conferencias",
     "APORTE_SEM_OPERACAO": "classificacao_extratos.conferencias",
+    "ACOMPANHAMENTO_APORTE": "classificacao_extratos.conferencias",
     "PIX_SEM_IDENTIFICACAO": "classificacao_extratos.aurora.pix_sem_identificacao",
     "DEVOLUCAO_PIX_LOJISTA": "classificacao_extratos.aurora.devolucao_pix_lojista",
     "SPREAD_NEGATIVO_SEM_TRAVA": "remessa.spread_negativo_por_observacao",
@@ -244,7 +255,7 @@ def _classificar(p: Pendencia, dona: str, natureza_por_ref: dict[str, str], nome
                  lojistas_extra: list[str]) -> None:
     tipo = p.tipo.upper()
     p.alerta = tipo.startswith("ALERTA")
-    if not p.natureza and tipo == "DIVERGENCIA_CHECKOUT":
+    if not p.natureza and tipo in TIPOS_DEVOLVER:
         vistas = sorted({natureza_por_ref[r] for r in p.refs if r in natureza_por_ref})
         p.natureza = vistas[0] if len(vistas) == 1 else ""
     p.grupo = GRUPO_POR_TIPO.get(tipo, "outras")
@@ -360,7 +371,7 @@ def carregar(saida: Path, dados: Path, regras_path: Path, hipoteses_path: Path |
             valor=_dec(l.get("valor_brl")), motivo=l.get("motivo", ""), quem_decide=l.get("quem_decide", ""),
             natureza=l.get("natureza", "") or "",
         )
-        if p.tipo.upper() == "DIVERGENCIA_CHECKOUT":
+        if p.tipo.upper() in TIPOS_DEVOLVER:
             linhas_div = [div_checkout[r] for r in p.refs if r in div_checkout]
             if tem_devolver and linhas_div:
                 p.devolver = sum((_dec(d.get("valor_a_devolver_brl")) or ZERO for d in linhas_div), ZERO)
@@ -675,7 +686,7 @@ def itens_por_grupo(pn: Painel) -> dict[str, list[tuple[Pendencia, Decimal, bool
 
 def custo_tarvo(pn: Painel) -> tuple[Decimal, Decimal, Decimal, list[Pendencia]]:
     """Custo para a Tarvo = devolver ao lojista − recuperar da Orbe (só divergências de checkout)."""
-    divs = [p for p in pn.pendencias if p.tipo.upper() == "DIVERGENCIA_CHECKOUT" and p.devolver is not None]
+    divs = [p for p in pn.pendencias if p.tipo.upper() in TIPOS_DEVOLVER and p.devolver is not None]
     devolver = sum((p.devolver for p in divs), ZERO)
     recuperar = sum((p.recuperar for p in divs), ZERO)
     return devolver, recuperar, devolver - recuperar, divs
