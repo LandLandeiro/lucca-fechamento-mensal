@@ -64,6 +64,38 @@ def id_comissao(cnpj: str, linha: str = LINHA) -> str:
 
 
 @dataclass
+class JuncaoOrbe:
+    transacoes: list[TransacaoOrbe]
+    pendencias: list[Pendencia] = field(default_factory=list)
+    rastro: list[dict] = field(default_factory=list)
+
+
+def juntar_relatorios_orbe(leituras: list) -> JuncaoOrbe:
+    """D75 (`orbe.ajustes_tardios`): o relatório da Orbe do mês e os ajustes tardios (06, opcional) formam um só conjunto de
+    transações; cada linha leva o seu arquivo no rastro. `id_transacao` repetido entre arquivos (uma correção?)
+    não conta em lugar nenhum: as linhas vão para uma pendência ID_REPETIDO_ORBE para a Helena (ASSUMO,
+    `orbe.id_repetido_entre_arquivos`; pergunta do Lucca 13:19 sem resposta)."""
+    por_id: dict[str, list[TransacaoOrbe]] = {}
+    for leitura in leituras:
+        for t in leitura.transacoes:
+            por_id.setdefault(t.ref_origem, []).append(t)
+    res = JuncaoOrbe([t for ts in por_id.values() if len({x.arquivo_origem for x in ts}) == 1 for t in ts])
+    for ref, ts in sorted(por_id.items()):
+        if len({x.arquivo_origem for x in ts}) == 1:
+            continue
+        pid = f"PEN-ID_REPETIDO_ORBE-{ref}"
+        onde = ", ".join(f"{x.arquivo_origem} linha {x.linha_arquivo}" for x in ts)
+        res.pendencias.append(Pendencia(
+            pid, "ID_REPETIDO_ORBE", ref, sum((x.valor_taxa for x in ts), Decimal("0")),
+            f"id_transacao {ref} aparece em mais de um arquivo da Orbe ({onde}): pode ser correção de uma linha. "
+            f"Nenhuma das linhas entra na comissão até a Helena dizer qual vale. valor_brl = taxa cobrada, informativo",
+            "Helena",
+        ))
+        res.rastro.extend(_linha_rastro(pid, x, x.valor_taxa, None, "id repetido entre arquivos da Orbe") for x in ts)
+    return res
+
+
+@dataclass
 class SeparacaoCompetencia:
     competencia: tuple[int, int]
     dentro: list[TransacaoOrbe]

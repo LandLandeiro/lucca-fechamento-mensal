@@ -20,6 +20,20 @@ orbe:
     status: SEI
     fonte: "01_orbe: 1.001 linhas só fecham truncando, 0 arredondando (ex.: TX88410128 5.773,57 × 3,79% = 218,818 → 218,81)"
     pergunta_ref: null
+  ajustes_tardios:          # D75
+    valor: >-
+      06_orbe_ajustes_tardios_<mês>.csv, mesmo formato do 01, é parte do relatório da Orbe do mês: lido junto, com o
+      próprio arquivo no rastro; opcional (se faltar, segue sem aviso). Cada linha passa pelas mesmas regras (estorno,
+      reversão, venda)
+    status: SEI
+    fonte: "mensagem da organização 17/10 13:10: 'A Orbe mandou os ajustes de setembro que ficaram fora do relatório ... no mesmo formato do arquivo 01 ... O fechamento entregue às 18h30 precisa considerar esse arquivo.' Opcional: decisão Lucca 17/10"
+    pergunta_ref: null
+  id_repetido_entre_arquivos:   # D75
+    valor: "id_transacao em mais de um arquivo da Orbe (01 e 06): nenhuma das linhas conta; pendência ID_REPETIDO_ORBE para a Helena"
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca 17/10 (D75); pergunta ao financeiro 13:19 (se o ajuste corrige uma linha, vale o ajuste?) sem resposta. Não acontece em setembro"
+    pergunta_ref: null
   liquido_igual_bruto_menos_taxa:
     valor: true
     status: SEI

@@ -219,6 +219,7 @@ COM-03229837000103-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443924;2
 COM-03229837000103-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443937;74.23;1908;VENDA;2759.30;2.69;planilha R14 col. 'Crédito à vista';
 COM-03229837000103-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444547;9.42;1917;VENDA;1192.79;0.79;planilha R14 col. 'Pix';
 COM-07752116000126-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411343;154.48;7;VENDA;4842.71;3.19;planilha R9 col. 'Créd. 2-6x';
+COM-07752116000126-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447225;174.81;15;VENDA;5480.00;3.19;planilha R9 col. 'Créd. 2-6x';
 COM-07752116000126-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411173;116.47;29;VENDA;3651.00;3.19;planilha R9 col. 'Créd. 2-6x';
 COM-07752116000126-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411289;53.63;53;VENDA;2070.82;2.59;planilha R9 col. 'Crédito à vista';
 COM-07752116000126-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411063;114.89;62;VENDA;3601.71;3.19;planilha R9 col. 'Créd. 2-6x';
@@ -415,6 +416,8 @@ COM-14760206000124-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0
 COM-14760206000124-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0517;310.83;218;REMESSA;;;50% de Spread R$ 621.65, status APROVADO;621.65
 COM-14760206000124-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0529;45.73;222;REMESSA;;;50% de Spread R$ 91.45, status APROVADO;91.45
 COM-14760206000124-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0540;93.99;226;REMESSA;;;50% de Spread R$ 187.97, status APROVADO C/ RESSALVA;187.97
+COM-16181276000153-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447057;-124.36;6;ESTORNO;-3898.29;3.19;estorno de TX88430977 (venda de 2026-09-18), planilha R17 col. 'Créd. 2-6x';
+COM-16181276000153-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447109;-87.65;10;ESTORNO;-2747.67;3.19;estorno de TX88428997 (venda de 2026-09-16), planilha R17 col. 'Créd. 2-6x';
 COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410056;44.92;25;VENDA;1670.01;2.69;planilha R17 col. 'Crédito à vista';
 COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410691;113.38;45;VENDA;3554.09;3.19;planilha R17 col. 'Créd. 2-6x';
 COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411155;90.48;58;VENDA;3363.53;2.69;planilha R17 col. 'Crédito à vista';
@@ -472,7 +475,7 @@ COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88429142;2
 COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88428853;71.92;1023;VENDA;2254.39;3.19;planilha R17 col. 'Créd. 2-6x';
 COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88429284;35.59;1026;VENDA;1323.23;2.69;planilha R17 col. 'Crédito à vista';
 COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88429114;75.86;1041;VENDA;2819.98;2.69;planilha R17 col. 'Crédito à vista';
-COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88428997;87.65;1045;VENDA;2747.67;3.19;planilha R17 col. 'Créd. 2-6x';
+COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88428997;87.65;1045;VENDA;2747.67;3.19;planilha R17 col. 'Créd. 2-6x', estornada em 2026-09-30 por TX88447109;
 COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88429326;14.26;1055;VENDA;530.17;2.69;planilha R17 col. 'Crédito à vista';
 COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430373;298.43;1084;VENDA;9355.15;3.19;planilha R17 col. 'Créd. 2-6x', estornada em 2026-09-22 por TX88446292;
 COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88429669;16.85;1098;VENDA;1893.75;0.89;planilha R17 col. 'Pix';
@@ -481,7 +484,7 @@ COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431666;4
 COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430971;70.70;1131;VENDA;2216.20;3.19;planilha R17 col. 'Créd. 2-6x';
 COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431121;141.30;1134;VENDA;4429.42;3.19;planilha R17 col. 'Créd. 2-6x';
 COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431511;73.19;1142;VENDA;2720.69;2.69;planilha R17 col. 'Crédito à vista';
-COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430977;124.36;1148;VENDA;3898.29;3.19;planilha R17 col. 'Créd. 2-6x';
+COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430977;124.36;1148;VENDA;3898.29;3.19;planilha R17 col. 'Créd. 2-6x', estornada em 2026-09-30 por TX88447057;
 COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431274;40.08;1151;VENDA;1490.00;2.69;planilha R17 col. 'Crédito à vista';
 COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431618;107.36;1179;VENDA;3991.25;2.69;planilha R17 col. 'Crédito à vista';
 COM-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;AN88446113;1126.01;1186;ANTECIPACAO;53619.67;2.1;planilha R17 col. 'Antecipação';
@@ -531,6 +534,7 @@ COM-16181276000153-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0
 COM-16181276000153-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0344;91.35;147;REMESSA;;;50% de Spread R$ 182.70, status APROVADO;182.70
 COM-16181276000153-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0355;189.84;151;REMESSA;;;50% de Spread R$ 379.68, status APROVADO;379.68
 COM-16181276000153-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0426;79.61;182;REMESSA;;;50% de Spread R$ 159.22, status APROVADO;159.22
+COM-17217888000111-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447030;-14.00;4;ESTORNO;-562.44;2.49;estorno de TX88438558 (venda de 2026-09-25), planilha R15 col. 'Crédito à vista';
 COM-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410886;33.15;14;VENDA;1331.35;2.49;planilha R15 col. 'Crédito à vista';
 COM-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411123;13.48;23;VENDA;541.24;2.49;planilha R15 col. 'Crédito à vista';
 COM-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410554;9.21;24;VENDA;1034.37;0.89;planilha R15 col. 'Pix';
@@ -661,7 +665,7 @@ COM-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88436837;3
 COM-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88437115;247.41;1496;VENDA;8274.59;2.99;planilha R15 col. 'Créd. 2-6x';
 COM-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88437750;50.22;1515;VENDA;2017.02;2.49;planilha R15 col. 'Crédito à vista';
 COM-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88437362;104.09;1516;VENDA;4180.27;2.49;planilha R15 col. 'Crédito à vista';
-COM-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88438558;14.00;1578;VENDA;562.44;2.49;planilha R15 col. 'Crédito à vista';
+COM-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88438558;14.00;1578;VENDA;562.44;2.49;planilha R15 col. 'Crédito à vista', estornada em 2026-09-30 por TX88447030;
 COM-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88438872;246.36;1587;VENDA;8239.52;2.99;planilha R15 col. 'Créd. 2-6x';
 COM-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88438002;187.93;1599;VENDA;4958.59;3.79;planilha R15 col. 'Créd. 7-12x';
 COM-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88438619;48.58;1607;VENDA;1950.97;2.49;planilha R15 col. 'Crédito à vista';
@@ -840,6 +844,8 @@ COM-21394880000106-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444661;2
 COM-21394880000106-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444820;38.38;1900;VENDA;1426.93;2.69;planilha R22 col. 'Crédito à vista';
 COM-21394880000106-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444038;17.52;1930;VENDA;1176.09;1.49;planilha R22 col. 'Débito';
 COM-21394880000106-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444590;182.75;1936;VENDA;4821.80;3.79;planilha R22 col. 'Créd. 7-12x';
+COM-22224579000109-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447044;-63.23;5;ESTORNO;-1982.10;3.19;estorno de TX88425142 (venda de 2026-09-13), planilha R6 col. 'Créd. 2-6x';
+COM-22224579000109-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447070;-83.05;7;ESTORNO;-2603.31;3.19;estorno de TX88424537 (venda de 2026-09-12), planilha R6 col. 'Créd. 2-6x';
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411252;123.86;11;VENDA;3882.89;3.19;planilha R6 col. 'Créd. 2-6x';
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410634;6.32;17;VENDA;709.86;0.89;planilha R6 col. 'Pix';
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410286;158.50;21;VENDA;4968.76;3.19;planilha R6 col. 'Créd. 2-6x';
@@ -879,13 +885,13 @@ COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88422860;4
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88422339;250.72;691;VENDA;7859.69;3.19;planilha R6 col. 'Créd. 2-6x';
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88422256;14.39;704;VENDA;555.69;2.59;planilha R6 col. 'Crédito à vista';
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88424307;61.34;739;VENDA;2368.21;2.59;planilha R6 col. 'Crédito à vista';
-COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88424537;83.05;754;VENDA;2603.31;3.19;planilha R6 col. 'Créd. 2-6x';
+COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88424537;83.05;754;VENDA;2603.31;3.19;planilha R6 col. 'Créd. 2-6x', estornada em 2026-09-30 por TX88447070;
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88423613;64.32;769;VENDA;2483.39;2.59;planilha R6 col. 'Crédito à vista';
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88424029;464.77;802;VENDA;12262.96;3.79;planilha R6 col. 'Créd. 7-12x';
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88425189;126.38;816;VENDA;3961.72;3.19;planilha R6 col. 'Créd. 2-6x';
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88425494;182.03;837;VENDA;5706.19;3.19;planilha R6 col. 'Créd. 2-6x';
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88425041;6.94;846;VENDA;465.89;1.49;planilha R6 col. 'Débito';
-COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88425142;63.23;849;VENDA;1982.10;3.19;planilha R6 col. 'Créd. 2-6x';
+COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88425142;63.23;849;VENDA;1982.10;3.19;planilha R6 col. 'Créd. 2-6x', estornada em 2026-09-30 por TX88447044;
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88425274;130.18;859;VENDA;5026.17;2.59;planilha R6 col. 'Crédito à vista';
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88426662;165.28;862;VENDA;4361.07;3.79;planilha R6 col. 'Créd. 7-12x';
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88425956;136.99;880;VENDA;3614.39;3.79;planilha R6 col. 'Créd. 7-12x';
@@ -948,6 +954,10 @@ COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444329;1
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443632;3.64;1931;VENDA;408.68;0.89;planilha R7 col. 'Pix';
 COM-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443575;6.16;1938;VENDA;692.31;0.89;planilha R7 col. 'Pix';
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410316;42.62;6;VENDA;1645.47;2.59;planilha R20 col. 'Crédito à vista';
+COM-23109187000161-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447087;-327.73;8;ESTORNO;-8647.36;3.79;estorno de TX88422829 (venda de 2026-09-11), planilha R20 col. 'Créd. 7-12x';
+COM-23109187000161-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447140;-61.28;11;ESTORNO;-2366.18;2.59;estorno de TX88432148 (venda de 2026-09-19), planilha R20 col. 'Crédito à vista';
+COM-23109187000161-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;AN88447152;-967.69;12;REVERSAO ANTECIPACAO;-46080.41;2.1;anula a antecipação AN88446397;
+COM-23109187000161-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;AN88447178;-875.49;13;REVERSAO ANTECIPACAO;-41690.09;2.1;anula a antecipação AN88446748;
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411115;422.69;37;VENDA;11152.65;3.79;planilha R20 col. 'Créd. 7-12x';
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444848;-83.12;39;ESTORNO;-2193.16;3.79;estorno de TX87651902 (venda de 2026-08-22), planilha R20 col. 'Créd. 7-12x';
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411203;8.81;47;VENDA;591.42;1.49;planilha R20 col. 'Débito';
@@ -989,7 +999,7 @@ COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;AN88445434;5
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88422325;44.51;664;VENDA;1440.50;3.09;planilha R20 col. 'Créd. 2-6x';
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88423218;276.65;706;VENDA;8953.12;3.09;planilha R20 col. 'Créd. 2-6x';
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88422252;103.12;717;VENDA;3337.34;3.09;planilha R20 col. 'Créd. 2-6x';
-COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88422829;327.73;719;VENDA;8647.36;3.79;planilha R20 col. 'Créd. 7-12x';
+COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88422829;327.73;719;VENDA;8647.36;3.79;planilha R20 col. 'Créd. 7-12x', estornada em 2026-09-30 por TX88447087;
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88423944;37.51;728;VENDA;1448.22;2.59;planilha R20 col. 'Crédito à vista';
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88423497;38.17;757;VENDA;1473.92;2.59;planilha R20 col. 'Crédito à vista';
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88424688;52.73;774;VENDA;1706.57;3.09;planilha R20 col. 'Créd. 2-6x';
@@ -1009,7 +1019,7 @@ COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430818;4
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88432761;29.41;1216;VENDA;1135.71;2.59;planilha R20 col. 'Crédito à vista';
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88432462;30.57;1227;VENDA;1180.35;2.59;planilha R20 col. 'Crédito à vista';
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88432493;56.64;1238;VENDA;2186.96;2.59;planilha R20 col. 'Crédito à vista';
-COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88432148;61.28;1239;VENDA;2366.18;2.59;planilha R20 col. 'Crédito à vista';
+COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88432148;61.28;1239;VENDA;2366.18;2.59;planilha R20 col. 'Crédito à vista', estornada em 2026-09-30 por TX88447140;
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88433677;5.43;1272;VENDA;364.59;1.49;planilha R20 col. 'Débito';
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88433614;127.41;1291;VENDA;4123.25;3.09;planilha R20 col. 'Créd. 2-6x';
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;AN88446265;1169.22;1339;ANTECIPACAO;55677.31;2.1;planilha R20 col. 'Antecipação';
@@ -1045,6 +1055,9 @@ COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;AN88446810;1
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444183;5.49;1919;VENDA;616.53;0.89;planilha R20 col. 'Pix';
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443668;83.85;1923;VENDA;2713.45;3.09;planilha R20 col. 'Créd. 2-6x';
 COM-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443842;321.85;1937;VENDA;8492.14;3.79;planilha R20 col. 'Créd. 7-12x';
+COM-34671260000100-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447011;-6.27;3;ESTORNO;-420.77;1.49;estorno de TX88413573 (venda de 2026-09-03), planilha R19 col. 'Débito';
+COM-34671260000100-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447093;-70.49;9;ESTORNO;-2620.34;2.69;estorno de TX88416714 (venda de 2026-09-06), planilha R19 col. 'Crédito à vista';
+COM-34671260000100-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;AN88447194;-768.25;14;REVERSAO ANTECIPACAO;-36583.37;2.1;anula a antecipação AN88446551;
 COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410990;423.24;31;VENDA;11167.32;3.79;planilha R19 col. 'Créd. 7-12x';
 COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410442;139.10;35;VENDA;4360.48;3.19;planilha R19 col. 'Créd. 2-6x';
 COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411202;115.22;55;VENDA;4283.13;2.69;planilha R19 col. 'Crédito à vista';
@@ -1057,7 +1070,7 @@ COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88412589;3
 COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411654;5.77;100;VENDA;648.05;0.89;planilha R19 col. 'Pix';
 COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411813;4.80;104;VENDA;322.37;1.49;planilha R19 col. 'Débito';
 COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411710;251.39;110;VENDA;6633.09;3.79;planilha R19 col. 'Créd. 7-12x';
-COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88413573;6.27;140;VENDA;420.77;1.49;planilha R19 col. 'Débito';
+COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88413573;6.27;140;VENDA;420.77;1.49;planilha R19 col. 'Débito', estornada em 2026-09-30 por TX88447011;
 COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;AN88444988;589.40;171;ANTECIPACAO;28066.62;2.1;planilha R19 col. 'Antecipação';
 COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88412733;10.57;183;VENDA;1188.14;0.89;planilha R19 col. 'Pix';
 COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416117;125.75;265;VENDA;3942.04;3.19;planilha R19 col. 'Créd. 2-6x';
@@ -1070,7 +1083,7 @@ COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416405;8
 COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416827;108.66;341;VENDA;3406.32;3.19;planilha R19 col. 'Créd. 2-6x';
 COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416267;511.51;346;VENDA;13496.42;3.79;planilha R19 col. 'Créd. 7-12x';
 COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88417465;132.17;369;VENDA;3487.28;3.79;planilha R19 col. 'Créd. 7-12x';
-COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416714;70.49;370;VENDA;2620.34;2.69;planilha R19 col. 'Crédito à vista';
+COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416714;70.49;370;VENDA;2620.34;2.69;planilha R19 col. 'Crédito à vista', estornada em 2026-09-30 por TX88447093;
 COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416206;5.15;382;VENDA;345.93;1.49;planilha R19 col. 'Débito';
 COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416170;4.84;388;VENDA;543.28;0.89;planilha R19 col. 'Pix';
 COM-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88418269;65.04;394;VENDA;2417.69;2.69;planilha R19 col. 'Crédito à vista';
@@ -1612,6 +1625,7 @@ COM-67869675000142-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444194;1
 COM-67869675000142-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443903;15.10;1925;VENDA;561.27;2.69;planilha R27 col. 'Crédito à vista';
 COM-67869675000142-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0395;117.74;169;REMESSA;;;50% de Spread R$ 235.48, status APROVADO;235.48
 COM-67869675000142-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0489;245.48;204;REMESSA;;;50% de Spread R$ 490.96, status APROVADO;490.96
+COM-68567965000102-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88446992;-29.71;2;ESTORNO;-1147.05;2.59;estorno de TX88431689 (venda de 2026-09-18), planilha R18 col. 'Crédito à vista';
 COM-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410230;43.61;9;VENDA;1367.14;3.19;planilha R18 col. 'Créd. 2-6x';
 COM-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411534;334.59;79;VENDA;8828.28;3.79;planilha R18 col. 'Créd. 7-12x';
 COM-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411825;7.01;90;VENDA;470.79;1.49;planilha R18 col. 'Débito';
@@ -1676,7 +1690,7 @@ COM-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430386;2
 COM-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88429746;7.31;1093;VENDA;490.44;1.49;planilha R18 col. 'Débito';
 COM-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;AN88446006;422.21;1107;ANTECIPACAO;20105.33;2.1;planilha R18 col. 'Antecipação';
 COM-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430459;51.05;1112;VENDA;1971.14;2.59;planilha R18 col. 'Crédito à vista';
-COM-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431689;29.71;1130;VENDA;1147.05;2.59;planilha R18 col. 'Crédito à vista';
+COM-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431689;29.71;1130;VENDA;1147.05;2.59;planilha R18 col. 'Crédito à vista', estornada em 2026-09-30 por TX88446992;
 COM-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430622;5.80;1156;VENDA;651.62;0.89;planilha R18 col. 'Pix';
 COM-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431649;29.99;1166;VENDA;1157.79;2.59;planilha R18 col. 'Crédito à vista';
 COM-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431367;21.86;1169;VENDA;844.20;2.59;planilha R18 col. 'Crédito à vista';
@@ -2612,6 +2626,7 @@ NF-03229837000103-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443924;22
 NF-03229837000103-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443937;74.23;1908;VENDA;2759.30;2.69;planilha R14 col. 'Crédito à vista';
 NF-03229837000103-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444547;9.42;1917;VENDA;1192.79;0.79;planilha R14 col. 'Pix';
 NF-07752116000126-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411343;154.48;7;VENDA;4842.71;3.19;planilha R9 col. 'Créd. 2-6x';
+NF-07752116000126-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447225;174.81;15;VENDA;5480.00;3.19;planilha R9 col. 'Créd. 2-6x';
 NF-07752116000126-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411173;116.47;29;VENDA;3651.00;3.19;planilha R9 col. 'Créd. 2-6x';
 NF-07752116000126-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411289;53.63;53;VENDA;2070.82;2.59;planilha R9 col. 'Crédito à vista';
 NF-07752116000126-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411063;114.89;62;VENDA;3601.71;3.19;planilha R9 col. 'Créd. 2-6x';
@@ -2775,6 +2790,8 @@ NF-08780784000120-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88442526;8.
 NF-08780784000120-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444718;42.34;1895;VENDA;1573.98;2.69;planilha R25 col. 'Crédito à vista';
 NF-08780784000120-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443707;21.15;1909;VENDA;786.37;2.69;planilha R25 col. 'Crédito à vista';
 NF-08780784000120-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444257;29.66;1914;VENDA;991.83;2.99;planilha R25 col. 'Créd. 2-6x';
+NF-16181276000153-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447057;-124.36;6;ESTORNO;-3898.29;3.19;estorno de TX88430977 (venda de 2026-09-18), planilha R17 col. 'Créd. 2-6x';
+NF-16181276000153-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447109;-87.65;10;ESTORNO;-2747.67;3.19;estorno de TX88428997 (venda de 2026-09-16), planilha R17 col. 'Créd. 2-6x';
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410056;44.92;25;VENDA;1670.01;2.69;planilha R17 col. 'Crédito à vista';
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410691;113.38;45;VENDA;3554.09;3.19;planilha R17 col. 'Créd. 2-6x';
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411155;90.48;58;VENDA;3363.53;2.69;planilha R17 col. 'Crédito à vista';
@@ -2832,7 +2849,7 @@ NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88429142;2.
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88428853;71.92;1023;VENDA;2254.39;3.19;planilha R17 col. 'Créd. 2-6x';
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88429284;35.59;1026;VENDA;1323.23;2.69;planilha R17 col. 'Crédito à vista';
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88429114;75.86;1041;VENDA;2819.98;2.69;planilha R17 col. 'Crédito à vista';
-NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88428997;87.65;1045;VENDA;2747.67;3.19;planilha R17 col. 'Créd. 2-6x';
+NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88428997;87.65;1045;VENDA;2747.67;3.19;planilha R17 col. 'Créd. 2-6x', estornada em 2026-09-30 por TX88447109;
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88429326;14.26;1055;VENDA;530.17;2.69;planilha R17 col. 'Crédito à vista';
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430373;298.43;1084;VENDA;9355.15;3.19;planilha R17 col. 'Créd. 2-6x', estornada em 2026-09-22 por TX88446292;
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88429669;16.85;1098;VENDA;1893.75;0.89;planilha R17 col. 'Pix';
@@ -2841,7 +2858,7 @@ NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431666;46
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430971;70.70;1131;VENDA;2216.20;3.19;planilha R17 col. 'Créd. 2-6x';
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431121;141.30;1134;VENDA;4429.42;3.19;planilha R17 col. 'Créd. 2-6x';
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431511;73.19;1142;VENDA;2720.69;2.69;planilha R17 col. 'Crédito à vista';
-NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430977;124.36;1148;VENDA;3898.29;3.19;planilha R17 col. 'Créd. 2-6x';
+NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430977;124.36;1148;VENDA;3898.29;3.19;planilha R17 col. 'Créd. 2-6x', estornada em 2026-09-30 por TX88447057;
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431274;40.08;1151;VENDA;1490.00;2.69;planilha R17 col. 'Crédito à vista';
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431618;107.36;1179;VENDA;3991.25;2.69;planilha R17 col. 'Crédito à vista';
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;AN88446113;1126.01;1186;ANTECIPACAO;53619.67;2.1;planilha R17 col. 'Antecipação';
@@ -2875,6 +2892,7 @@ NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88442867;36
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443192;93.11;1852;VENDA;2918.89;3.19;planilha R17 col. 'Créd. 2-6x';
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88442588;176.13;1869;VENDA;5521.46;3.19;planilha R17 col. 'Créd. 2-6x';
 NF-16181276000153-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443797;5.34;1901;VENDA;600.31;0.89;planilha R17 col. 'Pix';
+NF-17217888000111-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447030;-14.00;4;ESTORNO;-562.44;2.49;estorno de TX88438558 (venda de 2026-09-25), planilha R15 col. 'Crédito à vista';
 NF-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410886;33.15;14;VENDA;1331.35;2.49;planilha R15 col. 'Crédito à vista';
 NF-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411123;13.48;23;VENDA;541.24;2.49;planilha R15 col. 'Crédito à vista';
 NF-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410554;9.21;24;VENDA;1034.37;0.89;planilha R15 col. 'Pix';
@@ -3005,7 +3023,7 @@ NF-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88436837;37
 NF-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88437115;247.41;1496;VENDA;8274.59;2.99;planilha R15 col. 'Créd. 2-6x';
 NF-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88437750;50.22;1515;VENDA;2017.02;2.49;planilha R15 col. 'Crédito à vista';
 NF-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88437362;104.09;1516;VENDA;4180.27;2.49;planilha R15 col. 'Crédito à vista';
-NF-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88438558;14.00;1578;VENDA;562.44;2.49;planilha R15 col. 'Crédito à vista';
+NF-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88438558;14.00;1578;VENDA;562.44;2.49;planilha R15 col. 'Crédito à vista', estornada em 2026-09-30 por TX88447030;
 NF-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88438872;246.36;1587;VENDA;8239.52;2.99;planilha R15 col. 'Créd. 2-6x';
 NF-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88438002;187.93;1599;VENDA;4958.59;3.79;planilha R15 col. 'Créd. 7-12x';
 NF-17217888000111-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88438619;48.58;1607;VENDA;1950.97;2.49;planilha R15 col. 'Crédito à vista';
@@ -3161,6 +3179,8 @@ NF-21394880000106-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444661;23
 NF-21394880000106-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444820;38.38;1900;VENDA;1426.93;2.69;planilha R22 col. 'Crédito à vista';
 NF-21394880000106-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444038;17.52;1930;VENDA;1176.09;1.49;planilha R22 col. 'Débito';
 NF-21394880000106-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444590;182.75;1936;VENDA;4821.80;3.79;planilha R22 col. 'Créd. 7-12x';
+NF-22224579000109-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447044;-63.23;5;ESTORNO;-1982.10;3.19;estorno de TX88425142 (venda de 2026-09-13), planilha R6 col. 'Créd. 2-6x';
+NF-22224579000109-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447070;-83.05;7;ESTORNO;-2603.31;3.19;estorno de TX88424537 (venda de 2026-09-12), planilha R6 col. 'Créd. 2-6x';
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411252;123.86;11;VENDA;3882.89;3.19;planilha R6 col. 'Créd. 2-6x';
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410634;6.32;17;VENDA;709.86;0.89;planilha R6 col. 'Pix';
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410286;158.50;21;VENDA;4968.76;3.19;planilha R6 col. 'Créd. 2-6x';
@@ -3200,13 +3220,13 @@ NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88422860;44
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88422339;250.72;691;VENDA;7859.69;3.19;planilha R6 col. 'Créd. 2-6x';
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88422256;14.39;704;VENDA;555.69;2.59;planilha R6 col. 'Crédito à vista';
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88424307;61.34;739;VENDA;2368.21;2.59;planilha R6 col. 'Crédito à vista';
-NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88424537;83.05;754;VENDA;2603.31;3.19;planilha R6 col. 'Créd. 2-6x';
+NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88424537;83.05;754;VENDA;2603.31;3.19;planilha R6 col. 'Créd. 2-6x', estornada em 2026-09-30 por TX88447070;
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88423613;64.32;769;VENDA;2483.39;2.59;planilha R6 col. 'Crédito à vista';
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88424029;464.77;802;VENDA;12262.96;3.79;planilha R6 col. 'Créd. 7-12x';
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88425189;126.38;816;VENDA;3961.72;3.19;planilha R6 col. 'Créd. 2-6x';
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88425494;182.03;837;VENDA;5706.19;3.19;planilha R6 col. 'Créd. 2-6x';
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88425041;6.94;846;VENDA;465.89;1.49;planilha R6 col. 'Débito';
-NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88425142;63.23;849;VENDA;1982.10;3.19;planilha R6 col. 'Créd. 2-6x';
+NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88425142;63.23;849;VENDA;1982.10;3.19;planilha R6 col. 'Créd. 2-6x', estornada em 2026-09-30 por TX88447044;
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88425274;130.18;859;VENDA;5026.17;2.59;planilha R6 col. 'Crédito à vista';
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88426662;165.28;862;VENDA;4361.07;3.79;planilha R6 col. 'Créd. 7-12x';
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88425956;136.99;880;VENDA;3614.39;3.79;planilha R6 col. 'Créd. 7-12x';
@@ -3269,6 +3289,10 @@ NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444329;15
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443632;3.64;1931;VENDA;408.68;0.89;planilha R7 col. 'Pix';
 NF-22224579000109-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443575;6.16;1938;VENDA;692.31;0.89;planilha R7 col. 'Pix';
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410316;42.62;6;VENDA;1645.47;2.59;planilha R20 col. 'Crédito à vista';
+NF-23109187000161-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447087;-327.73;8;ESTORNO;-8647.36;3.79;estorno de TX88422829 (venda de 2026-09-11), planilha R20 col. 'Créd. 7-12x';
+NF-23109187000161-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447140;-61.28;11;ESTORNO;-2366.18;2.59;estorno de TX88432148 (venda de 2026-09-19), planilha R20 col. 'Crédito à vista';
+NF-23109187000161-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;AN88447152;-967.69;12;REVERSAO ANTECIPACAO;-46080.41;2.1;anula a antecipação AN88446397;
+NF-23109187000161-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;AN88447178;-875.49;13;REVERSAO ANTECIPACAO;-41690.09;2.1;anula a antecipação AN88446748;
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411115;422.69;37;VENDA;11152.65;3.79;planilha R20 col. 'Créd. 7-12x';
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444848;-83.12;39;ESTORNO;-2193.16;3.79;estorno de TX87651902 (venda de 2026-08-22), planilha R20 col. 'Créd. 7-12x';
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411203;8.81;47;VENDA;591.42;1.49;planilha R20 col. 'Débito';
@@ -3310,7 +3334,7 @@ NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;AN88445434;51
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88422325;44.51;664;VENDA;1440.50;3.09;planilha R20 col. 'Créd. 2-6x';
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88423218;276.65;706;VENDA;8953.12;3.09;planilha R20 col. 'Créd. 2-6x';
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88422252;103.12;717;VENDA;3337.34;3.09;planilha R20 col. 'Créd. 2-6x';
-NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88422829;327.73;719;VENDA;8647.36;3.79;planilha R20 col. 'Créd. 7-12x';
+NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88422829;327.73;719;VENDA;8647.36;3.79;planilha R20 col. 'Créd. 7-12x', estornada em 2026-09-30 por TX88447087;
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88423944;37.51;728;VENDA;1448.22;2.59;planilha R20 col. 'Crédito à vista';
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88423497;38.17;757;VENDA;1473.92;2.59;planilha R20 col. 'Crédito à vista';
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88424688;52.73;774;VENDA;1706.57;3.09;planilha R20 col. 'Créd. 2-6x';
@@ -3330,7 +3354,7 @@ NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430818;49
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88432761;29.41;1216;VENDA;1135.71;2.59;planilha R20 col. 'Crédito à vista';
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88432462;30.57;1227;VENDA;1180.35;2.59;planilha R20 col. 'Crédito à vista';
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88432493;56.64;1238;VENDA;2186.96;2.59;planilha R20 col. 'Crédito à vista';
-NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88432148;61.28;1239;VENDA;2366.18;2.59;planilha R20 col. 'Crédito à vista';
+NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88432148;61.28;1239;VENDA;2366.18;2.59;planilha R20 col. 'Crédito à vista', estornada em 2026-09-30 por TX88447140;
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88433677;5.43;1272;VENDA;364.59;1.49;planilha R20 col. 'Débito';
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88433614;127.41;1291;VENDA;4123.25;3.09;planilha R20 col. 'Créd. 2-6x';
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;AN88446265;1169.22;1339;ANTECIPACAO;55677.31;2.1;planilha R20 col. 'Antecipação';
@@ -3366,6 +3390,9 @@ NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;AN88446810;12
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444183;5.49;1919;VENDA;616.53;0.89;planilha R20 col. 'Pix';
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443668;83.85;1923;VENDA;2713.45;3.09;planilha R20 col. 'Créd. 2-6x';
 NF-23109187000161-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443842;321.85;1937;VENDA;8492.14;3.79;planilha R20 col. 'Créd. 7-12x';
+NF-34671260000100-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447011;-6.27;3;ESTORNO;-420.77;1.49;estorno de TX88413573 (venda de 2026-09-03), planilha R19 col. 'Débito';
+NF-34671260000100-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88447093;-70.49;9;ESTORNO;-2620.34;2.69;estorno de TX88416714 (venda de 2026-09-06), planilha R19 col. 'Crédito à vista';
+NF-34671260000100-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;AN88447194;-768.25;14;REVERSAO ANTECIPACAO;-36583.37;2.1;anula a antecipação AN88446551;
 NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410990;423.24;31;VENDA;11167.32;3.79;planilha R19 col. 'Créd. 7-12x';
 NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410442;139.10;35;VENDA;4360.48;3.19;planilha R19 col. 'Créd. 2-6x';
 NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411202;115.22;55;VENDA;4283.13;2.69;planilha R19 col. 'Crédito à vista';
@@ -3378,7 +3405,7 @@ NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88412589;32
 NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411654;5.77;100;VENDA;648.05;0.89;planilha R19 col. 'Pix';
 NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411813;4.80;104;VENDA;322.37;1.49;planilha R19 col. 'Débito';
 NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411710;251.39;110;VENDA;6633.09;3.79;planilha R19 col. 'Créd. 7-12x';
-NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88413573;6.27;140;VENDA;420.77;1.49;planilha R19 col. 'Débito';
+NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88413573;6.27;140;VENDA;420.77;1.49;planilha R19 col. 'Débito', estornada em 2026-09-30 por TX88447011;
 NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;AN88444988;589.40;171;ANTECIPACAO;28066.62;2.1;planilha R19 col. 'Antecipação';
 NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88412733;10.57;183;VENDA;1188.14;0.89;planilha R19 col. 'Pix';
 NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416117;125.75;265;VENDA;3942.04;3.19;planilha R19 col. 'Créd. 2-6x';
@@ -3391,7 +3418,7 @@ NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416405;8.
 NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416827;108.66;341;VENDA;3406.32;3.19;planilha R19 col. 'Créd. 2-6x';
 NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416267;511.51;346;VENDA;13496.42;3.79;planilha R19 col. 'Créd. 7-12x';
 NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88417465;132.17;369;VENDA;3487.28;3.79;planilha R19 col. 'Créd. 7-12x';
-NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416714;70.49;370;VENDA;2620.34;2.69;planilha R19 col. 'Crédito à vista';
+NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416714;70.49;370;VENDA;2620.34;2.69;planilha R19 col. 'Crédito à vista', estornada em 2026-09-30 por TX88447093;
 NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416206;5.15;382;VENDA;345.93;1.49;planilha R19 col. 'Débito';
 NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88416170;4.84;388;VENDA;543.28;0.89;planilha R19 col. 'Pix';
 NF-34671260000100-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88418269;65.04;394;VENDA;2417.69;2.69;planilha R19 col. 'Crédito à vista';
@@ -3850,6 +3877,7 @@ NF-67869675000142-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443556;28
 NF-67869675000142-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443692;214.19;1894;VENDA;5651.57;3.79;planilha R27 col. 'Créd. 7-12x';
 NF-67869675000142-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444194;129.76;1924;VENDA;4067.71;3.19;planilha R27 col. 'Créd. 2-6x';
 NF-67869675000142-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443903;15.10;1925;VENDA;561.27;2.69;planilha R27 col. 'Crédito à vista';
+NF-68567965000102-CHECKOUT;06_orbe_ajustes_tardios_set2026.csv;TX88446992;-29.71;2;ESTORNO;-1147.05;2.59;estorno de TX88431689 (venda de 2026-09-18), planilha R18 col. 'Crédito à vista';
 NF-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88410230;43.61;9;VENDA;1367.14;3.19;planilha R18 col. 'Créd. 2-6x';
 NF-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411534;334.59;79;VENDA;8828.28;3.79;planilha R18 col. 'Créd. 7-12x';
 NF-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88411825;7.01;90;VENDA;470.79;1.49;planilha R18 col. 'Débito';
@@ -3914,7 +3942,7 @@ NF-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430386;23
 NF-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88429746;7.31;1093;VENDA;490.44;1.49;planilha R18 col. 'Débito';
 NF-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;AN88446006;422.21;1107;ANTECIPACAO;20105.33;2.1;planilha R18 col. 'Antecipação';
 NF-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430459;51.05;1112;VENDA;1971.14;2.59;planilha R18 col. 'Crédito à vista';
-NF-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431689;29.71;1130;VENDA;1147.05;2.59;planilha R18 col. 'Crédito à vista';
+NF-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431689;29.71;1130;VENDA;1147.05;2.59;planilha R18 col. 'Crédito à vista', estornada em 2026-09-30 por TX88446992;
 NF-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88430622;5.80;1156;VENDA;651.62;0.89;planilha R18 col. 'Pix';
 NF-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431649;29.99;1166;VENDA;1157.79;2.59;planilha R18 col. 'Crédito à vista';
 NF-68567965000102-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88431367;21.86;1169;VENDA;844.20;2.59;planilha R18 col. 'Crédito à vista';

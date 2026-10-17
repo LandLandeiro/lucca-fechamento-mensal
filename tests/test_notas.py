@@ -30,7 +30,7 @@ def test_uma_nota_por_lojista_checkout_positivo(saida):
     notas = [n for n in _csv(pasta, "notas_a_emitir.csv") if n["linha_negocio"] == "CHECKOUT"]
     com = {c["cnpj"]: Decimal(c["comissao_brl"]) for c in _csv(pasta, "comissoes_por_lojista.csv") if c["linha_negocio"] == "CHECKOUT"}
     assert len(notas) == 20 == sum(1 for v in com.values() if v > 0)
-    assert sum(Decimal(n["valor_brl"]) for n in notas) == Decimal("207045.23")  # 207.039,73 + 5,50 (Casa fora)
+    assert sum(Decimal(n["valor_brl"]) for n in notas) == Decimal("203740.84")  # 203.735,34 (com o 06, D75) + 5,50 (Casa fora)
     rota = next(n for n in notas if n["tomador_cnpj"] == "95927868000148")
     assert rota["id_saida"] == "NF-95927868000148-CHECKOUT" and rota["valor_brl"] == "15621.27"
     assert rota["discriminacao"] == "Serviço de intermediação de pagamentos (checkout) - competência 09/2026"

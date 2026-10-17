@@ -91,9 +91,9 @@ class Achados:
 def fontes(dados: Path) -> dict[str, set[tuple[str, int]]]:
     """arquivo → {(ref_origem, linha)} lido direto dos arquivos do data pack."""
     out: dict[str, set[tuple[str, int]]] = {}
-    orbe = next(dados.glob("01_orbe_*.csv"))
-    linhas = orbe.read_text(encoding="utf-8").splitlines()
-    out[orbe.name] = {(l.split(";")[0], n) for n, l in enumerate(linhas, start=1) if n > 1 and l.strip()}
+    for orbe in sorted(dados.glob("01_orbe_*.csv")) + sorted(dados.glob("06_orbe_ajustes_*.csv")):  # 06: ajustes tardios
+        linhas = orbe.read_text(encoding="utf-8").splitlines()
+        out[orbe.name] = {(l.split(";")[0], n) for n, l in enumerate(linhas, start=1) if n > 1 and l.strip()}
     eml = next(dados.glob("03_email_*.eml"))
     msg = email.message_from_bytes(eml.read_bytes())
     anexo = next(p for p in msg.walk() if (p.get_filename() or "").endswith(".xlsx"))

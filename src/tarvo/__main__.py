@@ -15,7 +15,8 @@ from decimal import Decimal
 from pathlib import Path
 
 from tarvo.cadastro import adicionar_nomes_orbe, montar_cadastro, normalizar_nome
-from tarvo.calculos.comissoes import CompetenciaAmbigua, comissao_checkout, ordem_comissao, separar_competencia
+from tarvo.calculos.comissoes import (CompetenciaAmbigua, comissao_checkout, juntar_relatorios_orbe, ordem_comissao,
+                                     separar_competencia)
 from tarvo.calculos.alertas import alerta_antecipacao
 from tarvo.calculos.retomada import complementar_discriminacao, marcar_retomadas, resolvidas_sem_contrato, retomar_sem_contrato
 from tarvo.calculos.contestacao import contestacao_ponte
@@ -42,6 +43,7 @@ from tarvo.saida.rascunhos import gerar_rascunhos
 from tarvo.saida.validador import validar_saida
 
 PADRAO_ORBE = "01_orbe_relatorio_comissoes_*.csv"
+PADRAO_ORBE_AJUSTES = "06_orbe_ajustes_tardios_*.csv"  # opcional (D75): ajustes que a Orbe manda depois do relatório
 PADRAO_TAXAS = "02_tabela_taxas_contratadas*.xlsx"
 PADRAO_PONTE = "03_email_ponte_cambio_*.eml"
 PADRAO_PLANO = "04_plano_de_contas*.csv"
@@ -86,6 +88,25 @@ def achar_unico(pasta: Path, padrao: str) -> Path:
     return achados[0]
 
 
+def achar_opcional(pasta: Path, padrao: str) -> Path | None:
+    """Arquivo que pode faltar (D75): 0 → None, sem aviso; 1 → o arquivo; mais de um → erro de entrada."""
+    achados = sorted(pasta.glob(padrao))
+    if len(achados) > 1:
+        raise ErroEntrada(f"esperado no máximo 1 arquivo {padrao!r} em {pasta}, achei {len(achados)}: {[p.name for p in achados]}")
+    return achados[0] if achados else None
+
+
+# o que a pasta do mês pode ter além dos arquivos lidos (documentação do pacote)
+PADROES_DOCUMENTACAO = ("00_*", "README*", "*.md")
+
+
+def arquivos_nao_reconhecidos(pasta: Path) -> list[str]:
+    """D75: arquivo na pasta que nenhum leitor reconhece vira aviso (não some em silêncio)."""
+    padroes = (PADRAO_ORBE, PADRAO_ORBE_AJUSTES, PADRAO_TAXAS, PADRAO_PONTE, PADRAO_PLANO, PADRAO_AURORA, PADRAO_MERIDIANO,
+               *PADROES_DOCUMENTACAO)
+    return sorted(p.name for p in pasta.iterdir() if p.is_file() and not any(p.match(x) for x in padroes))
+
+
 def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, cliente_ia=_PADRAO,
              cache_ia: Path = CACHE_IA_PADRAO, pendencias_anteriores: Path | None = None,
              orbe_anterior: Path | None = None) -> dict:
@@ -95,13 +116,17 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     arq_taxas = achar_unico(dados, PADRAO_TAXAS)
 
     orbe = ler_orbe(arq_orbe)
+    arq_ajustes = achar_opcional(dados, PADRAO_ORBE_AJUSTES)
+    leituras_orbe = [orbe] + ([ler_orbe(arq_ajustes)] if arq_ajustes else [])  # D75: 01 + 06 (opcional)
+    juncao = juntar_relatorios_orbe(leituras_orbe)
+    transacoes_orbe = juncao.transacoes
     colunas = list(valor_da_regra(regras, "taxas.coluna_por_produto").values())
     taxas = ler_taxas_vigentes(
         arq_taxas, valor_da_regra(regras, "taxas.aba_vigente"), colunas, valor_da_regra(regras, "taxas.casas_decimais_taxa")
     )
     cadastro = montar_cadastro(taxas.linhas, regras, arq_taxas.name)
     try:  # D62: linha de outro mês vira pendência, não aborta
-        sep = separar_competencia(orbe.transacoes)
+        sep = separar_competencia(transacoes_orbe)
     except CompetenciaAmbigua as e:
         raise ErroEntrada(str(e)) from e
     competencia = sep.competencia
@@ -120,7 +145,9 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     if ponte.competencia and ponte.competencia != competencia:
         avisos_extra.append(Aviso(arq_ponte.name, "-", f"competência da Ponte {ponte.competencia} ≠ competência da Orbe {competencia}"))
     for p in sep.pendencias:
-        avisos_extra.append(Aviso(orbe.arquivo, p.ref_origem, f"linha fora da competência {competencia}: vira pendência {p.id_saida}"))
+        avisos_extra.append(Aviso("relatório da Orbe", p.ref_origem, f"linha fora da competência {competencia}: vira pendência {p.id_saida}"))
+    avisos_extra += [Aviso(nome, "-", "arquivo que nenhum leitor reconhece: não foi lido (confira se é do pacote)")
+                     for nome in arquivos_nao_reconhecidos(dados)]
     declarado_qtd = ponte.totais_declarados.get("Total de operações:")
     if declarado_qtd is not None and declarado_qtd != ponte.total_linhas_dados:
         avisos_extra.append(Aviso(arq_ponte.name, "-", f"Total de operações declarado {declarado_qtd} ≠ {ponte.total_linhas_dados} linhas lidas"))
@@ -130,8 +157,8 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
 
     pend_leitura = [
         Pendencia(f"PEN-LEITURA_INVALIDA-{li.ref_origem}", "LEITURA_INVALIDA", li.ref_origem,
-                  None, f"{orbe.arquivo} linha {li.linha_arquivo} não lida: {li.motivo}", "analista (conferir o arquivo com a Orbe)")
-        for li in orbe.linhas_invalidas
+                  None, f"{lo.arquivo} linha {li.linha_arquivo} não lida: {li.motivo}", "analista (conferir o arquivo com a Orbe)")
+        for lo in leituras_orbe for li in lo.linhas_invalidas
     ]
     pend_leitura += [
         Pendencia(f"PEN-LEITURA_INVALIDA-{li.ref_origem}-R{li.linha_arquivo}", "LEITURA_INVALIDA",
@@ -139,8 +166,9 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
                   "analista (conferir o relatório com a Ponte)")
         for li in ponte.linhas_invalidas
     ]
-    if len(orbe.transacoes) + len(orbe.linhas_invalidas) != orbe.total_linhas_dados:
-        raise AssertionError("linhas da Orbe perdidas entre leitura e cálculo")
+    for lo in leituras_orbe:
+        if len(lo.transacoes) + len(lo.linhas_invalidas) != lo.total_linhas_dados:
+            raise AssertionError(f"linhas de {lo.arquivo} perdidas entre leitura e cálculo")
     if len(ponte.operacoes) + len(ponte.linhas_invalidas) != ponte.total_linhas_dados:
         raise AssertionError("linhas do anexo da Ponte perdidas entre leitura e cálculo")
 
@@ -166,7 +194,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
             pend_leitura.append(Pendencia(f"PEN-LEITURA_INVALIDA-{ext.banco}-{li.ref_origem}", "LEITURA_INVALIDA",
                                           li.ref_origem, None, f"{ext.arquivo} linha {li.linha_arquivo}: lançamento não lido: "
                                           f"{li.motivo}", "analista (conferir o extrato com o banco)"))
-    adicionar_nomes_orbe(cadastro, orbe.transacoes, regras)  # D35: ex.: Atlas
+    adicionar_nomes_orbe(cadastro, transacoes_orbe, regras)  # D35: ex.: Atlas
     classif = [classificar_por_regra(ext.lancamentos, ext.linhas_arquivo, plano, regras, cadastro, competencia)
                for ext in (aurora, meridiano)]
     # decisões humanas por linha antes da IA (D44); IA só nas sobras, o código verifica antes de aceitar (D42)
@@ -185,7 +213,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     prompt_ia = por_ia.carregar_prompt()
     ia = por_ia.classificar_sobras(
         [(lan, motivo, linhas_ext[(lan.banco, lan.ref_origem)]) for c in classif for lan, motivo in c.sem_regra],
-        plano, cadastro, regras, competencia, orbe.transacoes, cls_remessa.elegiveis + cls_remessa.negativos,
+        plano, cadastro, regras, competencia, transacoes_orbe, cls_remessa.elegiveis + cls_remessa.negativos,
         aportes_por_regra, cache_ia, cliente_ia, sem_ia=sem_ia, prompt=prompt_ia,
     )
     por_ia.aplicar(ia, classif, prompt_ia.versao)
@@ -219,13 +247,13 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     conf.resolvidas.extend(resolvidas_sem_contrato(retomadas, cadastro, competencia))
 
     pendencias = consolidar_pendencias(
-        checkout.pendencias, sep.pendencias, divergencias.pendencias, alertas.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura,
+        checkout.pendencias, juncao.pendencias, sep.pendencias, divergencias.pendencias, alertas.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura,
         notas.pendencias, pend_repasse,
         div_remessa.pendencias_derivadas, contestacao.pendencias, *[c.pendencias for c in classif], conf.pendencias, [provisao],
     )
     divs = divergencias.linhas + div_remessa.linhas
     rastro = sorted(
-        checkout.rastro + sep.rastro + alertas.rastro + divergencias.rastro + divergencias.rastro_pendencias + remessa.rastro + div_remessa.rastro
+        checkout.rastro + juncao.rastro + sep.rastro + alertas.rastro + divergencias.rastro + divergencias.rastro_pendencias + remessa.rastro + div_remessa.rastro
         + notas.rastro + notas.rastro_pendencias + rastro_repasse + div_remessa.rastro_pendencias + contestacao.rastro
         + [l for c in classif for l in c.rastro + c.rastro_pendencias] + conf.rastro_pendencias,
         key=lambda l: (l["id_saida"], l["linha_arquivo"], l["ref_origem"]),
@@ -248,7 +276,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     rascunhos = gerar_rascunhos(saida, divs, contestacao.linhas, competencia,  # D68 (Q-T 2, Q-X 1)
                                 valor_da_regra(regras, "ponte.tomador_nf_remessa")["nome"])
     refs_esperadas = {
-        orbe.arquivo: {(t.ref_origem, t.linha_arquivo) for t in orbe.transacoes},
+        **{lo.arquivo: {(t.ref_origem, t.linha_arquivo) for t in lo.transacoes} for lo in leituras_orbe},
         **({orbe_ant.arquivo: {(t.ref_origem, t.linha_arquivo) for _, ts in retomadas for t in ts}} if retomadas else {}),
         ponte.arquivo: {(o.ref_origem, o.linha_planilha) for o in ponte.operacoes},
     }
@@ -259,7 +287,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         saida,
         refs_esperadas=refs_esperadas,
         fonte_orbe={arq: {t.ref_origem: (t.valor_taxa, t.valor_bruto, t.taxa_aplicada_pct / 100) for t in ts}
-                    for arq, ts in [(orbe.arquivo, orbe.transacoes)]
+                    for arq, ts in [(lo.arquivo, lo.transacoes) for lo in leituras_orbe]
                     + ([(orbe_ant.arquivo, [t for _, x in retomadas for t in x])] if retomadas else [])},
         modo_checkout=modo_arredondamento(valor_da_regra(regras, "checkout.arredondamento_comissao_contratada")),
         spread_ponte={ponte.arquivo: {(o.ref_origem, o.linha_planilha): o.spread_brl for o in ponte.operacoes}},
@@ -273,8 +301,8 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     for op, motivo, _ in cls_remessa.excluidas:
         excl.setdefault(motivo, []).append(op)
     return {
-        "arquivos": [arq_orbe.name, arq_taxas.name, f"{arq_ponte.name} (anexo {mail.nome_anexo})"],
-        "avisos": orbe.avisos + taxas.avisos + cadastro.avisos + checkout.avisos + avisos_retomada + ponte.avisos + aurora.avisos + meridiano.avisos + avisos_extra,
+        "arquivos": [arq_orbe.name, *([arq_ajustes.name] if arq_ajustes else []), arq_taxas.name, f"{arq_ponte.name} (anexo {mail.nome_anexo})"],
+        "avisos": [a for lo in leituras_orbe for a in lo.avisos] + taxas.avisos + cadastro.avisos + checkout.avisos + avisos_retomada + ponte.avisos + aurora.avisos + meridiano.avisos + avisos_extra,
         "extratos": {
             "leituras": (aurora, meridiano),
             "classif": classif,
@@ -302,8 +330,9 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         "pendencias_novas": divergencias.pendencias + notas.pendencias + pend_repasse + div_remessa.pendencias_derivadas + contestacao.pendencias,
         "residuo_checkout": (divergencias.residuo, divergencias.linhas_com_residuo),
         "pendencias": pendencias,
-        "transacoes_em_pendencia": len(checkout.em_pendencia) + len(sep.pendencias) + len(orbe.linhas_invalidas),
-        "transacoes_lidas": orbe.total_linhas_dados,
+        "transacoes_em_pendencia": len(checkout.em_pendencia) + len(sep.pendencias) + sum(len(lo.linhas_invalidas) for lo in leituras_orbe)
+        + len(juncao.rastro),
+        "transacoes_lidas": sum(lo.total_linhas_dados for lo in leituras_orbe),
         "divergencias": divergencias.linhas,
         "divergencias_zeradas": divergencias.grupos_zerados,
         "conservacao": (

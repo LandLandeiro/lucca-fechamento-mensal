@@ -1,13 +1,13 @@
 id_saida;tomador_cnpj;tomador;linha_negocio;valor_brl;discriminacao;competencia;id_comissao;qtd_linhas_origem
-NF-17217888000111-CHECKOUT;17217888000111;Mundo Aberto;CHECKOUT;18522.09;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-17217888000111-CHECKOUT;168
-NF-23109187000161-CHECKOUT;23109187000161;Oxford Prep Cursos Ltda;CHECKOUT;16077.90;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-23109187000161-CHECKOUT;98
+NF-17217888000111-CHECKOUT;17217888000111;Mundo Aberto;CHECKOUT;18508.09;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-17217888000111-CHECKOUT;169
 NF-95927868000148-CHECKOUT;95927868000148;Rota Global Intercâmbio Ltda;CHECKOUT;15621.27;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-95927868000148-CHECKOUT;159
-NF-34671260000100-CHECKOUT;34671260000100;Maple Study Assessoria Educacional Ltda;CHECKOUT;15010.78;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-34671260000100-CHECKOUT;105
-NF-16181276000153-CHECKOUT;16181276000153;EduAbroad;CHECKOUT;12070.17;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-16181276000153-CHECKOUT;100
-NF-22224579000109-CHECKOUT;22224579000109;Escola Bridge de Idiomas Ltda;CHECKOUT;11916.02;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-22224579000109-CHECKOUT;107
-NF-68567965000102-CHECKOUT;68567965000102;Dublin Hub Intercâmbio Ltda;CHECKOUT;11906.08;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-68567965000102-CHECKOUT;111
+NF-34671260000100-CHECKOUT;34671260000100;Maple Study Assessoria Educacional Ltda;CHECKOUT;14165.77;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-34671260000100-CHECKOUT;108
+NF-23109187000161-CHECKOUT;23109187000161;Oxford Prep Cursos Ltda;CHECKOUT;13845.71;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-23109187000161-CHECKOUT;102
+NF-68567965000102-CHECKOUT;68567965000102;Dublin Hub Intercâmbio Ltda;CHECKOUT;11876.37;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-68567965000102-CHECKOUT;112
+NF-16181276000153-CHECKOUT;16181276000153;EduAbroad;CHECKOUT;11858.16;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-16181276000153-CHECKOUT;102
+NF-22224579000109-CHECKOUT;22224579000109;Escola Bridge de Idiomas Ltda;CHECKOUT;11769.74;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-22224579000109-CHECKOUT;109
 NF-53857560000123-CHECKOUT;53857560000123;Canguru;CHECKOUT;11679.43;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-53857560000123-CHECKOUT;80
-NF-07752116000126-CHECKOUT;07752116000126;Kiwi Experience;CHECKOUT;10711.41;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-07752116000126-CHECKOUT;85
+NF-07752116000126-CHECKOUT;07752116000126;Kiwi Experience;CHECKOUT;10886.22;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-07752116000126-CHECKOUT;86
 NF-08780784000120-CHECKOUT;08780784000120;Campus Global Ltda;CHECKOUT;9336.06;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-08780784000120-CHECKOUT;79
 NF-20987545000140-CHECKOUT;20987545000140;Vela;CHECKOUT;9315.31;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-20987545000140-CHECKOUT;51
 NF-67869675000142-CHECKOUT;67869675000142;Bem-Vindo Exchange Ltda;CHECKOUT;9259.74;Serviço de intermediação de pagamentos (checkout) - competência 09/2026;09/2026;COM-67869675000142-CHECKOUT;76
