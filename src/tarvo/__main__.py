@@ -23,7 +23,7 @@ from tarvo.classificacao.conferencias import conferir
 from tarvo.classificacao import por_ia
 from tarvo.classificacao.decisoes import aplicar_decisoes_humanas
 from tarvo.classificacao.por_regra import classificar_por_regra
-from tarvo.formatos import fmt_dinheiro, modo_arredondamento
+from tarvo.formatos import fmt_brl, fmt_dinheiro, modo_arredondamento, nome_mes
 from tarvo.leitores.extrato_aurora import ler_extrato_aurora
 from tarvo.leitores.extrato_meridiano import ler_extrato_meridiano
 from tarvo.leitores.orbe import ErroLeitura, ler_orbe
@@ -279,6 +279,9 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
             sum((d["diferenca_brl"] for d in divergencias.linhas), ZERO),
         ),
         "erros_validacao": erros,
+        "competencia": competencia,
+        "lancamentos": lancamentos,
+        "arquivos_saida": sorted(p.name for p in saida.glob("*.csv")),
         "fontes_rastro": fontes_rastro,
     }
 
@@ -445,8 +448,49 @@ def main(argv: list[str] | None = None) -> int:
     print(f"\nVALIDADOR: OK (rastro fecha com todos os totais; as {r['transacoes_lidas']} linhas da Orbe aparecem uma vez;"
           f" as {r['remessa']['linhas']} linhas do anexo da Ponte também; conservação do checkout e da remessa fecha;"
           " notas = comissões; extratos: cada lançamento uma vez, Σ Aurora = saldo final − inicial, contas lançáveis)")
-    print(f"saída: {args.saida}")
+    _imprimir_resumo(r, args.saida)
     return 0
+
+
+def _imprimir_resumo(r: dict, saida: Path) -> None:
+    """Resumo do fechamento para o financeiro: o que importa, sem jargão."""
+    ano, mes = r["competencia"]
+    div_c, div_r = r["divergencias"], r["remessa"]["divergencias"]
+    notas = r["notas"]
+    metodos = {m: sum(1 for l in r["lancamentos"] if l["metodo"] == m) for m in ("REGRA", "IA", "HUMANO")}
+    por_resp: dict[str, int] = {}
+    for p in r["pendencias"]:
+        por_resp[p.quem_decide] = por_resp.get(p.quem_decide, 0) + 1
+
+    def parte(divs, direcao):
+        sel = [d["diferenca_brl"] for d in divs if d["direcao"] == direcao]
+        return len(sel), fmt_brl(abs(sum(sel, ZERO)))
+
+    obrig = ["comissoes_por_lojista.csv", "divergencias_taxa.csv", "notas_a_emitir.csv",
+             "lancamentos_classificados.csv", "pendencias.csv", "rastro.csv"]
+    extras = [a for a in r["arquivos_saida"] if a not in obrig]
+    linha = "=" * 76
+    print(f"\n{linha}\nRESUMO DO FECHAMENTO - {nome_mes(mes)} de {ano}\n{linha}")
+    print(f"Comissão de checkout (cartão e Pix):    {fmt_brl(r['total_checkout']):>16}  ({len(r['comissoes'])} lojistas)")
+    print(f"Comissão de remessa (50% do spread):    {fmt_brl(r['remessa']['total']):>16}  ({len(r['remessa']['comissoes'])} lojistas)")
+    print(f"Notas fiscais a emitir:                 {fmt_brl(sum((n['valor_brl'] for n in notas), ZERO)):>16}  ({len(notas)} notas)")
+    print("Taxa cobrada diferente do contrato (a Helena decide cada caso):")
+    for nome, divs, unidade in (("checkout", div_c, "transações"), ("remessa", div_r, "operações")):
+        for direcao, texto in (("COBROU_A_MAIS", "a mais"), ("COBROU_A_MENOS", "a menos")):
+            n, v = parte(divs, direcao)
+            if n:
+                rotulo = f"  {nome}, cobrado {texto}:"
+                print(f"{rotulo:<40}{v:>16}  ({n} {unidade})")
+    print(f"Lançamentos dos extratos: {len(r['lancamentos'])} (por regra {metodos['REGRA']}, por IA conferida "
+          f"{metodos['IA']}, por decisão de uma pessoa {metodos['HUMANO']})")
+    print(f"Pendências: {len(r['pendencias'])}, com motivo e valor em pendencias.csv")
+    for resp, n in sorted(por_resp.items(), key=lambda kv: (-kv[1], kv[0])):
+        print(f"  {resp}: {n}")
+    print(f"Arquivos em {saida.resolve()}:")
+    print(f"  os 6 do fechamento: {', '.join(obrig)}")
+    if extras:
+        print(f"  extras: {', '.join(extras)}")
+    print(linha)
 
 
 if __name__ == "__main__":

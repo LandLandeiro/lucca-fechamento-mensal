@@ -178,3 +178,10 @@ Texto copiado do Slack sem edição em 16/10/2026. Horários em -03.
 
 **Resposta (22:34):**
 > A Orbe deposita tudo no Aurora. Ela não paga lojista direto. Débito e Pix caem no dia seguinte. Crédito e parcelado caem ao longo dos meses seguintes, conforme as parcelas. Por isso o que entra no banco em setembro não bate com o líquido do relatório de setembro. O saldo negativo é a conta garantida que a gente tem no Aurora para pagar os lojistas antes de a Orbe liquidar. Conciliar a Orbe contra o banco, parcela por parcela, não é o que eu preciso neste fechamento. Os créditos da Orbe vocês classificam, e o resto fica para quando tivermos a agenda de recebíveis.
+
+---
+
+## Organização · 17/10 09:21 · requisito de entrega
+
+**Mensagem da organização do hackathon** (não é resposta da Helena; texto como repassado pelo Lucca):
+> A banca vai rodar a solução com os arquivos do case e comparar com o saida/ entregue. O mínimo: (1) recebe a pasta do mês, nada fixo para setembro; (2) um comando; (3) mostra o resultado e gera os 6 arquivos; (4) o README explica como rodar e ONDE CONFIGURAR A CHAVE DE API.

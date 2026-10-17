@@ -153,6 +153,13 @@ def fmt_dinheiro(valor: Decimal) -> str:
     return "0.00" if q == 0 else f"{q:.2f}"  # sem "-0.00" (zero negativo: −1.021,01 × 0)
 
 
+def fmt_brl(valor: Decimal) -> str:
+    """Decimal → 'R$ 207.039,73' (só para mostrar na tela; os CSVs usam fmt_dinheiro)."""
+    q = valor.quantize(CENTAVO)
+    texto = f"{abs(q):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"{'-' if q < 0 else ''}R$ {texto}"  # '-' ASCII: o console cp1252 do Windows não tem '−'
+
+
 MESES = ("janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro",
          "novembro", "dezembro")
 
