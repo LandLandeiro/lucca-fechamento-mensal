@@ -8,7 +8,8 @@ a comissão REMESSA (`COM-<cnpj>-REMESSA`). Regras usadas (todas de `regras.yaml
 - remessa.status_aprovado_com_ressalva (CONFIRMADO 20:48): não muda nada;
 - remessa.spread_negativo (CONFIRMADO 20:48): fora da comissão e da nota → divergência;
 - ponte.participacao_tarvo + ponte.base_participacao (CONFIRMADO 20:48): 50% do Spread R$;
-- remessa.arredondamento_participacao (ASSUMO, D19): ROUND_HALF_EVEN por operação.
+- remessa.arredondamento_participacao (CONFIRMADO 21:13, Q-H d): arredondamento comum por
+  operação (meio para longe do zero), depois soma.
 
 Destino de cada linha (o validador confere que cada uma aparece exatamente uma vez):
 COM-<cnpj>-REMESSA (elegível) · EXC-REMESSA-<motivo> (exclusão anotada, valor = Spread R$) ·
@@ -18,11 +19,11 @@ PEN-… (pendência). O spread negativo também gera DIV-<Nº Operação> (diver
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from decimal import ROUND_HALF_EVEN, Decimal
+from decimal import Decimal
 
 from tarvo.cadastro import Cadastro
 from tarvo.calculos.comissoes import id_comissao, ordem_comissao
-from tarvo.formatos import CENTAVO, cnpj_valido, normalizar_cnpj
+from tarvo.formatos import centavos, cnpj_valido, modo_arredondamento, normalizar_cnpj
 from tarvo.modelo import OperacaoPonte, Pendencia
 from tarvo.regras import valor_da_regra
 
@@ -54,9 +55,13 @@ def id_exclusao(motivo: str) -> str:
     return f"EXC-{LINHA}-{motivo}"
 
 
-def participacao(spread: Decimal, fracao: Decimal) -> Decimal:
-    """50% × Spread R$, arredondado no centavo com meio → par (D19)."""
-    return (spread * fracao).quantize(CENTAVO, rounding=ROUND_HALF_EVEN)
+def participacao(spread: Decimal, fracao: Decimal, modo: str) -> Decimal:
+    """Participação × Spread R$, arredondada no centavo com o modo de remessa.arredondamento_participacao."""
+    return centavos(spread * fracao, modo)
+
+
+def modo_participacao(regras: dict) -> str:
+    return modo_arredondamento(valor_da_regra(regras, "remessa.arredondamento_participacao"))
 
 
 def classificar_remessa(
@@ -127,8 +132,7 @@ def comissao_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: dict
     """Comissão REMESSA por lojista, com rastro, exclusões anotadas e pendências."""
     if valor_da_regra(regras, "ponte.base_participacao") != "SPREAD_REALIZADO":
         raise ValueError("ponte.base_participacao diferente de SPREAD_REALIZADO não suportado")
-    if valor_da_regra(regras, "remessa.arredondamento_participacao") != "ROUND_HALF_EVEN_POR_OPERACAO":
-        raise ValueError("remessa.arredondamento_participacao não suportado")
+    modo = modo_participacao(regras)
     fracao = Decimal(str(valor_da_regra(regras, "ponte.participacao_tarvo")))
 
     res = ResultadoRemessa()
@@ -136,7 +140,7 @@ def comissao_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: dict
     spreads: dict[str, Decimal] = {}
     qtd: dict[str, int] = {}
     for op, cnpj in cls.elegiveis:
-        com = participacao(op.spread_brl, fracao)
+        com = participacao(op.spread_brl, fracao, modo)
         res.por_operacao[(op.ref_origem, op.linha_planilha)] = com
         totais[cnpj] = totais.get(cnpj, Decimal("0")) + com
         spreads[cnpj] = spreads.get(cnpj, Decimal("0")) + op.spread_brl
@@ -155,7 +159,7 @@ def comissao_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: dict
             "comissao_brl": totais[cnpj],
             "qtd_transacoes": qtd[cnpj],
         })
-        uma_vez = participacao(spreads[cnpj], fracao)
+        uma_vez = participacao(spreads[cnpj], fracao, modo)
         res.comparacao_arredondamento.append({
             "cnpj": cnpj, "por_operacao": totais[cnpj], "total_uma_vez": uma_vez, "diferenca": totais[cnpj] - uma_vez,
         })

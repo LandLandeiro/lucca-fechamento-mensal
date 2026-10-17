@@ -1,7 +1,7 @@
 """Comissão CHECKOUT por transação e por lojista (valores conferidos contra as fontes).
 
-Cada caso cita a linha de origem e a conta feita à mão: bruto × taxa contratada, truncado
-no centavo (D09).
+Cada caso cita a linha de origem e a conta feita à mão: bruto × taxa contratada, com
+arredondamento comum no centavo (meio para longe do zero), linha por linha (Helena 21:13, Q-H).
 """
 
 from datetime import date
@@ -74,18 +74,19 @@ def test_bridge_venda_de_15_09_pela_taxa_nova(checkout):
 
 
 def test_antecipacao_e_reversao(checkout):
-    # L60 AN88444882: 31.765,12 × 2,10% = 667,0675… → 667,06
-    assert _com(checkout, "AN88444882").comissao == Decimal("667.06")
-    # L252 AN88445076 (Kiwi) 52.314,21 × 2,10% = 1.098,598… → 1.098,59; L266 AN88445093 a anula
-    assert _com(checkout, "AN88445076").comissao == Decimal("1098.59")
-    assert _com(checkout, "AN88445093").comissao == Decimal("-1098.59")
+    # L60 AN88444882: 31.765,12 × 2,10% = 667,0675… → 667,07 (a Orbe truncou em 667,06)
+    assert _com(checkout, "AN88444882").comissao == Decimal("667.07")
+    # L252 AN88445076 (Kiwi) 52.314,21 × 2,10% = 1.098,598… → 1.098,60; L266 AN88445093 a anula
+    assert _com(checkout, "AN88445076").comissao == Decimal("1098.60")
+    assert _com(checkout, "AN88445093").comissao == Decimal("-1098.60")
 
 
-def test_truncamento_nunca_arredonda(checkout):
+def test_arredondamento_comum_por_linha(checkout):
+    # Q-H: meio centavo para longe do zero (−0,005 → −0,01); nunca truncar
     for c in checkout.por_transacao.values():
-        exato = c.transacao.valor_bruto * c.taxa_contratada
         if c.transacao.tipo_lancamento != "REVERSAO ANTECIPACAO":
-            assert abs(c.comissao) <= abs(exato) < abs(c.comissao) + Decimal("0.01")
+            esperado = (c.transacao.valor_bruto * c.taxa_contratada).quantize(Decimal("0.01"), rounding="ROUND_HALF_UP")
+            assert c.comissao == esperado, c.transacao.ref_origem
 
 
 # --- Casa do Estudante ------------------------------------------------------
@@ -129,10 +130,8 @@ def test_ordem_deterministica_comissao_desc_depois_cnpj(checkout):
     assert ordem.index("08780784000120") < ordem.index("20987545000140")  # Campus 9.335,56 antes de Vela 9.315,05
 
 
-def test_totais_conferem_com_a_exploracao(checkout):
-    # Conferência independente (docs/EXPLORACAO.md, centavos inteiros em outro programa):
-    # Σ valor_taxa 231.880,36 − Atlas 7.876,05 − Casa cobrado 15.391,27 + Casa contratado (−5,50)
-    # − divergências Rota 1.546,28 e Bridge 29,95 = 207.031,31
-    assert sum(c["comissao_brl"] for c in checkout.comissoes) == Decimal("207031.31")
-    assert _total(checkout, "95927868000148") == Decimal("15620.55")  # Rota: 17.166,83 − 1.546,28
-    assert _total(checkout, "22224579000109") == Decimal("11915.51")  # Bridge: 11.945,46 − 29,95
+def test_totais_conferem_com_a_previsao_independente(checkout):
+    # previsão independente do Lucca (outra sessão, sem ver o código) com o arredondamento da Q-H
+    assert sum(c["comissao_brl"] for c in checkout.comissoes) == Decimal("207039.73")
+    assert _total(checkout, "22224579000109") == Decimal("11916.02")  # Bridge
+    assert _total(checkout, "95927868000148") == Decimal("15621.27")  # Rota

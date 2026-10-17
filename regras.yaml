@@ -121,12 +121,11 @@ checkout:
     status: CONFIRMADO
     fonte: "Slack Helena 20:05"
     pergunta_ref: P03
-  arredondamento_comissao_contratada:   # bruto × contratada (Helena 20:05 não definiu o arredondamento)
-    valor: TRUNCAR_POR_TRANSACAO        # trunca no centavo cada transação, depois soma; nunca trunca o total
-    status: ASSUMO
-    autor: Lucca
-    fonte: "decisão Lucca 16/10 ~20h55 (D09). Base: a Orbe trunca valor_taxa (1.001 linhas só truncamento reproduz; 0 só arredondamento; 942 ambos)"
-    pergunta_ref: null
+  arredondamento_comissao_contratada:   # substitui o ASSUMO de truncar (D09), corrigido pelo cliente (D27)
+    valor: ROUND_HALF_UP_POR_LINHA      # arredondamento comum no centavo (meio para longe do zero), linha por linha, depois soma
+    status: CONFIRMADO
+    fonte: "Slack Helena 21:13 (Q-H a, b): 'A gente não trunca. Arredondamento comum para o centavo. Meio centavo vai para cima ... -0,005 vira -0,01. Linha por linha, e depois soma.'"
+    pergunta_ref: P12
   composicao_comissao:
     valor:
       VENDA: "entra (bruto × taxa contratada)"
@@ -199,12 +198,13 @@ divergencias:
     autor: Lucca
     fonte: "decisão Lucca 16/10 ~20h55 (D10). Caso real: 4 estornos da Rota Global, −R$ 98,44"
     pergunta_ref: null
-  tolerancia_checkout:      # consequência do truncamento por transação: comparação exata
-    valor: 0
-    status: ASSUMO
-    autor: Lucca
-    fonte: "decisão Lucca 16/10 ~20h55 (D09): com o mesmo truncamento da Orbe não há ruído de arredondamento no checkout"
-    pergunta_ref: null
+  criterio_checkout:        # substitui a tolerância 0 (D09), removida (D27)
+    valor: >-
+      divergência só quando a taxa aplicada ≠ contratada; valor = round(valor_bruto × (taxa aplicada − contratada))
+      por linha (checkout.arredondamento_comissao_contratada); centavo de truncamento da Orbe não é divergência
+    status: CONFIRMADO
+    fonte: "Slack Helena 21:13 (Q-H c): 'Divergência é quando a taxa aplicada é diferente da contratada. Diferença de centavo por causa do truncamento da Orbe não é divergência. O valor da divergência eu quero como valor bruto × (taxa aplicada − contratada).'"
+    pergunta_ref: P12
 
 remessa:
   spread_negativo:
@@ -237,32 +237,38 @@ remessa:
     status: CONFIRMADO
     fonte: "Slack Helena 20:48 (caso: anexo R76/R77 PC-0926-0162; 05b MRD2026090550 pagou uma vez)"
     pergunta_ref: null
-  arredondamento_participacao:  # meio centavo no 50%
-    valor: ROUND_HALF_EVEN_POR_OPERACAO   # 50% × Spread R$ arredondado no centavo por operação (meio → par), depois soma
+  arredondamento_participacao:  # substitui o HALF_EVEN da D19 (D27)
+    valor: ROUND_HALF_UP_POR_LINHA   # 50% × Spread R$ arredondado por operação (meio para longe do zero), depois soma
+    status: CONFIRMADO
+    fonte: "Slack Helena 21:13 (Q-H d): 'Por operação, com o mesmo arredondamento. No seu exemplo, R$ 131,01.'"
+    pergunta_ref: P12
+  formula_divergencia:      # substitui a D22 (D28)
+    valor: "round((Spread % aplicado, coluna do relatório − contratado) × PTAX × Valor ME); valor cheio"
     status: ASSUMO
     autor: Lucca
-    fonte: "decisão Lucca 16/10 ~22h (D19): sem viés sistemático e o rastro fecha exato"
-    pergunta_ref: null
-  formula_divergencia:      # D22
-    valor: "Spread R$ (coluna do relatório) − contratado × PTAX × Valor ME; valor cheio; mesma base da comissão"
-    status: ASSUMO
-    autor: Lucca
-    fonte: "decisão Lucca ~22h20 (D22); 'É o valor cheio' (Slack Helena 20:58); contratado em branco/'padrão' = remessa.spread_padrao"
+    fonte: "decisão Lucca ~22h50 (D28), mesma lógica da Q-H c (Slack Helena 21:13: 'valor bruto × (taxa aplicada − contratada)'); 'É o valor cheio' (Slack Helena 20:58); contratado em branco/'padrão' = remessa.spread_padrao"
     pergunta_ref: P11
-  arredondamento_divergencia:   # D20
-    valor: ROUND_HALF_EVEN_POR_OPERACAO
-    status: ASSUMO
-    autor: Lucca
-    fonte: "D20, confirmada pelo Lucca (~22h20): mesma regra de remessa.arredondamento_participacao"
-    pergunta_ref: null
+  arredondamento_divergencia:   # substitui o HALF_EVEN da D20 (D27)
+    valor: ROUND_HALF_UP_POR_LINHA
+    status: CONFIRMADO
+    fonte: "Slack Helena 21:13 (Q-H a, d): mesmo arredondamento, por operação"
+    pergunta_ref: P12
   divergencia_spread_negativo:  # D21
     valor:
       diferenca_brl: "valor cheio contra o contrato (remessa.formula_divergencia)"
-      impacto_repasse_tarvo: "participação × Spread R$ (remessa.arredondamento_participacao), coluna extra"
+      impacto_repasse_tarvo: "round(participação × Spread R$) (remessa.arredondamento_participacao), coluna extra"
     status: ASSUMO
     autor: Lucca
     fonte: "decisão Lucca ~22h20 (D21); fato: Slack Helena 20:48 (fora da comissão e da nota; ela contesta)"
     pergunta_ref: P01
+  excesso_cobrado_na_remessa:   # Q-J
+    valor: >-
+      a nota de remessa sai pelo realizado (o excesso entra); a nossa metade do excesso cobrado a mais
+      (round(participação × divergência COBROU_A_MAIS do lojista)) vira pendência para a Helena, a ajustar
+      no mês em que a Ponte devolver a diferença ao lojista
+    status: CONFIRMADO
+    fonte: "Slack Helena 21:45 (Q-J): 'Entra. A nota de setembro sai pelo realizado ... Se a Ponte devolver a diferença para a Mundo Aberto, a nossa metade sai no mês em que o ajuste acontecer. Deixar como pendência para mim é o caminho certo.'"
+    pergunta_ref: P13
   motivo_spread_negativo:
     valor: "trava vencida (2h); Helena contesta o desconto no repasse"
     status: ASSUMO
@@ -320,10 +326,17 @@ contabil:
         L87: "2.1.03.002"   # DEBITO DARF 2172 COFINS
       MERIDIANO:
         MRD2026090132: {D: "1.1.01.002", C: "1.1.03.002"}   # TED RECEB PONTE CAMBIO SA REPASSE COMISSAO 08/2026
-    status: ASSUMO
-    autor: Lucca
-    fonte: "decisão Lucca; base: contabil.obrigacoes_mes_anterior_fatos (Slack Helena 20:49) + 04_plano_de_contas"
+    status: CONFIRMADO
+    fonte: "Slack Helena 21:14 (Q-I a): 'Se o valor já estava registrado, o pagamento ou recebimento baixa a conta onde ele estava, e não vira receita ou despesa de novo. Como respondi ao Lucca, a folha, os tributos de agosto e o repasse da Ponte de 04/09 já estavam registrados.' Contas: escolha do Lucca no plano de contas"
     pergunta_ref: P02
+  despesas_diretas:         # Q-I b; usado na E6b
+    valor:
+      categorias: [tarifas, aluguel, cloud, assinaturas, servicos]
+      tratamento: "despesa direta do mês (nada provisionado além das obrigações de agosto)"
+      quando_o_extrato_nao_deixar_claro: "declarar a premissa no HIPOTESES.md e seguir"
+    status: CONFIRMADO
+    fonte: "Slack Helena 21:14 (Q-I b): 'Além desses, nada estava provisionado: tarifas, aluguel, cloud, assinaturas e serviços entram direto na despesa do mês. Quando o extrato não deixar claro, declarem a premissa no HIPOTESES.md e sigam.'"
+    pergunta_ref: P14
   creditos_sem_origem:      # a Helena devolveu a decisão (20:49); decisão do Lucca
     valor:
       AURORA:

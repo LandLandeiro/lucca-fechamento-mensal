@@ -19,7 +19,7 @@ import re
 from dataclasses import dataclass, field
 from decimal import Decimal
 
-from tarvo.calculos.remessa import ClassificacaoRemessa, participacao
+from tarvo.calculos.remessa import ClassificacaoRemessa, modo_participacao, participacao
 from tarvo.formatos import fmt_dinheiro
 from tarvo.modelo import Pendencia
 from tarvo.regras import valor_da_regra
@@ -134,7 +134,8 @@ def conferencia_repasse(
     if spread_declarado is None:
         return [], []
     fracao = Decimal(str(valor_da_regra(regras, "ponte.participacao_tarvo")))
-    previsto = participacao(spread_declarado, fracao)
+    modo = modo_participacao(regras)
+    previsto = participacao(spread_declarado, fracao, modo)
     diferenca = nota_remessa - previsto
     if diferenca == 0:
         return [], []
@@ -150,9 +151,9 @@ def conferencia_repasse(
     }
     componentes: dict[str, list] = {}
     for op, motivo, _ in cls.excluidas:
-        componentes.setdefault(motivo, []).append((op, -participacao(op.spread_brl, fracao)))
+        componentes.setdefault(motivo, []).append((op, -participacao(op.spread_brl, fracao, modo)))
     for op, _, _ in cls.pendentes:
-        componentes.setdefault("PENDENCIA", []).append((op, -participacao(op.spread_brl, fracao)))
+        componentes.setdefault("PENDENCIA", []).append((op, -participacao(op.spread_brl, fracao, modo)))
     soma = sum((v for itens in componentes.values() for _, v in itens), ZERO)
     residuo = diferenca - soma
 
@@ -165,7 +166,8 @@ def conferencia_repasse(
         valor_txt = fmt_dinheiro(abs(total)) if partes else fmt_dinheiro(total)
         partes.append(f"{sinal}{valor_txt} ({nome} {', '.join(o.ref_origem for o, _ in itens)}, {acao})")
     if residuo:
-        partes.append(f"{'+ ' if residuo > 0 else '− '}{fmt_dinheiro(abs(residuo))} (arredondamento)")
+        partes.append(f"{'+ ' if residuo > 0 else '− '}{fmt_dinheiro(abs(residuo))} "
+                      f"(arredondamento por operação contra {fracao * 100:.0f}% do total da Ponte)")
     motivo_txt = (f"{quando}. Pelo total do relatório da Ponte ({fmt_dinheiro(spread_declarado)}) o repasse seria "
                   f"{fmt_dinheiro(previsto)}; faturamos {fmt_dinheiro(nota_remessa)}. Diferença {fmt_dinheiro(diferenca)} = "
                   + " ".join(partes) + ".")
@@ -179,5 +181,5 @@ def conferencia_repasse(
     if residuo:
         rastro.append({"id_saida": pid, "arquivo_origem": arquivo_ponte, "ref_origem": "Spread total R$:",
                        "valor": residuo, "linha_arquivo": 0, "tipo_lancamento": "REMESSA",
-                       "nota": "arredondamento: participação do total declarado × soma por operação"})
+                       "nota": "arredondamento por operação contra a participação do total declarado pela Ponte"})
     return [pend], rastro

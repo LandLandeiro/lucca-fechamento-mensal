@@ -60,7 +60,7 @@ def _ler(caminho: Path, erros: list[str]) -> list[dict] | None:
 PREFIXOS_COBERTURA = ("COM-", "PEN-", "EXC-")
 PREFIXO_EXCLUSAO = "EXC-"
 # pendências derivadas de um número já calculado: reapontam linhas que já têm destino
-PREFIXOS_DERIVADOS = ("PEN-NF_NEGATIVA-", "PEN-CONFERENCIA_REPASSE-")
+PREFIXOS_DERIVADOS = ("PEN-NF_NEGATIVA-", "PEN-CONFERENCIA_REPASSE-", "PEN-EXCESSO_REMESSA-")
 
 
 def _d(texto: str | None) -> Decimal:
@@ -75,7 +75,8 @@ def _destino(id_saida: str) -> bool:
 def validar_saida(
     pasta: Path,
     refs_esperadas: dict[str, set[tuple[str, int]]] | None = None,
-    valor_taxa_orbe: dict[str, dict[str, Decimal]] | None = None,
+    fonte_orbe: dict[str, dict[str, tuple]] | None = None,
+    modo_checkout: str | None = None,
     spread_ponte: dict[str, dict[tuple[str, int], Decimal]] | None = None,
     spread_declarado: Decimal | None = None,
 ) -> list[str]:
@@ -84,9 +85,9 @@ def validar_saida(
     - `refs_esperadas` {arquivo: {(ref_origem, linha)}}: cada linha de origem aparece
       exatamente uma vez no rastro de um COM-…, PEN-… ou EXC-… (a linha distingue cópias
       com o mesmo Nº de operação).
-    - `valor_taxa_orbe` {arquivo: {ref: valor_taxa}}, lido da fonte: conservação do checkout,
-      Σ valor_taxa das linhas em COM-…-CHECKOUT = Σ comissão CHECKOUT + Σ divergências CHECKOUT;
-      e toda divergência de checkout aponta só linhas que estão numa comissão.
+    - `fonte_orbe` {arquivo: {ref: (valor_taxa, valor_bruto, taxa_aplicada fração)}} lido da fonte,
+      com `modo_checkout` (modo de arredondamento do Decimal): conservação do checkout com resíduo
+      de truncamento (ver `_conservacao_checkout`); toda divergência aponta só linhas de comissão.
     - `spread_ponte` {arquivo: {(Nº, linha): Spread R$}}: conservação da remessa (ver
       `_conservacao_remessa`); `spread_declarado` = "Spread total R$" do próprio relatório.
     """
@@ -145,8 +146,10 @@ def validar_saida(
 
     if "notas_a_emitir.csv" in dados:
         erros.extend(_notas(dados))
-    if valor_taxa_orbe:
-        erros.extend(_conservacao_checkout(dados, valor_taxa_orbe))
+    if fonte_orbe:
+        if modo_checkout is None:
+            raise ValueError("fonte_orbe exige modo_checkout")
+        erros.extend(_conservacao_checkout(dados, fonte_orbe, modo_checkout))
     if spread_ponte:
         erros.extend(_conservacao_remessa(dados, spread_ponte, spread_declarado))
 
@@ -192,7 +195,14 @@ def _notas(dados: dict[str, list[dict]]) -> list[str]:
     return erros
 
 
-def _conservacao_checkout(dados: dict[str, list[dict]], valor_taxa_orbe: dict[str, dict[str, Decimal]]) -> list[str]:
+def _conservacao_checkout(dados: dict[str, list[dict]], fonte_orbe: dict[str, dict[str, tuple]], modo: str) -> list[str]:
+    """Σ valor_taxa (Orbe, linhas em COM-…-CHECKOUT) = Σ comissão + Σ divergência + resíduo de truncamento.
+
+    Para cada linha, recalcula a divergência da fonte (Q-H c): round(bruto × (aplicada − contratada))
+    se as taxas diferem, senão 0; a taxa contratada vem do rastro. Exige: Σ divergências recalculadas
+    = Σ divergências listadas (pares zerados somam 0); resíduo da linha ≤ 1 centavo onde as taxas são
+    iguais (só o truncamento da Orbe) e ≤ 2 centavos onde diferem (truncamento + dois arredondamentos).
+    """
     erros: list[str] = []
     rastro = dados["rastro.csv"]
     com_ids = {l["id_saida"] for l in dados.get("comissoes_por_lojista.csv", []) if l["linha_negocio"] == "CHECKOUT"}
@@ -201,23 +211,41 @@ def _conservacao_checkout(dados: dict[str, list[dict]], valor_taxa_orbe: dict[st
                     if l["id_saida"] in com_ids), Decimal("0"))
     soma_div = sum((_d(l["diferenca_brl"]) for l in dados.get("divergencias_taxa.csv", [])
                     if l["id_saida"] in div_ids), Decimal("0"))
-    soma_fonte = Decimal("0")
+    soma_fonte = soma_div_recalc = residuo = Decimal("0")
+    centavo = Decimal("0.01")
     refs_com: set[tuple[str, str]] = set()
     for l in rastro:
-        if l["id_saida"] in com_ids:
-            fonte = valor_taxa_orbe.get(l["arquivo_origem"], {})
-            if l["ref_origem"] not in fonte:
-                erros.append(f"conservação: {l['ref_origem']} no rastro de {l['id_saida']} não existe na fonte")
-                continue
-            soma_fonte += fonte[l["ref_origem"]]
-            refs_com.add((l["arquivo_origem"], l["ref_origem"]))
+        if l["id_saida"] not in com_ids:
+            continue
+        fonte = fonte_orbe.get(l["arquivo_origem"], {})
+        if l["ref_origem"] not in fonte:
+            erros.append(f"conservação: {l['ref_origem']} no rastro de {l['id_saida']} não existe na fonte")
+            continue
+        valor_taxa, bruto, aplicada = fonte[l["ref_origem"]]
+        try:
+            contratada = Decimal(l.get("taxa_contratada_pct") or "x") / 100
+        except Exception:  # noqa: BLE001 — coluna ausente ou ilegível
+            erros.append(f"conservação: {l['ref_origem']} sem taxa_contratada_pct legível no rastro")
+            continue
+        dif = Decimal("0") if aplicada == contratada else (bruto * (aplicada - contratada)).quantize(centavo, rounding=modo)
+        res_linha = valor_taxa - _d(l["valor"]) - dif
+        limite = centavo if aplicada == contratada else 2 * centavo
+        if abs(res_linha) > limite:
+            erros.append(f"{l['ref_origem']}: resíduo {res_linha} (valor_taxa {valor_taxa} − comissão {l['valor']} − "
+                         f"divergência {dif}) acima de {limite}")
+        soma_fonte += valor_taxa
+        soma_div_recalc += dif
+        residuo += res_linha
+        refs_com.add((l["arquivo_origem"], l["ref_origem"]))
     for l in rastro:
         if l["id_saida"] in div_ids and (l["arquivo_origem"], l["ref_origem"]) not in refs_com:
             erros.append(f"{l['id_saida']}: aponta {l['ref_origem']}, que não está em nenhuma comissão (pendência?)")
-    if soma_fonte != soma_com + soma_div:
+    if soma_div_recalc != soma_div:
+        erros.append(f"divergências CHECKOUT: listadas {soma_div} ≠ recalculadas da fonte {soma_div_recalc}")
+    if soma_fonte != soma_com + soma_div + residuo:
         erros.append(
-            f"conservação CHECKOUT: Σ valor_taxa Orbe {soma_fonte} ≠ Σ comissão {soma_com} + Σ divergências {soma_div}"
-            f" (diferença {soma_fonte - soma_com - soma_div})"
+            f"conservação CHECKOUT: Σ valor_taxa {soma_fonte} ≠ Σ comissão {soma_com} + Σ divergências {soma_div}"
+            f" + resíduo {residuo}"
         )
     return erros
 

@@ -70,9 +70,9 @@ def test_pc_0926_0002_liquidada_em_outubro_entra(cls, rem):
     # R6: contratada 30/09, liquidada 01/10 → competência pela contratação
     op = next(o for o, _ in cls.elegiveis if o.ref_origem == "PC-0926-0002")
     assert (op.data_contratacao, op.data_liquidacao) == (date(2026, 9, 30), date(2026, 10, 1))
-    # 50% × 262,01 = 131,005 → meio centavo, ROUND_HALF_EVEN → 131,00 (D19)
+    # 50% × 262,01 = 131,005 → meio centavo para cima → 131,01 (o exemplo da própria Helena, Q-H d)
     (linha,) = _rastro(rem, "PC-0926-0002")
-    assert linha["id_saida"] == "COM-34671260000100-REMESSA" and linha["valor"] == Decimal("131.00")
+    assert linha["id_saida"] == "COM-34671260000100-REMESSA" and linha["valor"] == Decimal("131.01")
     assert "liquidada em 2026-10-01" in linha["nota"]
 
 
@@ -94,16 +94,16 @@ def test_pc_0926_0210_spread_negativo_fora_da_comissao(cls, rem, divr):
     d = next(x for x in divr.linhas if x["ref_origem"] == "PC-0926-0210")
     assert d["linha_negocio"] == "REMESSA" and d["direcao"] == "COBROU_A_MENOS"
     assert "trava vencida (2h); Helena contesta o desconto no repasse" in d["motivo"]
-    # D22: Spread R$ −687,52 − 1,5% (padrão) × PTAX × ME = −1.351,87 (valor cheio contra o contrato, D21)
+    # D28: round((−1,5523% − 1,5% padrão) × PTAX × ME) = −1.351,87 (valor cheio contra o contrato, D21)
     assert d["diferenca_brl"] == Decimal("-1351.87")
     assert d["impacto_repasse_tarvo"] == Decimal("-343.76")  # 50% × −687,52
 
 
-def test_negativos_d21_d22(divr):
+def test_negativos_d21_d28(divr):
     neg = {d["ref_origem"]: d for d in divr.linhas if d["spread_brl"] < 0}
-    assert neg["PC-0926-0326"]["diferenca_brl"] == Decimal("-1001.29")  # Canguru (R141)
+    assert neg["PC-0926-0326"]["diferenca_brl"] == Decimal("-1001.30")  # Canguru (R141), pela coluna "Spread %"
     assert sum(d["diferenca_brl"] for d in neg.values()) == Decimal("-3565.98")
-    # −172,515 → −172,52 (meio → par)
+    # −172,515 → −172,52 (meio para longe do zero)
     assert sum(d["impacto_repasse_tarvo"] for d in neg.values()) == Decimal("-917.03")
     assert all(d["impacto_repasse_tarvo"] is None for d in divr.linhas if d["spread_brl"] >= 0)
 
@@ -120,29 +120,30 @@ def test_destinos_somam_233(cls, ponte):
 
 # --- comissão ---------------------------------------------------------------
 
-def test_participacao_meio_centavo_vai_para_o_par():
-    assert participacao(Decimal("262.01"), Decimal("0.5")) == Decimal("131.00")
-    assert participacao(Decimal("262.03"), Decimal("0.5")) == Decimal("131.02")
-    assert participacao(Decimal("-1.01"), Decimal("0.5")) == Decimal("-0.50")
+def test_participacao_meio_centavo_longe_do_zero():
+    # Q-H: "Meio centavo vai para cima, e no negativo ... -0,005 vira -0,01"
+    assert participacao(Decimal("262.01"), Decimal("0.5"), "ROUND_HALF_UP") == Decimal("131.01")
+    assert participacao(Decimal("262.03"), Decimal("0.5"), "ROUND_HALF_UP") == Decimal("131.02")
+    assert participacao(Decimal("-1.01"), Decimal("0.5"), "ROUND_HALF_UP") == Decimal("-0.51")
 
 
 def test_total_remessa_e_comparacao_de_arredondamento(rem, cls):
     elegivel = sum(o.spread_brl for o, _ in cls.elegiveis)
     assert elegivel == Decimal("79085.76")  # 78.073,59 − duplicata 821,88 + negativos 1.834,05
     total = sum(c["comissao_brl"] for c in rem.comissoes)
-    assert total == Decimal("39542.89")
-    assert sum(a["total_uma_vez"] for a in rem.comparacao_arredondamento) == Decimal("39542.87")
+    assert total == Decimal("39543.45")  # previsão independente
+    assert sum(a["total_uma_vez"] for a in rem.comparacao_arredondamento) == Decimal("39542.92")
 
 
 def test_mundo_aberto_comissao_sobre_o_spread_realizado(rem):
     c = next(c for c in rem.comissoes if c["cnpj"] == "17217888000111")
-    assert c["comissao_brl"] == Decimal("3547.62")  # Σ por operação de 50% × Spread R$ (que inclui o excesso)
+    assert c["comissao_brl"] == Decimal("3547.69")  # Σ por operação de round(50% × Spread R$), excesso incluído (Q-J)
 
 
 # --- divergência ------------------------------------------------------------
 
 def test_pc_0926_0011_mundo_aberto(divr):
-    # R10 (D22): Spread R$ 147,53 − 1,20% × 4,0315 × 2.438,46 (117,9666) = 29,5634 → 29,56
+    # R10 (D28): round((1,5007% − 1,20%) × 4,0315 × 2.438,46) = round(29,5605) = 29,56
     d = next(x for x in divr.linhas if x["ref_origem"] == "PC-0926-0011")
     assert d["diferenca_brl"] == Decimal("29.56")
     assert (d["taxa_contratada_pct"], d["taxa_aplicada_pct"]) == (Decimal("0.0120"), Decimal("0.015007"))
@@ -151,8 +152,7 @@ def test_pc_0926_0011_mundo_aberto(divr):
 
 def test_mundo_aberto_total(divr):
     mundo = [d for d in divr.linhas if d["cnpj"] == "17217888000111"]
-    assert len(mundo) == 23 and sum(d["diferenca_brl"] for d in mundo) == Decimal("1418.88")
-    assert divr.total_pela_coluna_spread_pct["17217888000111"] == Decimal("1418.85")  # número da Fox AI (Q-G)
+    assert len(mundo) == 23 and sum(d["diferenca_brl"] for d in mundo) == Decimal("1418.85")  # = Q-G (Fox AI)
 
 
 def test_canguru_padrao_sem_divergencia(divr, cls):

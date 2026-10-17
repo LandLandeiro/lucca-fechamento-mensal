@@ -30,9 +30,9 @@ def test_uma_nota_por_lojista_checkout_positivo(saida):
     notas = [n for n in _csv(pasta, "notas_a_emitir.csv") if n["linha_negocio"] == "CHECKOUT"]
     com = {c["cnpj"]: Decimal(c["comissao_brl"]) for c in _csv(pasta, "comissoes_por_lojista.csv") if c["linha_negocio"] == "CHECKOUT"}
     assert len(notas) == 20 == sum(1 for v in com.values() if v > 0)
-    assert sum(Decimal(n["valor_brl"]) for n in notas) == Decimal("207036.81")  # 207.031,31 + 5,50 (Casa fora)
+    assert sum(Decimal(n["valor_brl"]) for n in notas) == Decimal("207045.23")  # 207.039,73 + 5,50 (Casa fora)
     rota = next(n for n in notas if n["tomador_cnpj"] == "95927868000148")
-    assert rota["id_saida"] == "NF-95927868000148-CHECKOUT" and rota["valor_brl"] == "15620.55"
+    assert rota["id_saida"] == "NF-95927868000148-CHECKOUT" and rota["valor_brl"] == "15621.27"
     assert rota["discriminacao"] == "Serviço de intermediação de pagamentos (checkout) - competência 09/2026"
 
 
@@ -48,7 +48,7 @@ def test_nota_remessa_unica_para_a_ponte(saida):
     pasta, _ = saida
     (nf,) = [n for n in _csv(pasta, "notas_a_emitir.csv") if n["linha_negocio"] == "REMESSA"]
     assert nf["id_saida"] == "NF-75374179000146-REMESSA"
-    assert (nf["tomador_cnpj"], nf["tomador"], nf["valor_brl"]) == ("75374179000146", "Ponte Câmbio S.A.", "39542.89")
+    assert (nf["tomador_cnpj"], nf["tomador"], nf["valor_brl"]) == ("75374179000146", "Ponte Câmbio S.A.", "39543.45")
     assert nf["discriminacao"] == (
         "Intermediação de operações de câmbio - participação de 50% do spread realizado - competência 09/2026"
     )
@@ -67,13 +67,26 @@ def test_rastro_da_nota_e_o_da_comissao(saida):
 def test_conferencia_do_repasse(saida):
     pasta, _ = saida
     p = next(p for p in _csv(pasta, "pendencias.csv") if p["tipo"] == "CONFERENCIA_REPASSE")
-    assert p["valor_brl"] == "506.09" and p["quem_decide"] == "Helena"
-    for trecho in ("TED da Ponte previsto para 06/10", "(78073.59)", "seria 39036.80", "faturamos 39542.89",
-                   "Diferença 506.09 = 917.03", "− 410.94 (duplicata PC-0926-0162, a Ponte pagaria a mais; avisar)"):
+    assert p["valor_brl"] == "506.65" and p["quem_decide"] == "Helena"
+    for trecho in ("TED da Ponte previsto para 06/10", "(78073.59)", "seria 39036.80", "faturamos 39543.45",
+                   "Diferença 506.65 = 917.03", "− 410.94 (duplicata PC-0926-0162, a Ponte pagaria a mais; avisar)",
+                   "+ 0.56 (arredondamento por operação contra 50% do total da Ponte)"):
         assert trecho in p["motivo"], trecho
     rastro = [l for l in _csv(pasta, "rastro.csv") if l["id_saida"] == p["id_saida"]]
-    assert sum(Decimal(l["valor"]) for l in rastro) == Decimal("506.09")
-    assert {l["ref_origem"] for l in rastro} == {"PC-0926-0210", "PC-0926-0326", "PC-0926-0491", "PC-0926-0545", "PC-0926-0162"}
+    assert sum(Decimal(l["valor"]) for l in rastro) == Decimal("506.65")
+    assert {l["ref_origem"] for l in rastro} == {
+        "PC-0926-0210", "PC-0926-0326", "PC-0926-0491", "PC-0926-0545", "PC-0926-0162", "Spread total R$:"
+    }
+
+
+def test_pendencia_metade_do_excesso_da_mundo_aberto(saida):
+    # Q-J (Helena 21:45): round(50% × 1.418,85) = round(709,425) = 709,43
+    pasta, _ = saida
+    p = next(p for p in _csv(pasta, "pendencias.csv") if p["id_saida"] == "PEN-EXCESSO_REMESSA-17217888000111")
+    assert p["valor_brl"] == "709.43" and p["quem_decide"] == "Helena"
+    assert "1418.85" in p["motivo"] and "sai pelo realizado" in p["motivo"]
+    rastro = [l for l in _csv(pasta, "rastro.csv") if l["id_saida"] == p["id_saida"]]
+    assert sum(Decimal(l["valor"]) for l in rastro) == Decimal("709.43")
 
 
 def _reescrever(caminho, f):

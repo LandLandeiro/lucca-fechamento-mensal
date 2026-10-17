@@ -9,9 +9,29 @@ from __future__ import annotations
 
 import re
 from datetime import date, datetime
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_DOWN, ROUND_HALF_EVEN, ROUND_HALF_UP, Decimal, InvalidOperation
 
 CENTAVO = Decimal("0.01")
+
+# valor de regra de arredondamento (regras.yaml) → modo do Decimal. ROUND_HALF_UP do Decimal
+# leva o meio centavo para longe do zero (0,005 → 0,01; −0,005 → −0,01), como pede a Q-H.
+MODOS_ARREDONDAMENTO = {
+    "ROUND_HALF_UP_POR_LINHA": ROUND_HALF_UP,
+    "ROUND_HALF_EVEN_POR_LINHA": ROUND_HALF_EVEN,
+    "TRUNCAR_POR_LINHA": ROUND_DOWN,
+}
+
+
+def modo_arredondamento(valor_regra: str) -> str:
+    """Modo do Decimal para o valor de uma regra de arredondamento; erro se desconhecido."""
+    if valor_regra not in MODOS_ARREDONDAMENTO:
+        raise ValueError(f"arredondamento {valor_regra!r} não suportado (use {sorted(MODOS_ARREDONDAMENTO)})")
+    return MODOS_ARREDONDAMENTO[valor_regra]
+
+
+def centavos(valor: Decimal, modo: str) -> Decimal:
+    """Arredonda no centavo com o modo dado."""
+    return valor.quantize(CENTAVO, rounding=modo)
 
 _RE_DECIMAL_BR_SEM_MILHAR = re.compile(r"^-?\d+(,\d+)?$")
 _RE_DECIMAL_BR_COM_MILHAR = re.compile(r"^-?\d{1,3}(\.\d{3})*(,\d+)?$")

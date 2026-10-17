@@ -19,3 +19,10 @@ De 2 a 4 momentos. Para cada um: o que pedi, o que a IA devolveu, o que fiz com 
 - **O que aconteceu:** num teste de mutação (trocar truncamento por arredondamento para ver se os testes falham), a IA desfez a troca com `git checkout -- src/tarvo/calculos/comissoes.py`. O arquivo ainda não estava commitado, e o comando o voltou ao esqueleto da E0, apagando a implementação.
 - **Como foi percebido:** a própria IA notou na saída do comando, antes de seguir, que a versão restaurada era a do HEAD (o esqueleto) e não a dela.
 - **O que mudou:** o arquivo foi restaurado da cópia feita antes da mutação, conferido (`ROUND_DOWN` presente, nenhum `ROUND_HALF_UP`) e os 50 testes rodaram de novo. A mutação provou que os testes distinguem as regras (4 falharam). Regra a partir daqui: mutação só com backup explícito, nunca `git checkout` em arquivo não commitado.
+
+## 4. Premissa escrita, cliente corrigiu, mudou uma linha (truncar → arredondar)
+
+- **O que aconteceu:** às 20h55 registrei como ASSUMO "comissão contratada: truncar no centavo, como a Orbe" (D09), com base escrita (1.001 linhas da Orbe só fecham truncando) e com a consequência (tolerância 0). Às 21:13 a Helena respondeu à Fox AI: "A gente não trunca. Arredondamento comum para o centavo... linha por linha" e "Diferença de centavo por causa do truncamento da Orbe não é divergência".
+- **Como foi percebido:** a resposta pública no canal contradizia uma premissa marcada como ASSUMO, que eu tinha escrito justamente para poder ser contestada.
+- **O que mudou:** a regra virou CONFIRMADO no `regras.yaml` (`TRUNCAR` → `ROUND_HALF_UP`); o modo de arredondamento está num só lugar, então o cálculo não foi reescrito. O centavo de diferença com a Orbe passou a ser resíduo explícito (−9,07), não divergência. Os números novos (207.039,73 · 16.973,65 · 39.543,45 · 506,65) bateram no centavo com a minha previsão independente antes do commit.
+

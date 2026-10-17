@@ -43,7 +43,7 @@ def test_formato_dos_csvs(saida):
     cab = texto.splitlines()[0]
     assert cab.startswith("id_saida;cnpj;lojista;linha_negocio;comissao_brl")
     assert "COM-95927868000148-CHECKOUT;95927868000148;" in texto
-    assert ";15620.55;" in texto
+    assert ";15621.27;" in texto
     rastro = (pasta / "rastro.csv").read_text(encoding="utf-8")
     assert rastro.splitlines()[0].startswith("id_saida;arquivo_origem;ref_origem;valor")
     assert "COM-95927868000148-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88428676;374.08;1056;" in rastro
@@ -75,7 +75,11 @@ def test_linha_da_orbe_sumida_e_erro(saida, tmp_path, orbe):
 
 
 def _conservacao(orbe):
-    return {orbe.arquivo: {t.ref_origem: t.valor_taxa for t in orbe.transacoes}}
+    return {
+        "fonte_orbe": {orbe.arquivo: {t.ref_origem: (t.valor_taxa, t.valor_bruto, t.taxa_aplicada_pct / 100)
+                                      for t in orbe.transacoes}},
+        "modo_checkout": "ROUND_HALF_UP",
+    }
 
 
 def test_conservacao_quebra_se_divergencia_sumir(saida, tmp_path, orbe):
@@ -85,8 +89,8 @@ def test_conservacao_quebra_se_divergencia_sumir(saida, tmp_path, orbe):
     alvo = "DIV-TX88423647"
     _reescrever(pasta / "divergencias_taxa.csv", lambda ls: [l for l in ls if l[0] != alvo])
     _reescrever(pasta / "rastro.csv", lambda ls: [l for l in ls if l[0] != alvo])
-    erros = validar_saida(pasta, valor_taxa_orbe=_conservacao(orbe))
-    assert any("conservação CHECKOUT" in e and "diferença 66.28" in e for e in erros)
+    erros = validar_saida(pasta, **_conservacao(orbe))
+    assert any("listadas" in e and "recalculadas da fonte" in e for e in erros)
 
 
 def test_divergencia_de_linha_pendente_e_erro(saida, tmp_path, orbe):
@@ -101,8 +105,24 @@ def test_divergencia_de_linha_pendente_e_erro(saida, tmp_path, orbe):
         return linhas
 
     _reescrever(pasta / "rastro.csv", apontar_atlas)
-    erros = validar_saida(pasta, valor_taxa_orbe=_conservacao(orbe))
+    erros = validar_saida(pasta, **_conservacao(orbe))
     assert any("não está em nenhuma comissão" in e for e in erros)
+
+
+def test_residuo_de_mais_de_um_centavo_e_erro(saida, tmp_path, orbe):
+    from tarvo.saida.validador import validar_saida
+
+    pasta = _copia(saida, tmp_path)
+
+    def adulterar(linhas):
+        for l in linhas[1:]:
+            if l[0] == "COM-23109187000161-CHECKOUT" and l[2] == "TX88444848":
+                l[3] = "-83.15"  # comissão contratada é −83,12; −0,03 de resíduo não é truncamento
+        return linhas
+
+    _reescrever(pasta / "rastro.csv", adulterar)
+    erros = validar_saida(pasta, **_conservacao(orbe))
+    assert any("TX88444848: resíduo" in e for e in erros)
 
 
 def _spread_ponte():

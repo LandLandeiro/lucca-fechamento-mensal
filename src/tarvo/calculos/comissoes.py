@@ -5,8 +5,8 @@ linha de origem. `id_saida`: `COM-<cnpj>-<CHECKOUT|REMESSA>`.
 
 CHECKOUT (regras usadas, todas de `regras.yaml`):
 - checkout.base_comissao (CONFIRMADO 20:05): bruto × taxa contratada, por transação;
-- checkout.arredondamento_comissao_contratada (ASSUMO, D09): truncar no centavo por
-  transação, depois somar;
+- checkout.arredondamento_comissao_contratada (CONFIRMADO 21:13, Q-H): arredondamento comum
+  no centavo (meio para longe do zero) por transação, depois somar (substitui o truncamento da D09);
 - checkout.composicao_comissao (CONFIRMADO 20:47): VENDA, ESTORNO, ANTECIPACAO entram;
   REVERSAO ANTECIPACAO só anula a antecipação referenciada (id_referencia);
 - checkout.estorno (CONFIRMADO 20:06): estorno pela taxa contratada vigente na data da
@@ -21,10 +21,10 @@ no rastro de uma pendência (PEN-…). O validador confere isso.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from decimal import ROUND_DOWN, Decimal
+from decimal import Decimal
 
 from tarvo.cadastro import Cadastro, coluna_do_produto, taxa_contratada
-from tarvo.formatos import CENTAVO
+from tarvo.formatos import centavos, modo_arredondamento
 from tarvo.modelo import ItemRastro, Pendencia, TransacaoOrbe
 from tarvo.regras import valor_da_regra
 
@@ -55,18 +55,11 @@ def id_comissao(cnpj: str, linha: str = LINHA) -> str:
     return f"COM-{cnpj}-{linha}"
 
 
-def truncar(valor: Decimal) -> Decimal:
-    """Trunca no centavo em direção a zero (D09: igual à Orbe)."""
-    return valor.quantize(CENTAVO, rounding=ROUND_DOWN)
-
-
 def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regras: dict) -> ResultadoCheckout:
     """Comissão CHECKOUT por lojista, com rastro e pendências."""
     valor_da_regra(regras, "checkout.base_comissao")
     valor_da_regra(regras, "checkout.estorno")
-    arred = valor_da_regra(regras, "checkout.arredondamento_comissao_contratada")
-    if arred != "TRUNCAR_POR_TRANSACAO":
-        raise ValueError(f"checkout.arredondamento_comissao_contratada = {arred!r} não suportado")
+    modo = modo_arredondamento(valor_da_regra(regras, "checkout.arredondamento_comissao_contratada"))
     tipos = set(valor_da_regra(regras, "checkout.composicao_comissao"))
     sem_contrato = {str(k): v for k, v in valor_da_regra(regras, "cadastro.lojista_sem_contrato_vigente").items()}
     mapa_colunas = valor_da_regra(regras, "taxas.coluna_por_produto")
@@ -128,7 +121,7 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
         if enc.taxa is None:
             pendente_transacao(t, "TAXA_CONTRATADA_INDEFINIDA", f"{coluna}: {enc.fonte}")
             continue
-        com = truncar(t.valor_bruto * enc.taxa)
+        com = centavos(t.valor_bruto * enc.taxa, modo)
         nota = "; ".join(x for x in (nota, enc.fonte) if x)
         res.por_transacao[t.ref_origem] = ComissaoTransacao(t, cnpj, enc.taxa, com, nota, enc.fonte)
 

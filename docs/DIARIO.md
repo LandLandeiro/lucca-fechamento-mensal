@@ -72,3 +72,9 @@ Log cronológico: hora, etapa, o que foi feito, como foi verificado, commit.
 ` virou quebra de linha real); a CLI não rodava e foi corrigida antes do commit.
 - **Commit:** `D21/D22 e E6a: notas a emitir com conferência do repasse`.
 
+### ~22h40–22h55 · Respostas Q-H/Q-I/Q-J: arredondamento comum
+- **Feito:** Q-H, Q-I e Q-J em `docs/FINANCEIRO_SLACK.md` (literal). `regras.yaml`: arredondamento comum (ROUND_HALF_UP) por linha CONFIRMADO para a comissão de checkout, as divergências e os 50% da remessa, **corrigindo o ASSUMO de truncar (D09)** e o HALF_EVEN (D19/D20) → D27; tolerância 0 do checkout removida, divergência de checkout = round(bruto × (aplicada − contratada)) só onde as taxas diferem; divergência de remessa volta à coluna "Spread %" (D28); Q-I CONFIRMADO (obrigações de agosto e despesas diretas); Q-J pendência EXCESSO_REMESSA (D30). Arredondamento num só lugar (`formatos.modo_arredondamento`, lido do `regras.yaml`). Validador: divergência recalculada da fonte, resíduo de truncamento por linha (D29). Conferência do repasse com o terceiro componente (arredondamento).
+- **Verificado:** todos os números bateram no centavo com a previsão independente do Lucca antes do commit: checkout 207.039,73 (Bridge 11.916,02; Casa −5,50); divergências checkout 200 · 16.973,65 (Casa 15.397,42; Rota 1.546,28; Bridge 29,95); resíduo −9,07; remessa 39.543,45; Mundo Aberto 1.418,85; negativos −3.565,98; notas CHECKOUT 20 · 207.045,23; nota REMESSA 39.543,45; conferência 506,65 = 917,03 − 410,94 + 0,56. `pytest`: 94 passed.
+- **Ponto levado ao Lucca:** o pedido dizia "|resíduo por linha| < 0,01"; truncar × arredondar dá exatamente 0,01 em 969 linhas, então o critério implementado é ≤ 0,01 (D29). Um teste novo errou o exemplo (escolhi uma linha da Casa, que tem taxa 0) e foi corrigido para a L6 TX88410316.
+- **Commit:** `Q-H/Q-I/Q-J: arredondamento comum, resíduo de truncamento e excesso da remessa`.
+

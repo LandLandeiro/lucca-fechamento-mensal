@@ -18,7 +18,7 @@ from tarvo.calculos.comissoes import comissao_checkout, ordem_comissao
 from tarvo.calculos.divergencias import divergencias_checkout, divergencias_remessa
 from tarvo.calculos.notas import conferencia_repasse, notas_a_emitir
 from tarvo.calculos.remessa import classificar_remessa, comissao_remessa
-from tarvo.formatos import fmt_dinheiro
+from tarvo.formatos import fmt_dinheiro, modo_arredondamento
 from tarvo.leitores.orbe import ErroLeitura, ler_orbe
 from tarvo.leitores.ponte_email import ler_email, ler_operacoes
 from tarvo.leitores.taxas import ler_taxas_vigentes
@@ -110,12 +110,13 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
         nf_remessa, ponte.totais_declarados.get("Spread total R$:"), cls_remessa, mail.corpo, ponte.arquivo, regras
     )
     pendencias = consolidar_pendencias(
-        checkout.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura, notas.pendencias, pend_repasse
+        checkout.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura, notas.pendencias, pend_repasse,
+        div_remessa.pendencias_derivadas,
     )
     divs = divergencias.linhas + div_remessa.linhas
     rastro = sorted(
         checkout.rastro + divergencias.rastro + remessa.rastro + div_remessa.rastro
-        + notas.rastro + notas.rastro_pendencias + rastro_repasse,
+        + notas.rastro + notas.rastro_pendencias + rastro_repasse + div_remessa.rastro_pendencias,
         key=lambda l: (l["id_saida"], l["linha_arquivo"], l["ref_origem"]),
     )
     escrever_saida(
@@ -134,7 +135,8 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
             orbe.arquivo: {(t.ref_origem, t.linha_arquivo) for t in orbe.transacoes},
             ponte.arquivo: {(o.ref_origem, o.linha_planilha) for o in ponte.operacoes},
         },
-        valor_taxa_orbe={orbe.arquivo: {t.ref_origem: t.valor_taxa for t in orbe.transacoes}},
+        fonte_orbe={orbe.arquivo: {t.ref_origem: (t.valor_taxa, t.valor_bruto, t.taxa_aplicada_pct / 100) for t in orbe.transacoes}},
+        modo_checkout=modo_arredondamento(valor_da_regra(regras, "checkout.arredondamento_comissao_contratada")),
         spread_ponte={ponte.arquivo: {(o.ref_origem, o.linha_planilha): o.spread_brl for o in ponte.operacoes}},
         spread_declarado=ponte.totais_declarados.get("Spread total R$:"),
     )
@@ -156,13 +158,13 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
             "pendentes": len(cls_remessa.pendentes),
             "arredondamento": remessa.comparacao_arredondamento,
             "divergencias": div_remessa.linhas,
-            "div_pela_coluna": div_remessa.total_pela_coluna_spread_pct,
         },
         "comissoes": checkout.comissoes,
         "total_checkout": sum((c["comissao_brl"] for c in checkout.comissoes), ZERO),
         "lojistas": {c["cnpj"]: c["lojista"] for c in comissoes},
         "notas": notas.linhas,
-        "pendencias_novas": notas.pendencias + pend_repasse,
+        "pendencias_novas": notas.pendencias + pend_repasse + div_remessa.pendencias_derivadas,
+        "residuo_checkout": (divergencias.residuo, divergencias.linhas_com_residuo),
         "pendencias": pendencias,
         "transacoes_em_pendencia": len(checkout.em_pendencia) + len(orbe.linhas_invalidas),
         "transacoes_lidas": orbe.total_linhas_dados,
@@ -192,8 +194,9 @@ def _imprimir_divergencias(r: dict) -> None:
         sel = [d["diferenca_brl"] for d in divs if d["direcao"] == direcao]
         print(f"  {direcao:<16} {len(sel):>4} divergências  {fmt_dinheiro(sum(sel, ZERO)):>12}")
     fonte, com, div = r["conservacao"]
+    residuo, n_res = r["residuo_checkout"]
     print(f"  conservação: Σ valor_taxa Orbe {fmt_dinheiro(fonte)} = Σ comissão {fmt_dinheiro(com)}"
-          f" + Σ divergências {fmt_dinheiro(div)}")
+          f" + Σ divergências {fmt_dinheiro(div)} + resíduo de truncamento {fmt_dinheiro(residuo)} ({n_res} linhas)")
 
 
 def _imprimir_remessa(r: dict) -> None:
@@ -204,7 +207,7 @@ def _imprimir_remessa(r: dict) -> None:
     print(f"  {'TOTAL':<56} {fmt_dinheiro(m['total']):>12}")
     dif_arred = [a for a in m["arredondamento"] if a["diferenca"] != 0]
     total_uma_vez = sum((a["total_uma_vez"] for a in m["arredondamento"]), ZERO)
-    print(f"  arredondamento: por operação (D19) {fmt_dinheiro(m['total'])} × 50% do total do lojista arredondado uma vez "
+    print(f"  arredondamento: por operação (Q-H) {fmt_dinheiro(m['total'])} × 50% do total do lojista arredondado uma vez "
           f"{fmt_dinheiro(total_uma_vez)} → diferença {fmt_dinheiro(m['total'] - total_uma_vez)} em {len(dif_arred)} lojistas")
     for a in dif_arred:
         print(f"    {a['cnpj']} {r['lojistas'].get(a['cnpj'], '')[:30]:<30} {fmt_dinheiro(a['por_operacao'])} × "
@@ -223,8 +226,9 @@ def _imprimir_remessa(r: dict) -> None:
         chave = ("SPREAD_NEGATIVO" if d["spread_brl"] < 0 else "ACIMA_DO_CONTRATADO", d["cnpj"])
         grupos.setdefault(chave, []).append(d)
     for (tipo, cnpj), ds in sorted(grupos.items()):
+        impacto = sum((d["impacto_repasse_tarvo"] or ZERO for d in ds), ZERO)
         print(f"  {tipo:<20} {cnpj} {ds[0]['lojista'][:30]:<30} {len(ds):>3}  {fmt_dinheiro(sum((d['diferenca_brl'] for d in ds), ZERO)):>10}"
-              f"  (pela coluna 'Spread %' do relatório: {fmt_dinheiro(m['div_pela_coluna'].get(cnpj, ZERO)) if tipo == 'ACIMA_DO_CONTRATADO' else '-'})")
+              + (f"  impacto no repasse {fmt_dinheiro(impacto)}" if tipo == "SPREAD_NEGATIVO" else ""))
 
 
 def _imprimir_notas(r: dict) -> None:

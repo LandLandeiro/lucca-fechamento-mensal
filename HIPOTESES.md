@@ -16,26 +16,30 @@ Espelho executável: `regras.yaml` (mesmo status, mesma fonte). Evidências: `do
 | H07 | Ruído do spread da Ponte | Diferença de spread % abaixo de 0,005 p.p. é ruído | ASSUMO | Taxas da Ponte com 4 casas, ruído até 0,0016 p.p.; a Helena aceitou critério nosso escrito com motivo (Slack Helena 20:58) | ~200 alarmes falsos (R$ 1,67) | Antes estava como SEI; o limiar é escolha minha, aceita pela Helena |
 | H08 | Tomador da NF de remessa | 1 nota por mês, tomadora Ponte Câmbio S.A. (75374179000146), valor = total da participação do mês; discriminação: serviço + competência | CONFIRMADO | Slack Helena 20:47 | NF de remessa inteira (~R$ 38,6 mil) | Era ASSUMO (só e-mail); agora com quantidade e discriminação |
 | H09 | "APROVADO C/ RESSALVA" | Segue para liquidação (fato do e-mail) e não muda nada na comissão | CONFIRMADO | E-mail Ponte; Slack Helena 20:48 | R$ 2.414,69 de comissão | Era PENDENTE; entra como APROVADO |
-| H10 | Arredondamento de bruto × contratada | TRUNCAR no centavo por transação, depois somar; nunca truncar o total. Sem tolerância na divergência de checkout | ASSUMO (Lucca, ~20h55, D09) | A Orbe trunca `valor_taxa` (1.001 só truncamento; 0 só arredondamento; 942 ambos) | Centavos em ~1.900 linhas | Era PENDENTE; desbloqueia o mínimo |
+| H10 | Arredondamento de bruto × contratada | Arredondamento comum no centavo (meio para longe do zero), linha por linha, depois soma | CONFIRMADO (Helena 21:13, Q-H; D27) | "A gente não trunca. (a) Arredondamento comum para o centavo..." | Comissão checkout 207.039,73 (com truncamento: 207.031,31) | Era ASSUMO "truncar como a Orbe" (D09): **o cliente corrigiu** |
 | H15 | Divergência × estorno | Divergência por transação, líquida com os estornos dela (`id_referencia`) no mesmo mês; só listada se o líquido ≠ 0; venda e estorno ficam no rastro com a nota "estornada em <data> por <id>"; estorno parcial ou em mês seguinte: listada | ASSUMO (Lucca, ~20h55, D10) | Caso real: 4 estornos da Rota Global (−R$ 98,44) | Alarme falso em vendas estornadas | Era PENDENTE |
 | H16 | Uso de IA | Só na classificação de lançamentos sem regra de texto; contas lançáveis em lista fechada; JSON validado por pydantic; o código confere se a conta existe, é ANALITICA e tem ACEITA_LANCTO=S; o lado (D/C) vem do sinal do movimento, não da natureza da conta; confiança ≥ 0,8, senão pendência; cache por hash da linha | ASSUMO (Lucca, ~20h55, D11; corrigida ~21h, D12) | — | Classificação errada ou não reproduzível | Limiar era PENDENTE; checagem de natureza D/C removida (D12) |
 | H11 | Antecipação e reversão na comissão | VENDA + ESTORNO (taxa da venda original) + ANTECIPACAO (mesma regra); REVERSAO ANTECIPACAO só anula a taxa da antecipação referenciada (`id_referencia`) | CONFIRMADO | Slack Helena 20:47; dados: a Orbe aplica 2,10% sobre o `valor_bruto` da linha, truncado (27 só truncamento, 17 ambos, 0 só arredondamento); 6 reversões espelham a referenciada | R$ 24.430,72 de antecipação líquida | Era PENDENTE; desbloqueia o mínimo |
 | H12 | Operação duplicada PC-0926-0162 | O número da operação é único: conta uma vez | CONFIRMADO | Slack Helena 20:48; anexo R76/R77; 05b MRD2026090550 | R$ 410,94 de comissão | Era PENDENTE |
 | H13 | Liquidação em 01/10 | Competência pela data de contratação | CONFIRMADO | Slack Helena 20:48; anexo 6 operações | R$ 1.039,36 de comissão | Era PENDENTE; as 6 entram em setembro |
-| H14 | Meio centavo no 50% | ROUND_HALF_EVEN no centavo por operação, depois soma | ASSUMO (Lucca, ~22h, D19) | Sem viés sistemático; o rastro fecha exato | Total por operação 39.542,89 × 50% do total do lojista arredondado uma vez 39.542,87 (R$ 0,02 em 7 lojistas) | Era PENDENTE |
+| H14 | Meio centavo no 50% | Arredondamento comum por operação (131,005 → 131,01), depois soma | CONFIRMADO (Helena 21:13, Q-H d; D27) | "No seu exemplo, R$ 131,01" | Comissão remessa 39.543,45 (com HALF_EVEN: 39.542,89) | Era ASSUMO HALF_EVEN (D19) |
 | H17 | Spread padrão / em branco | 1,5% sobre a PTAX | CONFIRMADO | Slack Helena 20:48 | Base de R$ 17.682,46 de spread | Era PENDENTE |
 | H18 | Spread negativo | Fora da comissão e da nota; vai para `divergencias_taxa` | CONFIRMADO | Slack Helena 20:48 | R$ −1.834,05 de spread | Era PENDENTE |
 | H19 | Divergência de spread | Spread aplicado ≠ contratado = divergência no valor cheio | CONFIRMADO | Slack Helena 20:58 | R$ 1.418,88 (Mundo Aberto) | — |
 | H20 | Rota Global +0,50 p.p. | Contrato não mudou: é divergência | CONFIRMADO | Slack Helena 20:49 | R$ 1.546,28 | Era PENDENTE |
 | H21 | Casa do Estudante | Taxa contratada 0 para MDR e antecipação de 2026-09-01 a 2026-12-31; remessa normal; tudo o que a Orbe cobrou é divergência | CONFIRMADO | Slack Helena 20:49 | R$ 15.391,27 (Σ `valor_taxa` da Casa) | Era PENDENTE; comissão checkout da Casa = 0 → não emite NF |
 | H22 | Obrigações de 08/2026: fatos | Folha, ISS, INSS, FGTS e DARFs são de agosto e já estavam provisionados; o repasse da Ponte de 04/09 é o spread de agosto, já registrado como comissão a receber | CONFIRMADO | Slack Helena 20:49 | R$ 411.790,94 de classificação | Era PENDENTE |
-| H24 | Obrigações de 08/2026: contas | Baixa de passivo: L15 2.1.04.001; L42 2.1.03.003; L54 2.1.04.002; L55 2.1.04.003; L57 2.1.03.004; L86 2.1.03.001; L87 2.1.03.002; repasse Ponte MRD2026090132 D 1.1.01.002 / C 1.1.03.002 | ASSUMO (Lucca; a Helena devolveu a escolha em 20:49: "me diga como você lançaria") | Fatos de H22 + plano de contas | R$ 411.790,94 de classificação | Separado de H22: antes estava como CONFIRMADO junto com os fatos |
-| H25 | Valor da divergência de remessa | Spread R$ (coluna do relatório) − contratado × PTAX × Valor ME, valor cheio; mesma base da comissão | ASSUMO (Lucca ~22h20, D22; "É o valor cheio" Helena 20:58) | Mundo Aberto 1.418,88 | Pela coluna "Spread %" arredondada daria 1.418,85 (Q-G) | Fórmula trocada às 22h20: antes, spread % recalculado (Canguru −1.001,30 → −1.001,29) |
+| H24 | Obrigações de 08/2026: contas | Baixa de passivo: L15 2.1.04.001; L42 2.1.03.003; L54 2.1.04.002; L55 2.1.04.003; L57 2.1.03.004; L86 2.1.03.001; L87 2.1.03.002; repasse Ponte MRD2026090132 D 1.1.01.002 / C 1.1.03.002 | CONFIRMADO (Helena 21:14, Q-I a; antes ASSUMO, quando a Helena devolveu a escolha em 20:49) | Fatos de H22 + plano de contas | R$ 411.790,94 de classificação | Separado de H22: antes estava como CONFIRMADO junto com os fatos |
+| H25 | Valor da divergência de remessa | round((Spread % do relatório − contratado) × PTAX × Valor ME), valor cheio | ASSUMO (Lucca ~22h50, D28; lógica da Q-H c; "É o valor cheio" Helena 20:58) | Mundo Aberto 1.418,85 | Pelo Spread R$ (D22) seria 1.418,88 | Trocou duas vezes: D22 (Spread R$) → D28 (coluna Spread %) |
 | H26 | Divergência do spread negativo | `diferenca_brl` = valor cheio contra o contrato (−3.565,98); coluna `impacto_repasse_tarvo` = 50% × Spread R$ (−917,03); motivo "trava vencida (2h); Helena contesta o desconto no repasse" | ASSUMO (Lucca ~22h20, D21) | Fato: Helena 20:48 (fora da comissão e da nota; ela contesta) | 4 operações | Era "a confirmar" |
-| H27 | Arredondamento da divergência de remessa | ROUND_HALF_EVEN no centavo por operação (mesma regra da H14) | ASSUMO (Lucca, confirmada ~22h20, D20) | Extensão da D19 | Centavos | Era "a confirmar" |
+| H27 | Arredondamento da divergência | Arredondamento comum por linha/operação | CONFIRMADO (Helena 21:13, Q-H; D27) | Q-H (a), (d) | Centavos | Era ASSUMO HALF_EVEN (D20) |
 | H28 | Reversão de antecipação na divergência | Líquida com a antecipação que ela anula (`id_referencia`), como o estorno | ASSUMO (Lucca, confirmada ~22h20, D17) | Helena 20:47: "a reversão só anula a taxa da antecipação que ela reverte" | Zero em set/2026 | — |
 | H29 | Discriminação das notas | CHECKOUT: "Serviço de intermediação de pagamentos (checkout) - competência MM/AAAA"; REMESSA: "Intermediação de operações de câmbio - participação de 50% do spread realizado - competência MM/AAAA" | ASSUMO (redação Lucca) | Helena 20:47 (d): "Algo simples com o serviço e a competência resolve" | Texto das 21 notas | — |
-| H30 | Conferência do repasse da Ponte | Participação × "Spread total R$" declarado × nota REMESSA; a diferença vira pendência CONFERENCIA_REPASSE para a Helena, decomposta em negativos (contestar) e duplicata (avisar) | ASSUMO (Lucca ~22h20) | E-mail Ponte: crédito em 06/10, contestação em até 5 dias úteis | R$ 506,09 = 917,03 − 410,94 | — |
+| H30 | Conferência do repasse da Ponte | Participação × "Spread total R$" declarado × nota REMESSA; a diferença vira pendência CONFERENCIA_REPASSE para a Helena, decomposta em negativos (contestar) e duplicata (avisar) | ASSUMO (Lucca ~22h20) | E-mail Ponte: crédito em 06/10, contestação em até 5 dias úteis | R$ 506,65 = 917,03 − 410,94 + 0,56 (arredondamento por operação contra 50% do total da Ponte) | — |
+| H31 | Divergência de checkout × centavo de truncamento | Divergência só quando a taxa aplicada ≠ contratada, valor = round(bruto × (aplicada − contratada)); o centavo de truncamento da Orbe é resíduo, nunca divergência | CONFIRMADO (Helena 21:13, Q-H c; D27) | "Diferença de centavo por causa do truncamento da Orbe não é divergência" | Resíduo −9,07 em 969 linhas | Tolerância 0 do checkout removida |
+| H32 | Resíduo por linha | No máximo 1 centavo onde as taxas são iguais; até 2 onde diferem | ASSUMO (D29) | Truncar × arredondar dá 0 ou 1 centavo por linha | Critério do validador | O pedido dizia "< 0,01" estrito, que reprovaria 969 linhas corretas |
+| H33 | Contas: baixa e despesa direta | Obrigações de agosto e repasse da Ponte de 04/09 baixam a conta onde estavam; tarifas, aluguel, cloud, assinaturas e serviços entram direto na despesa do mês; sem clareza no extrato, premissa no HIPOTESES | CONFIRMADO (Helena 21:14, Q-I) | Q-I (a), (b) | Classificação dos extratos (E6b) | H24 (contas das obrigações) passou de ASSUMO a CONFIRMADO |
+| H34 | Excesso cobrado na remessa | A nota sai pelo realizado; a nossa metade do excesso vira pendência para a Helena (Mundo Aberto: round(50% × 1.418,85) = 709,43) | CONFIRMADO (Helena 21:45, Q-J; D30) | "Deixar como pendência para mim é o caminho certo" | R$ 709,43 | — |
 | H23 | Créditos sem origem | L50 C 1.1.09.002 + pendência; L65 C 2.1.01.001 + pendência (motivo da devolução); L92 D 1.1.09.001 (cai no Meridiano em 01/10) | ASSUMO (Lucca; a Helena devolveu a decisão em 20:49) | Slack Helena 20:49 | R$ 319.750,00 de classificação | Era PENDENTE |
 
 ## Perguntas ao financeiro
@@ -56,6 +60,9 @@ Fonte única dos textos: `docs/FINANCEIRO_SLACK.md` (copiado do Slack sem ediç�
 | P09 | Créditos sem origem (L50, L65, L92) | Q-F item 4 | Lucca · 20:36 | Helena · 20:49 | respondida (decisão devolvida) | `contabil.creditos_sem_origem` ASSUMO do Lucca (H23) |
 | P10 | Estorno de venda de mês anterior | Q-B | MN AI · 20:04 | Helena · 20:06 | respondida | `checkout.estorno` CONFIRMADO (H03) |
 | P11 | Valor da divergência de remessa e tolerância | Q-G | Fox AI · 20:52 | Helena · 20:58 | respondida | `remessa.divergencia_spread` valor cheio (H19); tolerância é critério nosso, escrito com motivo (H07) |
+| P12 | Arredondamento (truncar ou arredondar; por linha; divergência; meio centavo no 50%) | Q-H | Fox AI | Helena · 21:13 | respondida | D09/D19/D20 substituídas pela D27; H10, H14, H27, H31 → CONFIRMADO |
+| P13 | Nota de remessa com o excesso da Mundo Aberto | Q-J | Theo Garcia · 21:45 | Helena · 21:45 | respondida | nota pelo realizado; pendência EXCESSO_REMESSA (D30, H34) |
+| P14 | Plano de contas: contrapartida, provisionado × despesa direta | Q-I | Fox AI | Helena · 21:14 | respondida | H24 e H33 → CONFIRMADO; `contabil.despesas_diretas` para a E6b |
 
 **Nota de autocorreção (Q-F, item 1):** na minha pergunta, os rótulos de modalidade estão trocados. 2,49/2,99/3,59% são as faixas **crédito à vista / 2–6x / 7–12x** da planilha (o débito é 1,49%). A resposta não muda: o contrato não mudou. O código compara por modalidade direto na planilha.
 
@@ -179,6 +186,33 @@ Fonte única dos textos: `docs/FINANCEIRO_SLACK.md` (copiado do Slack sem ediç�
 **Resposta (20:58):**
 > É o valor cheio. Quem pagou a mais foi a Mundo Aberto, e é o total que eu contesto com a Ponte. A nossa metade é só como a Ponte divide o spread com a gente.
 > O critério de tolerância é de vocês. Se ele estiver escrito, com o motivo, eu sigo. O que eu preciso é não receber alarme de centavo, e também não deixar passar diferença de verdade.
+
+---
+
+#### Q-H · Fox AI · resposta 21:13 · arredondamento
+
+**Pergunta:** texto da pergunta não copiado aqui (consultar o Slack). Itens (a)–(d) da resposta.
+
+**Resposta (21:13):**
+> Isso mesmo: a Orbe trunca os centavos. A gente não trunca. (a) Arredondamento comum para o centavo. Meio centavo vai para cima, e no negativo vale a mesma regra com o sinal: -0,005 vira -0,01. (b) Linha por linha, e depois soma. (c) Divergência é quando a taxa aplicada é diferente da contratada. Diferença de centavo por causa do truncamento da Orbe não é divergência. O valor da divergência eu quero como valor bruto × (taxa aplicada − contratada). (d) Por operação, com o mesmo arredondamento. No seu exemplo, R$ 131,01.
+
+---
+
+#### Q-I · Fox AI · resposta 21:14 · plano de contas
+
+**Pergunta:** texto da pergunta não copiado aqui (consultar o Slack). Itens (a)–(b) da resposta.
+
+**Resposta (21:14):**
+> (a) Quero a contrapartida do movimento no banco. Se o valor já estava registrado, o pagamento ou recebimento baixa a conta onde ele estava, e não vira receita ou despesa de novo. Como respondi ao Lucca, a folha, os tributos de agosto e o repasse da Ponte de 04/09 já estavam registrados. (b) Além desses, nada estava provisionado: tarifas, aluguel, cloud, assinaturas e serviços entram direto na despesa do mês. Quando o extrato não deixar claro, declarem a premissa no HIPOTESES.md e sigam.
+
+---
+
+#### Q-J · Theo Garcia · resposta 21:45 · nota de remessa e excesso da Mundo Aberto
+
+**Pergunta:** sobre o excesso de spread da Mundo Aberto na nota de remessa (texto da pergunta não copiado aqui; consultar o Slack).
+
+**Resposta (21:45):**
+> Entra. A nota de setembro sai pelo realizado, porque é o que a Ponte vai repassar para a gente agora. A contestação é um processo à parte. Se a Ponte devolver a diferença para a Mundo Aberto, a nossa metade sai no mês em que o ajuste acontecer. Deixar como pendência para mim é o caminho certo.
 
 ## Decisões de escopo
 
