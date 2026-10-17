@@ -70,7 +70,8 @@ def test_conferencia_do_ted_sem_prever_desconto(saida):
     p = next(p for p in _csv(pasta, "pendencias.csv") if p["tipo"] == "CONFERENCIA_REPASSE")
     assert p["quem_decide"] == "Helena" and p["valor_brl"] == "39543.45"  # o faturado
     assert p["motivo"] == (
-        "Conferir o TED da Ponte quando cair (previsto 06/10). Faturado: 39543.45. Total do relatório da Ponte: "
+        "Conferir o TED da Ponte quando cair (previsto 06/10). Faturado: 39543.45 (NF-75374179000146-REMESSA, 228 operações). "
+        "Total do relatório da Ponte: "
         "78073.59, que inclui 4 spreads negativos (-1834.05) e a duplicata PC-0926-0162 (821.88), ambos em contestação."
     )
     assert "descont" not in p["motivo"] and "seria" not in p["motivo"]

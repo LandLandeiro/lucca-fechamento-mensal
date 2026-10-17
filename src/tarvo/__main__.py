@@ -31,7 +31,7 @@ from tarvo.leitores.plano_contas import contas_lancaveis, ler_plano_contas
 from tarvo.leitores.ponte_email import ler_email, ler_operacoes
 from tarvo.leitores.taxas import ler_taxas_vigentes
 from tarvo.modelo import Aviso, Pendencia
-from tarvo.pendencias import consolidar_pendencias, ler_pendencias_anteriores, pendencia_para_linha
+from tarvo.pendencias import consolidar_pendencias, ler_pendencias_anteriores, pendencia_para_linha, refs_das_pendencias
 from tarvo.regras import RegraInvalida, RegraPendente, carregar_regras, valor_da_regra
 from tarvo.saida.escritor import escrever_saida
 from tarvo.saida.validador import validar_saida
@@ -109,13 +109,13 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     div_remessa = divergencias_remessa(cls_remessa, cadastro, regras)
 
     pend_leitura = [
-        Pendencia(f"PEN-LEITURA_INVALIDA-{li.ref_origem}", "LEITURA_INVALIDA", f"{orbe.arquivo}:L{li.linha_arquivo}",
-                  None, f"linha não lida: {li.motivo}", "analista (conferir o arquivo com a Orbe)")
+        Pendencia(f"PEN-LEITURA_INVALIDA-{li.ref_origem}", "LEITURA_INVALIDA", li.ref_origem,
+                  None, f"{orbe.arquivo} linha {li.linha_arquivo} não lida: {li.motivo}", "analista (conferir o arquivo com a Orbe)")
         for li in orbe.linhas_invalidas
     ]
     pend_leitura += [
         Pendencia(f"PEN-LEITURA_INVALIDA-{li.ref_origem}-R{li.linha_arquivo}", "LEITURA_INVALIDA",
-                  f"{ponte.arquivo}:R{li.linha_arquivo}", None, f"linha do anexo não lida: {li.motivo}",
+                  li.ref_origem, None, f"{ponte.arquivo}: linha R{li.linha_arquivo} do anexo não lida: {li.motivo}",
                   "analista (conferir o relatório com a Ponte)")
         for li in ponte.linhas_invalidas
     ]
@@ -145,8 +145,8 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
             avisos_extra.append(Aviso(ext.arquivo, "-", f"lançamentos em {sorted(meses)}; competência {competencia}"))
         for li in ext.linhas_invalidas:
             pend_leitura.append(Pendencia(f"PEN-LEITURA_INVALIDA-{ext.banco}-{li.ref_origem}", "LEITURA_INVALIDA",
-                                          f"{ext.arquivo}:L{li.linha_arquivo}", None, f"lançamento não lido: {li.motivo}",
-                                          "analista (conferir o extrato com o banco)"))
+                                          li.ref_origem, None, f"{ext.arquivo} linha {li.linha_arquivo}: lançamento não lido: "
+                                          f"{li.motivo}", "analista (conferir o extrato com o banco)"))
     adicionar_nomes_orbe(cadastro, orbe.transacoes, regras)  # D35: ex.: Atlas
     classif = [classificar_por_regra(ext.lancamentos, ext.linhas_arquivo, plano, regras, cadastro, competencia)
                for ext in (aurora, meridiano)]
@@ -204,6 +204,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         + [l for c in classif for l in c.rastro + c.rastro_pendencias] + conf.rastro_pendencias,
         key=lambda l: (l["id_saida"], l["linha_arquivo"], l["ref_origem"]),
     )
+    pendencias = refs_das_pendencias(pendencias, rastro)
     escrever_saida(
         {
             "comissoes_por_lojista.csv": comissoes,

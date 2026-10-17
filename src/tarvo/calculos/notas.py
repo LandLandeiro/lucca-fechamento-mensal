@@ -97,7 +97,7 @@ def notas_a_emitir(
             pid = f"PEN-NF_NEGATIVA-{c['cnpj']}"
             res.pendencias.append(Pendencia(
                 pid, "NF_NEGATIVA", c["id_saida"], c["comissao_brl"],
-                f"comissão CHECKOUT do mês negativa ({fmt_dinheiro(c['comissao_brl'])}): não emite nota e não passa "
+                f"comissão CHECKOUT do mês negativa ({c['id_saida']}, {fmt_dinheiro(c['comissao_brl'])}): não emite nota e não passa "
                 f"para o mês seguinte automaticamente (Helena 20:47). Linhas não nulas: {detalhe}",
                 "Helena",
             ))
@@ -145,7 +145,9 @@ def conferencia_repasse(
         return [], []
     m = _RE_DATA_CREDITO.search(corpo_email or "")
     quando = f"previsto {m.group(1)[:5]}" if m else "data não informada no e-mail da Ponte"
-    texto = f"Conferir o TED da Ponte quando cair ({quando}). Faturado: {fmt_dinheiro(nota_remessa)}."
+    ref_nota = rastro_nota[0]["id_saida"] if rastro_nota else "nota REMESSA"
+    texto = (f"Conferir o TED da Ponte quando cair ({quando}). Faturado: {fmt_dinheiro(nota_remessa)} "
+             f"({ref_nota}, {len(rastro_nota)} operações).")
     if spread_declarado is not None:
         grupos: dict[str, list] = {}
         for op, motivo, _ in cls.excluidas:
@@ -170,6 +172,5 @@ def conferencia_repasse(
                 texto += ", ambos em contestação" if len(partes) == 2 else ", em contestação"
         texto += "."
     pid = "PEN-CONFERENCIA_REPASSE-REMESSA"
-    ref = rastro_nota[0]["id_saida"] if rastro_nota else "nota REMESSA"
-    pend = Pendencia(pid, "CONFERENCIA_REPASSE", ref, nota_remessa, texto, "Helena")
+    pend = Pendencia(pid, "CONFERENCIA_REPASSE", "|".join(l["ref_origem"] for l in rastro_nota), nota_remessa, texto, "Helena")
     return [pend], [{**l, "id_saida": pid} for l in rastro_nota]

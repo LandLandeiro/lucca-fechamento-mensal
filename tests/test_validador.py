@@ -224,3 +224,34 @@ def test_validador_recusa_rastro_sem_linha_de_origem(saida, tmp_path):
     erros = v(pasta, fontes_rastro=fontes)
     assert any("PC-9999-9999" in e and "não existe na fonte" in e for e in erros)
 
+
+
+def test_ref_origem_das_pendencias_so_ids_puros(saida):
+    """D55: ids puros (id_transacao, Nº Operação, L<n>, FITID), lista completa separada por '|', sem prosa."""
+    pasta, _ = saida
+    with open(pasta / "pendencias.csv", encoding="utf-8", newline="") as f:
+        pend = {p["id_saida"]: p for p in csv.DictReader(f, delimiter=";")}
+    for p in pend.values():
+        assert " " not in p["ref_origem"] and "," not in p["ref_origem"] and "mais" not in p["ref_origem"], p["id_saida"]
+    assert len(pend["PEN-EXCESSO_REMESSA-17217888000111"]["ref_origem"].split("|")) == 23
+    assert pend["PEN-CONTESTACAO_PONTE-DUPLICATA"]["ref_origem"] == "PC-0926-0162"
+    assert len(pend["PEN-SEM_CONTRATO_VIGENTE-EC1076801732"]["ref_origem"].split("|")) == 57
+    assert len(pend["PEN-CONFERENCIA_REPASSE-REMESSA"]["ref_origem"].split("|")) == 228
+    assert "NF-75374179000146-REMESSA" in pend["PEN-CONFERENCIA_REPASSE-REMESSA"]["motivo"]  # a explicação vai no motivo
+
+
+@pytest.mark.parametrize("ref, trecho", [
+    ("PC-0926-0011, PC-0926-0016 e mais 21", "não é id puro"),
+    ("PC-0926-0011|PC-0926-0016", "ref_origem ≠ ids do rastro"),  # lista incompleta
+])
+def test_validador_recusa_ref_origem_de_pendencia_em_prosa_ou_incompleta(saida, tmp_path, ref, trecho):
+    from tarvo.saida.validador import validar_saida
+    pasta = _copia(saida, tmp_path)
+
+    def trocar(linhas):
+        for l in linhas[1:]:
+            if l[0] == "PEN-EXCESSO_REMESSA-17217888000111":
+                l[2] = ref
+        return linhas
+    _reescrever(pasta / "pendencias.csv", trocar)
+    assert any("PEN-EXCESSO_REMESSA-17217888000111" in e and trecho in e for e in validar_saida(pasta))

@@ -166,6 +166,8 @@ def validar_saida(
         if ids.startswith(PREFIXO_EXCLUSAO):
             erros.append(f"{ids}: exclusão anotada não pode ser número de saída")
 
+    if "pendencias.csv" in dados:
+        erros.extend(_refs_pendencias(dados))
     if "notas_a_emitir.csv" in dados:
         erros.extend(_notas(dados))
     if (pasta / "contestacao_ponte.csv").exists():
@@ -195,6 +197,30 @@ def validar_saida(
                 erros.append(f"{arquivo}: {len(repetidas)} linhas contadas mais de uma vez (ex.: {repetidas[:5]})")
             if estranhas:
                 erros.append(f"{arquivo}: {len(estranhas)} ref_origem no rastro que não existem na fonte (ex.: {estranhas[:5]})")
+    return erros
+
+
+_RE_ID_PURO = re.compile(r"^[^\s,;()|]+$")
+
+
+def _refs_pendencias(dados: dict[str, list[dict]]) -> list[str]:
+    """D55: `ref_origem` de pendência = ids puros separados por '|', sem prosa nem repetição; com rastro,
+    exatamente os ids das linhas de origem do rastro dela (lista completa)."""
+    erros: list[str] = []
+    do_rastro: dict[str, set[str]] = {}
+    for l in dados["rastro.csv"]:
+        do_rastro.setdefault(l["id_saida"], set()).add(l["ref_origem"])
+    for p in dados["pendencias.csv"]:
+        tokens = (p.get("ref_origem") or "").split("|")
+        ruins = [t for t in tokens if not _RE_ID_PURO.match(t)]
+        if ruins:
+            erros.append(f"{p['id_saida']}: ref_origem com algo que não é id puro: {ruins[:3]}")
+        elif len(tokens) != len(set(tokens)):
+            erros.append(f"{p['id_saida']}: ref_origem com id repetido")
+        elif p["id_saida"] in do_rastro and set(tokens) != do_rastro[p["id_saida"]]:
+            faltam = sorted(do_rastro[p["id_saida"]] - set(tokens))
+            sobram = sorted(set(tokens) - do_rastro[p["id_saida"]])
+            erros.append(f"{p['id_saida']}: ref_origem ≠ ids do rastro (faltam {faltam[:3]}, sobram {sobram[:3]})")
     return erros
 
 
