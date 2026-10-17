@@ -41,6 +41,7 @@ class Vigencia:
 class TaxaEncontrada:
     taxa: Decimal | None  # fração (0.0359); None = não determinada
     fonte: str  # de onde veio (linha da planilha ou regra), ou o motivo de não ter vindo
+    condicao: dict | None = None  # a condição especial de regras.yaml que deu a taxa, se houver
 
 
 @dataclass
@@ -228,7 +229,7 @@ def _condicao_especial(cnpj: str, coluna: str, data_ref: date, regras: dict) -> 
     taxas = cond["taxa_contratada"]
     if grupo not in taxas:
         return None
-    return TaxaEncontrada(Decimal(str(taxas[grupo])), f"regras.yaml {chave} ({grupo}, {vig.inicio}–{vig.fim})")
+    return TaxaEncontrada(Decimal(str(taxas[grupo])), f"regras.yaml {chave} ({grupo}, {vig.inicio}–{vig.fim})", cond)
 
 
 def _como_data(v) -> date:

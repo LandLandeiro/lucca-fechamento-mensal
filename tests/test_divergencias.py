@@ -117,3 +117,23 @@ def test_rastro_de_cada_divergencia_fecha(divs):
 
 def test_sem_zero_negativo_na_saida():
     assert fmt_dinheiro(Decimal("-1021.01") * Decimal("0")) == "0.00"
+
+
+def test_uma_pendencia_por_lojista_para_decidir(divs):
+    """D53: o que a Helena decide vira pendência, uma por lojista, com valor e as transações no rastro.
+    Casa (condição especial do comercial): Helena + comercial, com a fala dela da Q-F 2."""
+    pend = {p.id_saida: p for p in divs.pendencias}
+    assert {(k, p.valor_brl, p.quem_decide) for k, p in pend.items()} == {
+        ("PEN-DIVERGENCIA_CHECKOUT-00520815000100", Decimal("15397.42"), "Helena + comercial"),
+        ("PEN-DIVERGENCIA_CHECKOUT-95927868000148", Decimal("1546.28"), "Helena"),
+        ("PEN-DIVERGENCIA_CHECKOUT-22224579000109", Decimal("29.95"), "Helena"),
+    }
+    casa = pend["PEN-DIVERGENCIA_CHECKOUT-00520815000100"]
+    assert "O que foi cobrado eu devolvo ao lojista, junto com o comercial." in casa.motivo
+    assert "cobro a Orbe" not in casa.motivo  # a Casa é devolução ao lojista, não cobrança da Orbe
+    assert "Isso eu decido, não vai automático." in pend["PEN-DIVERGENCIA_CHECKOUT-95927868000148"].motivo
+    for pid, p in pend.items():
+        linhas = [r for r in divs.rastro_pendencias if r["id_saida"] == pid]
+        assert sum(r["valor"] for r in linhas) == p.valor_brl
+        cnpj = pid.rsplit("-", 1)[1]
+        assert set(p.ref_origem.split("|")) == {d["ref_origem"] for d in divs.linhas if d["cnpj"] == cnpj}

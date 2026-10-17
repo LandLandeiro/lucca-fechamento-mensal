@@ -208,6 +208,19 @@ divergencias:
     autor: Lucca
     fonte: "decisão Lucca 16/10 ~20h55 (D10). Caso real: 4 estornos da Rota Global, −R$ 98,44"
     pergunta_ref: null
+  pendencia_por_lojista:    # D53: o que a Helena decide vira pendência, como a contestação da Ponte
+    valor:
+      quem_decide: Helena
+      citacao: "Se a Orbe cobrou a mais, a diferença volta para o lojista e eu cobro a Orbe. Isso eu decido, não vai automático."
+      citacao_fonte: "Helena 20:05"
+      condicao_especial: "quem decide e o texto vêm da condição (cadastro.condicoes_especiais: quem_decide_divergencia, citacao)"
+    status: ASSUMO
+    autor: Lucca
+    fonte: >-
+      pedido Lucca 17/10 após a avaliação simulada (D53): uma pendência DIVERGENCIA_CHECKOUT por lojista, com valor
+      e as transações no rastro (detalhe em divergencias_taxa.csv). Base: Slack Helena 20:05 ('Isso eu decido, não
+      vai automático. Preciso ver cada caso com transação e valor') e 20:49 (Q-F 2, Casa: 'junto com o comercial')
+    pergunta_ref: P03
   criterio_checkout:        # substitui a tolerância 0 (D09), removida (D27)
     valor: >-
       divergência só quando a taxa aplicada ≠ contratada; valor = round(valor_bruto × (taxa aplicada − contratada))
@@ -325,6 +338,10 @@ cadastro:
       vigencia: {inicio: 2026-09-01, fim: 2026-12-31}
       remessa: "normal (spread da planilha)"
       cobrado_pela_orbe: "tudo é divergência"
+      descricao: "tarifa zero no checkout por acordo do comercial"
+      quem_decide_divergencia: "Helena + comercial"
+      citacao: "Ninguém avisou a Orbe, então ela cobrou. O que foi cobrado eu devolvo ao lojista, junto com o comercial."
+      citacao_fonte: "Helena 20:49, Q-F 2"
     status: CONFIRMADO
     fonte: "Slack Helena 20:49 (planilha: comentário A13, obs R13)"
     pergunta_ref: P07

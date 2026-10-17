@@ -193,12 +193,13 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     lancamentos = [l for c in classif for l in c.linhas]
 
     pendencias = consolidar_pendencias(
-        checkout.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura, notas.pendencias, pend_repasse,
+        checkout.pendencias, divergencias.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura,
+        notas.pendencias, pend_repasse,
         div_remessa.pendencias_derivadas, contestacao.pendencias, *[c.pendencias for c in classif], conf.pendencias,
     )
     divs = divergencias.linhas + div_remessa.linhas
     rastro = sorted(
-        checkout.rastro + divergencias.rastro + remessa.rastro + div_remessa.rastro
+        checkout.rastro + divergencias.rastro + divergencias.rastro_pendencias + remessa.rastro + div_remessa.rastro
         + notas.rastro + notas.rastro_pendencias + rastro_repasse + div_remessa.rastro_pendencias + contestacao.rastro
         + [l for c in classif for l in c.rastro + c.rastro_pendencias] + conf.rastro_pendencias,
         key=lambda l: (l["id_saida"], l["linha_arquivo"], l["ref_origem"]),
@@ -266,7 +267,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         "total_checkout": sum((c["comissao_brl"] for c in checkout.comissoes), ZERO),
         "lojistas": {c["cnpj"]: c["lojista"] for c in comissoes},
         "notas": notas.linhas,
-        "pendencias_novas": notas.pendencias + pend_repasse + div_remessa.pendencias_derivadas + contestacao.pendencias,
+        "pendencias_novas": divergencias.pendencias + notas.pendencias + pend_repasse + div_remessa.pendencias_derivadas + contestacao.pendencias,
         "residuo_checkout": (divergencias.residuo, divergencias.linhas_com_residuo),
         "pendencias": pendencias,
         "transacoes_em_pendencia": len(checkout.em_pendencia) + len(orbe.linhas_invalidas),

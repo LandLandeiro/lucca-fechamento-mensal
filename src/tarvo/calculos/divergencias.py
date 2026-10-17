@@ -14,7 +14,11 @@ CHECKOUT (regras usadas, todas de `regras.yaml`):
   líquida com os estornos dela (`id_referencia`) no mesmo arquivo; só lista se o líquido
   ≠ 0. Estorno de venda que não está no arquivo (mês anterior) é avaliado sozinho;
 - divergencias.reversao_liquida_com_antecipacao (ASSUMO, D17): a REVERSAO ANTECIPACAO é
-  líquida com a antecipação que ela anula, do mesmo jeito.
+  líquida com a antecipação que ela anula, do mesmo jeito;
+- divergencias.pendencia_por_lojista (ASSUMO, D53): uma pendência DIVERGENCIA_CHECKOUT por lojista,
+  com o total e o rastro das transações (mesmo padrão da contestação com a Ponte). Se a taxa
+  contratada veio de uma condição especial (ex.: Casa), quem decide é o da condição e o texto cita a
+  fonte dela; senão, a Helena (20:05).
 
 Transações em pendência (ex.: Atlas, sem contrato) não entram: não há taxa contratada.
 
@@ -44,6 +48,8 @@ ZERO = Decimal("0")
 class ResultadoDivergencias:
     linhas: list[dict] = field(default_factory=list)
     rastro: list[dict] = field(default_factory=list)
+    pendencias: list[Pendencia] = field(default_factory=list)  # DIVERGENCIA_CHECKOUT, uma por lojista (D53)
+    rastro_pendencias: list[dict] = field(default_factory=list)
     grupos_zerados: int = 0  # vendas divergentes cujo estorno zerou a diferença (não listadas)
     residuo: Decimal = ZERO  # Σ (valor_taxa − comissão − divergência da linha): truncamento da Orbe
     linhas_com_residuo: int = 0
@@ -72,6 +78,7 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
         regras, "divergencias.reversao_liquida_com_antecipacao") else ("ESTORNO",)
 
     res = ResultadoDivergencias()
+    condicoes: dict[str, dict | None] = {}  # id DIV → condição especial que deu a taxa contratada
     grupos: dict[str, list[ComissaoTransacao]] = {}
     for c in sorted(checkout.por_transacao.values(), key=lambda x: x.transacao.linha_arquivo):
         t = c.transacao
@@ -102,6 +109,7 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
             motivo += f"; estorno de venda de {t.data_venda_original.isoformat()} que não está no arquivo"
         if outros:
             motivo += f"; líquida com {', '.join(outros)} (parcial)"
+        condicoes[id_divergencia(cabeca_id)] = cabeca.condicao
         res.linhas.append({
             "id_saida": id_divergencia(cabeca_id),
             "cnpj": cabeca.cnpj,
@@ -137,7 +145,41 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
             })
 
     res.linhas.sort(key=lambda l: (-l["diferenca_brl"], l["cnpj"], l["ref_origem"]))
+    _pendencias_por_lojista(res, condicoes, regras)
     return res
+
+
+def _pendencias_por_lojista(res: ResultadoDivergencias, condicoes: dict[str, dict | None], regras: dict) -> None:
+    """D53: o que a Helena decide vira pendência, uma por lojista, com valor e as transações (rastro)."""
+    cfg = valor_da_regra(regras, "divergencias.pendencia_por_lojista")
+    por_cnpj: dict[str, list[dict]] = {}
+    for l in res.linhas:
+        por_cnpj.setdefault(l["cnpj"], []).append(l)
+    rastro_por_div: dict[str, list[dict]] = {}
+    for r in res.rastro:
+        rastro_por_div.setdefault(r["id_saida"], []).append(r)
+    for cnpj, divs in sorted(por_cnpj.items()):
+        total = sum((d["diferenca_brl"] for d in divs), ZERO)
+        cond = next((condicoes[d["id_saida"]] for d in divs if condicoes.get(d["id_saida"])), None)
+        nome, n = divs[0]["lojista"], len(divs)
+        if cond is not None:
+            quem = cond.get("quem_decide_divergencia") or cfg["quem_decide"]
+            vig = cond["vigencia"]
+            texto = (f"{nome}: o contrato tem condição especial ({cond.get('descricao', 'regras.yaml')}, {vig['inicio']} a "
+                     f"{vig['fim']}) e a Orbe cobrou {fmt_dinheiro(total)} em {n} transações. "
+                     f"{cond.get('citacao_fonte', 'regras.yaml')}: '{cond.get('citacao', '')}'. "
+                     f"Detalhe por transação em divergencias_taxa.csv (DIV-<id_transacao>)")
+        else:
+            quem = cfg["quem_decide"]
+            sentido = "a mais" if total > 0 else "a menos"
+            texto = (f"{nome}: a Orbe cobrou {fmt_dinheiro(abs(total))} {sentido} que o contrato em {n} transações. "
+                     f"{cfg['citacao_fonte']}: '{cfg['citacao']}'. "
+                     f"Detalhe por transação em divergencias_taxa.csv (DIV-<id_transacao>)")
+        pid = f"PEN-DIVERGENCIA_CHECKOUT-{cnpj}"
+        res.pendencias.append(Pendencia(pid, "DIVERGENCIA_CHECKOUT", "|".join(d["ref_origem"] for d in divs), total,
+                                        " ".join(texto.split()), quem))
+        for d in divs:
+            res.rastro_pendencias.extend({**r, "id_saida": pid} for r in rastro_por_div[d["id_saida"]])
 
 
 @dataclass

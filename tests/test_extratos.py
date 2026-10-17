@@ -271,7 +271,7 @@ def test_nomes_da_orbe_pelo_ec(cadastro, orbe, regras):
 
 def test_total_de_pendencias(saida):
     tipos = sorted(p["tipo"] for p in _csv(saida[0], "pendencias.csv"))
-    assert len(tipos) == 11 and "IA_REPROVADA" not in tipos and "SEM_REGRA" not in tipos
+    assert len(tipos) == 14 and "IA_REPROVADA" not in tipos and "SEM_REGRA" not in tipos
     assert tipos.count("CONTESTACAO_PONTE") == 3
 
 

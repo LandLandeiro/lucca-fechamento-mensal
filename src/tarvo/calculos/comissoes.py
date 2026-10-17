@@ -20,7 +20,7 @@ no rastro de uma pendência (PEN-…). O validador confere isso.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from decimal import Decimal
 
 from tarvo.cadastro import Cadastro, coluna_do_produto, taxa_contratada
@@ -40,6 +40,7 @@ class ComissaoTransacao:
     comissao: Decimal
     nota: str
     fonte_taxa: str = ""  # de onde veio a taxa contratada (linha da planilha ou regra)
+    condicao: dict | None = None  # condição especial (regras.yaml) que deu a taxa contratada, se houver
 
 
 @dataclass
@@ -123,7 +124,7 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
             continue
         com = centavos(t.valor_bruto * enc.taxa, modo)
         nota = "; ".join(x for x in (nota, enc.fonte) if x)
-        res.por_transacao[t.ref_origem] = ComissaoTransacao(t, cnpj, enc.taxa, com, nota, enc.fonte)
+        res.por_transacao[t.ref_origem] = ComissaoTransacao(t, cnpj, enc.taxa, com, nota, enc.fonte, enc.condicao)
 
     por_id = {t.ref_origem: t for t in transacoes}
     for t in reversoes:
@@ -141,9 +142,7 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
             res.em_pendencia[t.ref_origem] = res.em_pendencia[ref]
             continue
         base = res.por_transacao[ref]
-        res.por_transacao[t.ref_origem] = ComissaoTransacao(
-            t, base.cnpj, base.taxa_contratada, -base.comissao, f"anula a antecipação {ref}", base.fonte_taxa
-        )
+        res.por_transacao[t.ref_origem] = replace(base, transacao=t, comissao=-base.comissao, nota=f"anula a antecipação {ref}")
 
     _marcar_estornadas(res)
     _agregar(res, cadastro)
@@ -162,10 +161,7 @@ def _marcar_estornadas(res: ResultadoCheckout) -> None:
         venda = res.por_transacao.get(e.transacao.id_referencia or "")
         if venda is not None:
             marca = f"estornada em {e.transacao.data_movimento.isoformat()} por {e.transacao.ref_origem}"
-            res.por_transacao[venda.transacao.ref_origem] = ComissaoTransacao(
-                venda.transacao, venda.cnpj, venda.taxa_contratada, venda.comissao,
-                "; ".join(x for x in (venda.nota, marca) if x), venda.fonte_taxa,
-            )
+            res.por_transacao[venda.transacao.ref_origem] = replace(venda, nota="; ".join(x for x in (venda.nota, marca) if x))
 
 
 def _agregar(res: ResultadoCheckout, cadastro: Cadastro) -> None:
