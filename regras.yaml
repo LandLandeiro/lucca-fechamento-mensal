@@ -170,6 +170,17 @@ notas:
     status: CONFIRMADO
     fonte: "Slack Helena 20:47"
     pergunta_ref: P03
+  nota_com_transacao_pendente:   # D57
+    valor: >-
+      lojista com transação do mês em pendência (taxa contratada indefinida, produto sem coluna, estorno sem
+      data, tipo não previsto, reversão sem antecipação): a nota CHECKOUT dele não é emitida com valor parcial;
+      vira pendência NOTA_BLOQUEADA para a Helena, com a comissão parcial (informativa) e as pendências que a bloqueiam
+    status: ASSUMO
+    autor: Lucca
+    fonte: >-
+      pedido Lucca 17/10 após a avaliação simulada (D57); Slack Helena 20:47 (a): 'uma nota por lojista por mês, no
+      valor da comissão do mês pela taxa contratada' (com transação pendente, o valor calculado não é a comissão do mês)
+    pergunta_ref: P03
   discriminacao:            # {competencia} = MM/AAAA, vinda dos dados (Orbe no checkout; cabeçalho do relatório na remessa)
     valor:
       CHECKOUT: "Serviço de intermediação de pagamentos (checkout) - competência {competencia}"

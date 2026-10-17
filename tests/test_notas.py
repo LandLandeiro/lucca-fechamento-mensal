@@ -169,3 +169,50 @@ def test_validador_recusa_nota_errada(saida, tmp_path):
     assert any("≤ 0" in e for e in erros)
     assert any("Σ comissões CHECKOUT positivas" in e for e in erros)
     assert any("NF-95927868000148-CHECKOUT" in e and "comissão CHECKOUT do lojista" in e for e in erros)
+
+
+def _planilha_com_celula(destino, lojista, coluna, valor):
+    """Cópia do data pack com uma célula da aba vigente trocada (o data/ original não muda)."""
+    import openpyxl
+    from conftest import copiar_dados
+    copiar_dados(destino)
+    caminho = next(destino.glob("02_tabela_taxas_contratadas*.xlsx"))
+    wb = openpyxl.load_workbook(caminho)
+    ws = wb["Taxas vigentes"]
+    cab = next(r for r in ws.iter_rows() if any(c.value == "Lojista" for c in r))
+    col = next(c.column for c in cab if c.value == coluna)
+    linha = next(r[0].row for r in ws.iter_rows(min_row=cab[0].row + 1) if r[0].value == lojista)
+    ws.cell(linha, col).value = valor
+    wb.save(caminho)
+    return destino
+
+
+def test_nota_nao_sai_com_valor_parcial(tmp_path):
+    """D57 (avaliação simulada): com 'a confirmar' na taxa de crédito à vista da Rota, as transações dessa
+    coluna ficam em pendência e a comissão calculada é parcial; a nota da Rota não é emitida e vira
+    NOTA_BLOQUEADA com o motivo. As outras notas não mudam."""
+    rota = "95927868000148"
+    dados = _planilha_com_celula(tmp_path / "dados", "Rota Global Intercâmbio Ltda", "Crédito à vista", "a confirmar")
+    r = executar(dados, tmp_path / "s", RAIZ / "regras.yaml")
+    assert r["erros_validacao"] == []
+    notas = {n["tomador_cnpj"]: n for n in _csv(tmp_path / "s", "notas_a_emitir.csv")}
+    assert rota not in notas and len(notas) == 20  # 19 de checkout + a da Ponte
+    pend = {p["id_saida"]: p for p in _csv(tmp_path / "s", "pendencias.csv")}
+    b = pend[f"PEN-NOTA_BLOQUEADA-{rota}"]
+    com = next(c for c in _csv(tmp_path / "s", "comissoes_por_lojista.csv") if c["id_saida"] == f"COM-{rota}-CHECKOUT")
+    assert b["valor_brl"] == com["comissao_brl"] and b["quem_decide"] == "Helena"
+    assert "é parcial" in b["motivo"] and "PEN-TAXA_CONTRATADA_INDEFINIDA-" in b["motivo"]
+    assert any(p["tipo"] == "TAXA_CONTRATADA_INDEFINIDA" and "a confirmar" in p["motivo"] for p in pend.values())
+
+
+def test_validador_recusa_nota_de_lojista_bloqueado(saida, tmp_path):
+    from tarvo.saida.validador import validar_saida
+    pasta, _ = saida
+    for p in pasta.iterdir():
+        (tmp_path / p.name).write_bytes(p.read_bytes())
+
+    def bloquear(linhas):  # uma NOTA_BLOQUEADA da Rota, que tem nota emitida
+        return linhas + [["PEN-NOTA_BLOQUEADA-95927868000148", "NOTA_BLOQUEADA", "TX88440860", "", "teste", "Helena"]]
+    _reescrever(tmp_path / "pendencias.csv", bloquear)
+    erros = validar_saida(tmp_path)
+    assert any("NF-95927868000148-CHECKOUT" in e and "NOTA_BLOQUEADA" in e for e in erros)

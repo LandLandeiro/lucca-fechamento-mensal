@@ -127,7 +127,8 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         raise ErroEntrada(f"relatório da Orbe com {len(meses_orbe)} meses ({sorted(meses_orbe)}): competência do checkout ambígua")
 
     comissoes = sorted(checkout.comissoes + remessa.comissoes, key=ordem_comissao)
-    notas = notas_a_emitir(comissoes, checkout.rastro + remessa.rastro, regras, next(iter(meses_orbe)), ponte.competencia)
+    notas = notas_a_emitir(comissoes, checkout.rastro + remessa.rastro, regras, next(iter(meses_orbe)), ponte.competencia,
+                           checkout.pendencias_por_cnpj)
     nf_remessa = sum((n["valor_brl"] for n in notas.linhas if n["linha_negocio"] == "REMESSA"), ZERO)
     pend_repasse, rastro_repasse = conferencia_repasse(
         nf_remessa, [l for l in notas.rastro if l["id_saida"].endswith("-REMESSA")],

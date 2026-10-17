@@ -50,6 +50,8 @@ class ResultadoCheckout:
     pendencias: list[Pendencia] = field(default_factory=list)
     por_transacao: dict[str, ComissaoTransacao] = field(default_factory=dict)
     em_pendencia: dict[str, str] = field(default_factory=dict)  # id_transacao → id_saida da pendência
+    # CNPJ → pendências de transações dele (taxa indefinida etc.): a nota do mês não sai com valor parcial (D57)
+    pendencias_por_cnpj: dict[str, list[str]] = field(default_factory=dict)
 
 
 def id_comissao(cnpj: str, linha: str = LINHA) -> str:
@@ -76,6 +78,11 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
 
     def pendente_transacao(t: TransacaoOrbe, tipo: str, motivo: str) -> None:
         pendente_grupo(t, tipo, t.ref_origem, motivo, QUEM_DECIDE_FINANCEIRO)
+        cnpj = cadastro.por_ec.get(t.cod_estabelecimento)
+        if cnpj and t.cod_estabelecimento not in sem_contrato:
+            lista = res.pendencias_por_cnpj.setdefault(cnpj, [])
+            if f"PEN-{tipo}-{t.ref_origem}" not in lista:
+                lista.append(f"PEN-{tipo}-{t.ref_origem}")
 
     def cnpj_da(t: TransacaoOrbe) -> str | None:
         ec = t.cod_estabelecimento

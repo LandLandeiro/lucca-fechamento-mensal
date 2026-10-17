@@ -61,7 +61,7 @@ PREFIXOS_COBERTURA = ("COM-", "PEN-", "EXC-")
 PREFIXO_EXCLUSAO = "EXC-"
 # pendências derivadas de um número já calculado: reapontam linhas que já têm destino
 PREFIXOS_DERIVADOS = ("PEN-NF_NEGATIVA-", "PEN-CONFERENCIA_REPASSE-", "PEN-EXCESSO_REMESSA-", "PEN-APORTE_",
-                      "PEN-CONTESTACAO_PONTE-", "PEN-DIVERGENCIA_CHECKOUT-")
+                      "PEN-CONTESTACAO_PONTE-", "PEN-DIVERGENCIA_CHECKOUT-", "PEN-NOTA_BLOQUEADA-")
 
 
 def _d(texto: str | None) -> Decimal:
@@ -247,15 +247,20 @@ def _contestacao(caminho: Path, dados: dict[str, list[dict]]) -> list[str]:
 
 
 def _notas(dados: dict[str, list[dict]]) -> list[str]:
-    """Σ notas CHECKOUT = Σ comissões CHECKOUT positivas (e cada nota = a comissão do lojista);
-    nota REMESSA = Σ comissão REMESSA; nenhuma nota ≤ 0."""
+    """Σ notas CHECKOUT = Σ comissões CHECKOUT positivas dos lojistas sem nota bloqueada (e cada nota = a
+    comissão do lojista); lojista com NOTA_BLOQUEADA não tem nota (D57); nota REMESSA = Σ comissão REMESSA;
+    nenhuma nota ≤ 0."""
     erros: list[str] = []
     notas = dados["notas_a_emitir.csv"]
     comissoes = dados.get("comissoes_por_lojista.csv", [])
-    com = {(l["cnpj"], l["linha_negocio"]): _d(l["comissao_brl"]) for l in comissoes}
+    bloqueados = {p["id_saida"].rsplit("-", 1)[1] for p in dados.get("pendencias.csv", []) if p["tipo"] == "NOTA_BLOQUEADA"}
+    com = {(l["cnpj"], l["linha_negocio"]): _d(l["comissao_brl"]) for l in comissoes
+           if not (l["linha_negocio"] == "CHECKOUT" and l["cnpj"] in bloqueados)}
     for n in notas:
         if _d(n["valor_brl"]) <= 0:
             erros.append(f"{n['id_saida']}: nota com valor {n['valor_brl']} ≤ 0")
+        if n["linha_negocio"] == "CHECKOUT" and n["tomador_cnpj"] in bloqueados:
+            erros.append(f"{n['id_saida']}: nota emitida para lojista com NOTA_BLOQUEADA (valor parcial)")
         if n["linha_negocio"] == "CHECKOUT" and com.get((n["tomador_cnpj"], "CHECKOUT")) != _d(n["valor_brl"]):
             erros.append(f"{n['id_saida']}: valor {n['valor_brl']} ≠ comissão CHECKOUT do lojista {com.get((n['tomador_cnpj'], 'CHECKOUT'))}")
     positivas = sum((v for (_, ln), v in com.items() if ln == "CHECKOUT" and v > 0), Decimal("0"))

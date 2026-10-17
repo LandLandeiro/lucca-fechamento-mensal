@@ -60,9 +60,15 @@ def notas_a_emitir(
     regras: dict,
     competencia_checkout: tuple[int, int],
     competencia_remessa: tuple[int, int] | None,
+    bloqueios: dict[str, list[str]] | None = None,
 ) -> ResultadoNotas:
-    """Notas a emitir (CHECKOUT por lojista; REMESSA para a Ponte) e pendências de nota negativa."""
+    """Notas a emitir (CHECKOUT por lojista; REMESSA para a Ponte) e pendências de nota negativa.
+
+    `bloqueios` {cnpj: [pendências de transações do lojista]}: a comissão do mês está incompleta, então a
+    nota não sai com valor parcial; vira pendência NOTA_BLOQUEADA (`notas.nota_com_transacao_pendente`, D57)."""
     valor_da_regra(regras, "notas.estrutura_nf_checkout")
+    if bloqueios:
+        valor_da_regra(regras, "notas.nota_com_transacao_pendente")
     textos = valor_da_regra(regras, "notas.discriminacao")
     tomador_remessa = valor_da_regra(regras, "ponte.tomador_nf_remessa")
     por_id: dict[str, list[dict]] = {}
@@ -74,6 +80,19 @@ def notas_a_emitir(
         if c["linha_negocio"] != "CHECKOUT":
             continue
         linhas = por_id.get(c["id_saida"], [])
+        pendentes = (bloqueios or {}).get(c["cnpj"])
+        if pendentes:
+            pid = f"PEN-NOTA_BLOQUEADA-{c['cnpj']}"
+            lista = ", ".join(pendentes[:3]) + (f" e mais {len(pendentes) - 3}" if len(pendentes) > 3 else "")
+            res.pendencias.append(Pendencia(
+                pid, "NOTA_BLOQUEADA", c["id_saida"], c["comissao_brl"],
+                f"{c['lojista']}: {len(pendentes)} transações do mês em pendência ({lista}). A comissão calculada "
+                f"({c['id_saida']}, {fmt_dinheiro(c['comissao_brl'])}) é parcial: a nota CHECKOUT não sai com valor "
+                f"parcial. Emitir depois de resolver as pendências (valor_brl = comissão parcial, informativo)",
+                "Helena",
+            ))
+            res.rastro_pendencias.extend({**l, "id_saida": pid} for l in linhas)
+            continue
         if c["comissao_brl"] > 0:
             nid = id_nota(c["cnpj"], "CHECKOUT")
             res.linhas.append({
