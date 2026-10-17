@@ -14,8 +14,8 @@
 |---|---|
 | Notas a emitir | **R$ 243.284,29 em 21 notas** (20 de checkout, R$ 203.740,84; 1 para a Ponte, R$ 39.543,45), já com os 14 ajustes tardios da Orbe (arquivo 06: −R$ 3.304,39) |
 | Comissão | checkout R$ 203.735,34 (21 lojistas; a Casa fica em −5,50 e não emite nota); remessa R$ 39.543,45 (14 lojistas) |
-| Divergência de checkout | 210 transações (o estorno de venda divergente entra com valor negativo); devolver aos lojistas **R$ 16.972,57**; recuperar da Orbe **R$ 1.575,80** (Rota e Bridge: condição contratada); custo para a Tarvo **R$ 15.396,77** (Casa: concessão do comercial fora do contrato) |
-| Remessa | Mundo Aberto R$ 1.418,85 a contestar com a Ponte; 4 spreads negativos: −R$ 1.834,05 no relatório (o que aconteceu), −R$ 3.565,98 até o spread do contrato (o que se pede à Ponte) |
+| Divergência de checkout | 210 transações (o estorno de venda divergente entra com valor negativo); devolver aos lojistas **R$ 16.972,57**; recuperar da Orbe **R$ 1.575,80** (Rota e Bridge: condição contratada); custo para a Tarvo **R$ 15.396,77** (Casa: concessão do comercial fora do contrato); as 118 linhas da Casa estão marcadas como isenção comercial, com natureza e motivo próprios, como a Helena autorizou (Q-AE 1: 'Se quiserem pôr as linhas também em divergências, marcadas como isenção, tudo bem') |
+| Remessa | Mundo Aberto R$ 1.418,85 a contestar com a Ponte; 4 spreads negativos: −R$ 1.834,05 no relatório (o que aconteceu), −R$ 3.565,98 até o spread do contrato (o que se pede à Ponte); os 4 spreads negativos também aparecem em divergencias_taxa.csv com natureza spread_negativo, como a Helena permitiu (Q-O: 'desde que fique claro que é outra natureza') |
 | Lançamentos | 184 dos dois extratos, todos por regra (0 para a IA) |
 | Pendências | **15**, cada uma com valor, motivo e quem decide (Helena 10, Helena + comercial 2, analista 2, comercial 1) |
 | Rastro | **5.251 linhas**: cada número acima ligado às linhas de origem (relatório da Orbe, ajustes tardios, anexo da Ponte, extratos) |
@@ -42,7 +42,7 @@ A tabela é a porta de entrada; os arquivos detalhados são a evidência.
 | Critério do case | Onde ver | O que mostra |
 |---|---|---|
 | Correção dos números (25%) | `saida/` + `docs/AUDITORIA.md` + CI | Os 6 arquivos, cada número com a linha de origem no `rastro.csv`; auditoria independente com 0 violações; o CI refaz a saída do zero em Windows e Linux a cada commit e confere que é idêntica |
-| Uso de IA (20%) | `PROMPTS/MOMENTOS.md` + `PROMPTS/` | Onde a IA errou e como foi corrigida, onde ela sugeriu e o código provou antes de aceitar, e o histórico completo das sessões |
+| Uso de IA (20%) | `PROMPTS/MOMENTOS.md` + `PROMPTS/` | Onde a IA errou e como foi corrigida, onde ela sugeriu e o código provou antes de aceitar, e o histórico das sessões: as do Claude Code literais; a do Claude (app) em relatório (PROMPTS/03) |
 | Causa raiz (15%) | `docs/CAUSA_RAIZ.md` | Por que o fechamento erra (o comercial fecha a condição e ninguém avisa a Orbe e a Ponte), com os casos de setembro em reais, o custo (R$ 15.396,77) e o que precisa mudar no processo |
 | Hipóteses (10%) | `HIPOTESES.md` + `regras.yaml` | O que é fato, o que é premissa e o que o financeiro confirmou, com fonte; cada regra do cálculo com status SEI/ASSUMO/CONFIRMADO |
 | Perguntar antes de construir (10%) | `HIPOTESES.md` (seção "Perguntas ao financeiro") + `docs/FINANCEIRO_SLACK.md` | As perguntas feitas, as respostas literais da Helena e o que cada resposta mudou na solução |
