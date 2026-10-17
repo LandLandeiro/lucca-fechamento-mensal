@@ -114,6 +114,19 @@ Se uma regra mudar (taxa nova, nome novo de lojista no extrato, feriado do ano s
 - **O código prova antes de aceitar:** conta lançável; CNPJ no cadastro; prova em outra fonte (Meridiano: soma dos PIX do lojista = operações dele na Ponte; Aurora: o lojista tem vendas na Orbe no mês); confiança ≥ 0,8. Falhou qualquer item → vai para uma pessoa, com o motivo.
 - **Não atua** em comissão, divergência, nota, remessa ou cadastro: tudo isso é regra determinística. A IA também não cria regra: o que ela acertou vira proposta em `saida/sugestoes_regra.csv` para alguém aprovar no mês seguinte.
 
+### Ver a IA funcionando
+
+Setembro não tem linha para a IA. O outubro sintético (`tests/fixtures/outubro/`, DADO SINTÉTICO) tem uma: um aporte da Nórdica que chega com nome novo, "PIX RECEB NEI EDUCACAO INTERNACIONAL".
+
+```
+python -m tarvo --dados tests/fixtures/outubro --saida saida_outubro
+```
+
+- **Com a chave no `.env.local`** (ver [Chave de API](#chave-de-api)): o programa chama a API para a linha que não está no cache. Para forçar a chamada de verdade, rode com `--saida` numa pasta qualquer depois de apagar o arquivo do cache dessa linha (`cache_ia/112face5….json`); a tela mostra `1 chamadas à API`, os tokens e o custo (na nossa execução: 2.612 de entrada, 143 de saída, ~US$ 0,0003).
+- **Sem chave:** a resposta vem de `cache_ia/` (commitado), com o mesmo resultado; a tela mostra `1 do cache`.
+- **O que aparece na tela:** a sugestão da IA (conta 2.1.02.001, lojista Nórdica, confiança 0,9, justificativa) e as 4 checagens do código: (a) conta lançável, (b) CNPJ no cadastro, (c) Σ PIX da Nórdica 473.909,27 (regra 401.420,40 + IA 72.488,87) = Σ das operações dela na Ponte, (d) confiança ≥ 0,8 → aceita.
+- **Em `saida_outubro/sugestoes_regra.csv`:** `SUG-001;ALIAS_LOJISTA;MERIDIANO;NEI EDUCACAO INTERNACIONAL;2.1.02.001;PROPOSTA`, com a evidência da soma. Fica PROPOSTA até alguém aprovar o alias no `regras.yaml` (`classificacao_extratos.aliases_lojista`).
+
 ## Limitações conhecidas
 
 - **Alerta de antecipação só para lojista sem histórico** (D66). A antecipação pode cobrir recebíveis de meses anteriores, que não estão nos dados; checar todos os lojistas exige a agenda de recebíveis da Orbe. Com o critério do mês inteiro, o alerta seria alarme falso em 5 lojistas. Com mais tempo: ler a agenda de recebíveis. Se a pergunta do Theo (11:16) for respondida, o critério é revisto.

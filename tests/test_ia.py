@@ -178,3 +178,26 @@ def test_cache_antigo_com_tres_casas_e_lido_sem_erro(tmp_path):
     r, _, lan, _ = _rodar(tmp_path, "b", None)
     assert r["erros_validacao"] == [] and r["extratos"]["ia"].chamadas_api == 0
     assert all(lan[k]["confianca"] == "0.86" for k in SOBRAS)
+
+
+def test_com_chave_usa_o_cliente_real_e_sem_chave_o_cache(tmp_path, monkeypatch):
+    """Item 8: com chave (e sem TARVO_SEM_REDE) o caminho cria o cliente da API; sem chave, None → só cache."""
+    from tarvo.classificacao.por_ia import ClienteAnthropic, cliente_padrao
+    from tarvo.regras import carregar_regras
+    regras = carregar_regras(RAIZ / "regras.yaml")
+    env = tmp_path / ".env.local"
+    env.write_text("ANTHROPIC_API_KEY=chave-de-teste\n", encoding="utf-8")
+    monkeypatch.delenv("TARVO_SEM_REDE", raising=False)
+    assert isinstance(cliente_padrao(env, regras), ClienteAnthropic)  # não chama a rede ao criar
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    assert cliente_padrao(tmp_path / "sem_env", regras) is None
+
+
+def test_fixture_de_outubro_responde_pelo_cache_commitado(tmp_path):
+    """O comando do README sem chave: a linha de nome novo vem de cache_ia/ (resposta real gravada) e é aceita."""
+    from tarvo.__main__ import CACHE_IA_PADRAO
+    r = executar(RAIZ / "tests" / "fixtures" / "outubro", tmp_path / "s", RAIZ / "regras.yaml", cache_ia=CACHE_IA_PADRAO)
+    (d,) = r["extratos"]["ia"].decisoes
+    assert d.resposta.origem == "CACHE" and d.aceita and d.resposta.sugestao.lojista_cnpj == "14760206000124"
+    (s,) = _csv(tmp_path / "s", "sugestoes_regra.csv")
+    assert (s["padrao_ou_nome"], s["status"]) == ("NEI EDUCACAO INTERNACIONAL", "PROPOSTA")
