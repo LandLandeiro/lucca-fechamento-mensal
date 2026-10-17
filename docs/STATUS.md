@@ -1,6 +1,6 @@
 # Status
 
-> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 ~16h10 (respostas de 17/10 de manhã, D63–D70).
+> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 13:10 (D71–D74 e documentação para a entrega).
 
 **Nível atual:** **Alvo** (todos os 6 CSVs gerados e validados); os 184 lançamentos por REGRA (D52); IA só para nome que nenhuma regra reconhece
 **Próximo passo:** README (problema em 2 frases), números velhos do HIPOTESES (H02, H11, H19), pitch; rever H51 e H53 se o Theo (11:16) tiver resposta.
