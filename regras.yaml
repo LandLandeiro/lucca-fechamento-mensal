@@ -323,11 +323,18 @@ remessa:
     status: CONFIRMADO
     fonte: "Slack Helena 21:13 (Q-H d): 'Por operação, com o mesmo arredondamento. No seu exemplo, R$ 131,01.'"
     pergunta_ref: P12
-  formula_divergencia:      # substitui a D22 (D28)
-    valor: "round((Spread % aplicado, coluna do relatório − contratado) × PTAX × Valor ME); valor cheio"
+  formula_divergencia:      # substitui a D22 (D28); critério escrito pedido na Q-X 4 (D64)
+    valor:
+      criterio: "round((Spread % aplicado, coluna do relatório − contratado) × PTAX × Valor ME), por operação; valor cheio"
+      motivo: >-
+        foi o critério proposto e aceito na Q-G (a Helena: 'É o valor cheio' e 'O critério ... é de vocês. Se ele
+        estiver escrito, com o motivo, eu sigo'); e o Spread R$ da Ponte já vem arredondado por operação, então
+        partir dele soma arredondamentos da Ponte aos nossos
+      diferenca_para_spread_rs: "Mundo Aberto set/2026: 1.418,85 pelo Spread % × 1.418,88 pelo Spread R$ (D22): R$ 0,03"
     status: ASSUMO
     autor: Lucca
-    fonte: "decisão Lucca ~22h50 (D28), mesma lógica da Q-H c (Slack Helena 21:13: 'valor bruto × (taxa aplicada − contratada)'); 'É o valor cheio' (Slack Helena 20:58); contratado em branco/'padrão' = remessa.spread_padrao"
+    aceite: "Slack Helena 11:01 (Q-X 4): 'São três centavos. Escolham um critério e escrevam qual.'"
+    fonte: "decisão Lucca ~22h50 (D28) e 17/10 (D64), mesma lógica da Q-H c (Slack Helena 21:13: 'valor bruto × (taxa aplicada − contratada)'); 'É o valor cheio' (Slack Helena 20:58, Q-G); contratado em branco/'padrão' = remessa.spread_padrao. ASSUMO com aceite: a Helena delegou o critério (Q-X 4), como a tolerância (H07)"
     pergunta_ref: P11
   arredondamento_divergencia:   # substitui o HALF_EVEN da D20 (D27)
     valor: ROUND_HALF_UP_POR_LINHA

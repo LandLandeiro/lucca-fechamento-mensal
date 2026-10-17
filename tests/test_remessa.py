@@ -193,3 +193,17 @@ def test_spread_negativo_depende_da_observacao(ponte, cadastro, regras, observac
         (p,) = [p for p in rem.pendencias if p.id_saida == "PEN-SPREAD_NEGATIVO_SEM_TRAVA-PC-0926-0210"]
         assert p.valor_brl < 0 and "Helena" in p.quem_decide
         assert "PC-0926-0210" not in {o.ref_origem for o, _ in c.elegiveis}
+
+
+def test_criterio_da_mundo_aberto_escrito_com_a_diferenca(divr, regras, cadastro, cls):
+    """D64 (Q-X 4, Q-G): Spread % do relatório (1.418,85); pelo Spread R$ seria 1.418,88 (R$ 0,03 a mais)."""
+    from tarvo.cadastro import linha_vigente
+    from tarvo.formatos import centavos
+    regra = regras["remessa.formula_divergencia"]
+    assert regra["status"] == "ASSUMO" and "Q-X 4" in regra["aceite"] and "0,03" in regra["valor"]["diferenca_para_spread_rs"]
+    mundo = [d for d in divr.linhas if d["cnpj"] == "17217888000111"]
+    assert sum(d["diferenca_brl"] for d in mundo) == Decimal("1418.85")
+    ops = {o.ref_origem: o for o, _ in cls.elegiveis}
+    pelo_spread_rs = sum(centavos(ops[d["ref_origem"]].spread_brl - d["taxa_contratada_pct"] * ops[d["ref_origem"]].ptax_ref
+                                  * ops[d["ref_origem"]].valor_me, "ROUND_HALF_UP") for d in mundo)
+    assert pelo_spread_rs == Decimal("1418.88")
