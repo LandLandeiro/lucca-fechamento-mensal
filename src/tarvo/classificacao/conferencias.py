@@ -2,23 +2,28 @@
 
 1. Transferência entre contas: cada saída Aurora→Meridiano (regra transferencia_meridiano)
    casa com uma entrada de mesma titularidade (regra mesma_titularidade) de mesmo valor em
-   até 1 dia útil. Sem par → pendência "em trânsito".
+   até 1 dia útil. Sem par → pendência "em trânsito". Entrada sem saída no mês → pendência, a não
+   ser que case com uma pendência "em trânsito" do mês anterior (`--pendencias-anteriores`, D50):
+   aí sai como pendência anterior resolvida, não como pendência nova.
 2. Aportes da remessa: por lojista, Σ PIX RECEB no Meridiano × Σ (Valor R$ + IOF) das
    operações únicas da Ponte (a duplicata conta uma vez). Sobra igual a um aporte → pendência
    desse aporte; outra sobra ≠ 0 → pendência do lojista. Lojista sem nenhum aporte identificado,
    havendo PIX RECEB sem regra, fica "não conferido" (sem pendência: seria alarme falso).
-3. Aplicação × resgate (FIFO): resgate acima do saldo aplicado no mês é sempre reportado; vira
-   pendência só se `resgate_acima_do_aplicado` = PENDENCIA (em set/2026: SALDO_APLICADO_ANTERIOR,
-   D36). A linha nunca é dividida.
+3. Aplicação × resgate (FIFO): resgate acima do saldo aplicado no mês é sempre reportado. Com
+   `resgate_acima_do_aplicado` = SALDO_APLICADO_ANTERIOR_SE_HA_RENDIMENTO (D49, refina a D36), o excesso
+   só é saldo aplicado anterior se o extrato do mês tem linha própria de rendimento (regra
+   rendimento_aplicacao); sem ela, vira pendência para a Helena. PENDENCIA e SALDO_APLICADO_ANTERIOR
+   forçam um dos dois. A linha nunca é dividida.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
 from datetime import date, timedelta
 from decimal import Decimal
 
-from tarvo.formatos import fmt_dinheiro
+from tarvo.formatos import fmt_dinheiro, mes_seguinte, nome_mes
 from tarvo.modelo import LancamentoBancario, OperacaoPonte, Pendencia
 
 ZERO = Decimal("0")
@@ -29,6 +34,7 @@ class ResultadoConferencias:
     pendencias: list[Pendencia] = field(default_factory=list)
     rastro_pendencias: list[dict] = field(default_factory=list)
     transferencias: list[tuple[LancamentoBancario, LancamentoBancario | None]] = field(default_factory=list)
+    resolvidas: list[dict] = field(default_factory=list)  # pendências do mês anterior resolvidas neste mês (D50)
     aportes: list[dict] = field(default_factory=list)
     resgates: list[dict] = field(default_factory=list)
 
@@ -58,6 +64,7 @@ def conferir(
     nomes: dict[str, str],
     aportes_nao_identificados: list[LancamentoBancario] | None = None,
     resgate_acima: str = "PENDENCIA",
+    pendencias_anteriores: list[dict] | None = None,
 ) -> ResultadoConferencias:
     """Roda as três conferências. `regra_por_lancamento` (banco, ref) → nome da regra aplicada."""
     res = ResultadoConferencias()
@@ -78,14 +85,29 @@ def conferir(
             entradas.remove(par)
             continue
         pid = f"PEN-TRANSFERENCIA_EM_TRANSITO-{saida.banco}-{saida.ref_origem}"
+        proximo = nome_mes(mes_seguinte(saida.data)[1])  # D48: mês derivado da data, nunca fixo
         res.pendencias.append(Pendencia(
             pid, "TRANSFERENCIA_EM_TRANSITO", saida.ref_origem, saida.valor,
             f"transferência de {fmt_dinheiro(-saida.valor)} saiu do Aurora em {saida.data.isoformat()} e não tem TED de "
-            f"mesma titularidade no Meridiano em até 1 dia útil: em trânsito, cai no Meridiano em 01/10 "
-            f"(Helena 20:49, Q-F 4c); conferir no extrato de outubro", "analista (conferir em outubro)",
+            f"mesma titularidade no Meridiano em até 1 dia útil: em trânsito, cai no Meridiano no dia útil seguinte "
+            f"(Q-F 4c); conferir no extrato de {proximo}", f"analista (conferir em {proximo})",
         ))
         res.rastro_pendencias.append(_rastro(pid, saida, saida.valor, linha(saida), "transferência sem par no Meridiano"))
+    em_transito = [p for p in (pendencias_anteriores or []) if p.get("tipo") == "TRANSFERENCIA_EM_TRANSITO"]
     for e in entradas:  # entrada de mesma titularidade sem saída no Aurora
+        anterior = _transito_anterior(e, em_transito)
+        if anterior is not None:  # D50: a transferência em trânsito do mês anterior caiu agora
+            em_transito.remove(anterior)
+            m = _RE_DATA_SAIDA.search(anterior.get("motivo", ""))
+            mes_ant = nome_mes(date.fromisoformat(m.group(1)).month) if m else "mês anterior"
+            res.resolvidas.append({
+                "id_pendencia_anterior": anterior["id_saida"], "tipo": anterior["tipo"], "ref_origem": anterior["ref_origem"],
+                "valor_brl": Decimal(anterior["valor_brl"]), "resolvida_por": f"LAN-{e.banco}-{e.ref_origem}",
+                "data_resolucao": e.data,
+                "motivo": f"pendência de {mes_ant} resolvida: a transferência de {fmt_dinheiro(-Decimal(anterior['valor_brl']))}"
+                          f" que saiu do Aurora em {m.group(1) if m else '?'} caiu no Meridiano em {e.data.isoformat()} ({e.ref_origem})",
+            })
+            continue
         pid = f"PEN-TRANSFERENCIA_SEM_ORIGEM-{e.banco}-{e.ref_origem}"
         res.pendencias.append(Pendencia(pid, "TRANSFERENCIA_SEM_ORIGEM", e.ref_origem, e.valor,
                                         f"TED de mesma titularidade de {fmt_dinheiro(e.valor)} em {e.data.isoformat()} "
@@ -158,16 +180,43 @@ def conferir(
             if ap[1] == 0:
                 fila.pop(0)
         res.resgates.append({"resgate": lan, "consumidas": consumidas, "excesso": falta})
-        if falta > 0 and resgate_acima == "PENDENCIA":
+        if falta > 0 and _resgate_vira_pendencia(resgate_acima, por_regra):
             pid = f"PEN-RESGATE_ACIMA_DO_APLICADO-{lan.banco}-{lan.ref_origem}"
             orig = ", ".join(f"{a.ref_origem} ({fmt_dinheiro(u)})" for a, u in consumidas) or "nenhuma"
             res.pendencias.append(Pendencia(
                 pid, "RESGATE_ACIMA_DO_APLICADO", lan.ref_origem, falta,
                 f"resgate de {fmt_dinheiro(lan.valor)} em {lan.data.isoformat()} excede em {fmt_dinheiro(falta)} o saldo aplicado "
-                f"no mês (FIFO: {orig}). A linha ficou inteira em 1.1.02.001. Proposta: o excesso é rendimento "
-                f"(3.2.01) — ou havia saldo aplicado antes de 01/09, que o extrato não mostra. Não dividi a linha", "Lucca",
+                f"no mês (FIFO: {orig}). A linha ficou inteira em 1.1.02.001. O extrato do mês não tem linha própria de "
+                f"rendimento: o excesso pode ser rendimento (3.2.01) ou saldo aplicado antes de "
+                f"{lan.data.replace(day=1).isoformat()}, que o extrato não mostra. Não dividi a linha", "Helena",
             ))
             res.rastro_pendencias.append(_rastro(pid, lan, lan.valor, linha(lan), "resgate"))
             for a, u in consumidas:
                 res.rastro_pendencias.append(_rastro(pid, a, -u, linha(a), "aplicação consumida (FIFO)"))
     return res
+
+
+_RE_DATA_SAIDA = re.compile(r"saiu do Aurora em (\d{4}-\d{2}-\d{2})")
+
+
+def _transito_anterior(e: LancamentoBancario, em_transito: list[dict]) -> dict | None:
+    """Pendência "em trânsito" do mês anterior com o mesmo valor (sinal oposto) e saída até 1 dia útil antes."""
+    for p in em_transito:
+        try:
+            valor = Decimal(p["valor_brl"])
+        except Exception:  # noqa: BLE001 — linha ilegível do arquivo anterior: não casa
+            continue
+        m = _RE_DATA_SAIDA.search(p.get("motivo", ""))
+        if valor == -e.valor and m and 0 <= dias_uteis_entre(date.fromisoformat(m.group(1)), e.data) <= 1:
+            return p
+    return None
+
+
+def _resgate_vira_pendencia(modo: str, por_regra: dict) -> bool:
+    """D49: com SALDO_APLICADO_ANTERIOR_SE_HA_RENDIMENTO, o excesso só é saldo anterior se o extrato do mês
+    tem linha própria de rendimento (a evidência da D36 em setembro)."""
+    if modo == "SALDO_APLICADO_ANTERIOR_SE_HA_RENDIMENTO":
+        return not por_regra.get("meridiano.rendimento_aplicacao")
+    if modo in ("PENDENCIA", "SALDO_APLICADO_ANTERIOR"):
+        return modo == "PENDENCIA"
+    raise ValueError(f"resgate_acima_do_aplicado desconhecido: {modo!r}")

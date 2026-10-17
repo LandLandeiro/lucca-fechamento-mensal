@@ -39,6 +39,7 @@ COLUNAS = {
 EXTRAS = {
     "contestacao_ponte.csv": ["id_pendencia", "motivo", "ref_origem", "linha_anexo", "valor_contestado_brl"],
     "sugestoes_regra.csv": ["id_sugestao", "tipo", "banco", "padrao_ou_nome", "conta_codigo", "status"],
+    "pendencias_resolvidas.csv": ["id_pendencia_anterior", "tipo", "ref_origem", "valor_brl", "resolvida_por", "motivo"],
 }
 
 

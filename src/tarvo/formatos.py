@@ -153,6 +153,20 @@ def fmt_dinheiro(valor: Decimal) -> str:
     return "0.00" if q == 0 else f"{q:.2f}"  # sem "-0.00" (zero negativo: −1.021,01 × 0)
 
 
+MESES = ("janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro",
+         "novembro", "dezembro")
+
+
+def nome_mes(mes: int) -> str:
+    """9 → 'setembro'. Para textos derivados da data (nada de mês fixo no código, D48)."""
+    return MESES[mes - 1]
+
+
+def mes_seguinte(d: date) -> tuple[int, int]:
+    """(ano, mês) do mês seguinte ao da data."""
+    return (d.year + 1, 1) if d.month == 12 else (d.year, d.month + 1)
+
+
 def fmt_pct(fracao: Decimal) -> str:
     """Fração 0.0359 → '3.59' (percentual, sem zeros à direita)."""
     pct = (fracao * 100).normalize()

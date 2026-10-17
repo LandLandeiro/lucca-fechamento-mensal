@@ -567,8 +567,9 @@ classificacao_extratos:
     valor:
       transferencia_entre_contas: "cada TRANSF Aurora→Meridiano casa com um TED de mesma titularidade de mesmo valor em até 1 dia útil; sem par → pendência (em trânsito)"
       aportes_ponte: "por lojista, Σ PIX RECEB no Meridiano × Σ (Valor R$ + IOF) das operações únicas da Ponte; a sobra igual a um aporte → pendência daquele aporte; outra sobra → pendência do lojista"
-      aplicacao_resgate: "FIFO entre aplicações e resgates do mês; resgate acima do saldo aplicado no mês é reportado, sem pendência e sem dividir a linha"
-      resgate_acima_do_aplicado: SALDO_APLICADO_ANTERIOR   # SALDO_APLICADO_ANTERIOR (só reporta) | PENDENCIA
+      aplicacao_resgate: "FIFO entre aplicações e resgates do mês; resgate acima do saldo aplicado no mês é sempre reportado, sem dividir a linha"
+      # D49 (refina a D36): saldo aplicado anterior só com linha própria de rendimento no extrato do mês; sem ela, pendência para a Helena
+      resgate_acima_do_aplicado: SALDO_APLICADO_ANTERIOR_SE_HA_RENDIMENTO   # | SALDO_APLICADO_ANTERIOR | PENDENCIA
     status: ASSUMO
     autor: Lucca
     fonte: >-

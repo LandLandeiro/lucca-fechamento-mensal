@@ -50,9 +50,17 @@ cd tarvo-fechamento
 
 Chaves necessárias: **nenhuma para reproduzir setembro.** As respostas da IA estão em `cache_ia/` (commitado): sem chave, o fechamento usa o cache e dá o mesmo resultado, sem custo. Com arquivos novos (outubro), a IA lê `ANTHROPIC_API_KEY` de `.env.local` (modelo em `.env.example`); sem chave e sem cache, as linhas sem regra ficam para uma pessoa (HUMANO + pendência), com aviso, e o programa termina normalmente. `--sem-ia` desliga a IA.
 
-## Como a analista usa em outubro
+## Fechando outubro
 
-[preencher]
+Não muda nada no programa. A Helena (ou quem fecha o mês) faz três coisas:
+
+1. **Coloca os arquivos de outubro numa pasta**, do jeito que chegam: o relatório da Orbe, a planilha de taxas, o e-mail da Ponte com o anexo, o plano de contas e os dois extratos. Os nomes podem trazer o mês (`..._out2026...`); o programa acha cada arquivo pelo começo do nome.
+2. **Roda o fechamento apontando para essa pasta e para as pendências de setembro**:
+   `.\.venv\Scripts\python.exe -m tarvo --dados <pasta de outubro> --saida <pasta de saída> --pendencias-anteriores saida\pendencias.csv`
+   O que setembro deixou em aberto e outubro resolveu (por exemplo, a transferência de 300 mil que estava em trânsito) aparece como resolvido, e não como pendência nova.
+3. **Abre o `pendencias.csv`** e decide o que é dela (devoluções, contestações, nota negativa, lojista sem contrato). O resto (comissões, divergências, notas a emitir e lançamentos) já vem pronto, cada número com a linha de origem no `rastro.csv`.
+
+Se uma regra mudar (taxa nova, condição especial, nome novo de lojista no extrato), a mudança é uma linha no `regras.yaml`, com a fonte. O programa não muda.
 
 ## Onde a IA atua e onde não atua
 

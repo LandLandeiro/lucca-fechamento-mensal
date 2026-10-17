@@ -93,3 +93,37 @@ def test_rastro_fecha(outubro):
         soma[r["id_saida"]] = soma.get(r["id_saida"], Decimal(0)) + Decimal(r["valor"])
     for c in ler("comissoes_por_lojista.csv"):
         assert soma[c["id_saida"]] == Decimal(c["comissao_brl"])
+
+
+def test_nenhuma_pendencia_de_outubro_cita_setembro(outubro):
+    """D48: textos derivados da data; a transferência em trânsito de 30/10 manda conferir em novembro."""
+    _, ler = outubro
+    pend = ler("pendencias.csv")
+    assert not [p["id_saida"] for p in pend if "setembro" in (p["motivo"] + p["quem_decide"]).lower()]
+    (t,) = [p for p in pend if p["tipo"] == "TRANSFERENCIA_EM_TRANSITO"]
+    assert "conferir no extrato de novembro" in t["motivo"] and t["quem_decide"] == "analista (conferir em novembro)"
+    (x,) = [p for p in pend if p["tipo"] == "EXCESSO_REMESSA"]
+    assert "A nota de outubro sai pelo realizado" in x["motivo"]
+
+
+def test_sem_a_flag_a_ted_de_300_mil_vira_pendencia_nova(outubro, tmp_path):
+    """Sem --pendencias-anteriores o comportamento não muda: entrada sem saída no mês é pendência."""
+    _, ler = outubro
+    assert any(p["id_saida"] == "PEN-TRANSFERENCIA_SEM_ORIGEM-MERIDIANO-MRD2026100001" for p in ler("pendencias.csv"))
+
+
+def test_com_a_flag_a_pendencia_de_setembro_sai_resolvida(tmp_path_factory):
+    """D50: com o pendencias.csv de setembro, a TED de 01/10 casa com a transferência em trânsito de 30/09."""
+    dados = _gerador().gerar(DADOS, tmp_path_factory.mktemp("dados_flag"))
+    saida = tmp_path_factory.mktemp("saida_flag")
+    r = executar(dados, saida, RAIZ / "regras.yaml", pendencias_anteriores=RAIZ / "saida" / "pendencias.csv")
+    assert r["erros_validacao"] == []
+    with open(saida / "pendencias.csv", encoding="utf-8", newline="") as f:
+        pend = list(csv.DictReader(f, delimiter=";"))
+    assert not any(p["tipo"] == "TRANSFERENCIA_SEM_ORIGEM" for p in pend)
+    with open(saida / "pendencias_resolvidas.csv", encoding="utf-8", newline="") as f:
+        (res,) = list(csv.DictReader(f, delimiter=";"))
+    assert (res["id_pendencia_anterior"], res["valor_brl"], res["resolvida_por"]) == (
+        "PEN-TRANSFERENCIA_EM_TRANSITO-AURORA-L92", "-300000.00", "LAN-MERIDIANO-MRD2026100001")
+    assert res["motivo"].startswith("pendência de setembro resolvida")
+

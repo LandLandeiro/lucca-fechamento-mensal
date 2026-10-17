@@ -197,7 +197,8 @@ def test_transferencias(saida):
     pares = {s.ref_origem: (p.ref_origem if p else None) for s, p in r["extratos"]["conf"].transferencias}
     assert pares == {"L12": "MRD2026090107", "L44": "MRD2026090274", "L58": "MRD2026090454", "L92": None}
     p = next(p for p in _csv(saida[0], "pendencias.csv") if p["tipo"] == "TRANSFERENCIA_EM_TRANSITO")
-    assert p["ref_origem"] == "L92" and p["valor_brl"] == "-300000.00" and "01/10" in p["motivo"]
+    assert p["ref_origem"] == "L92" and p["valor_brl"] == "-300000.00"
+    assert "conferir no extrato de outubro" in p["motivo"] and p["quem_decide"] == "analista (conferir em outubro)"
 
 
 def test_aporte_sem_operacao_ponte_aerea(saida):
@@ -353,4 +354,37 @@ def test_saldo_negativo_do_aurora_nao_vira_pendencia(saida):
     pend = _csv(pasta, "pendencias.csv")
     assert not any("saldo" in p["tipo"].lower() or "garantida" in p["motivo"].lower() or "saldo negativo" in p["motivo"].lower()
                    for p in pend)
+
+
+def _resgate_sem_saldo(rendimento: bool):
+    """Aplicação de 100,00 e resgate de 150,00 no mês: o resgate excede o aplicado em 50,00."""
+    from datetime import date as _date
+    from tarvo.classificacao.conferencias import conferir
+    from tarvo.modelo import LancamentoBancario
+    lan = [LancamentoBancario("MERIDIANO", "A1", _date(2026, 10, 5), "APLIC AUTOMATICA", Decimal("-100.00"), None, "t"),
+           LancamentoBancario("MERIDIANO", "R1", _date(2026, 10, 9), "RESGATE AUTOMATICO", Decimal("150.00"), None, "t")]
+    regra = {("MERIDIANO", "A1"): "meridiano.aplicacao_automatica", ("MERIDIANO", "R1"): "meridiano.resgate_automatico"}
+    if rendimento:
+        lan.append(LancamentoBancario("MERIDIANO", "Y1", _date(2026, 10, 31), "RENDIMENTO APLIC AUTOMATICA", Decimal("3.00"), None, "t"))
+        regra[("MERIDIANO", "Y1")] = "meridiano.rendimento_aplicacao"
+    return conferir(regra, lan, {}, {}, [], {}, None, "SALDO_APLICADO_ANTERIOR_SE_HA_RENDIMENTO")
+
+
+def test_resgate_acima_com_linha_de_rendimento_e_saldo_anterior():
+    """D49 (refina a D36): com linha própria de rendimento no mês, o excesso é saldo aplicado anterior."""
+    r = _resgate_sem_saldo(rendimento=True)
+    assert r.resgates[0]["excesso"] == Decimal("50.00") and r.pendencias == []
+
+
+def test_resgate_acima_sem_linha_de_rendimento_vira_pendencia_para_a_helena():
+    r = _resgate_sem_saldo(rendimento=False)
+    (p,) = r.pendencias
+    assert (p.tipo, p.valor_brl, p.quem_decide) == ("RESGATE_ACIMA_DO_APLICADO", Decimal("50.00"), "Helena")
+    assert "2026-10-01" in p.motivo and "09/" not in p.motivo  # data derivada do lançamento, nada fixo
+
+
+def test_setembro_tem_linha_de_rendimento(regras):
+    from tarvo.regras import valor_da_regra
+    assert valor_da_regra(regras, "classificacao_extratos.conferencias")["resgate_acima_do_aplicado"] == \
+        "SALDO_APLICADO_ANTERIOR_SE_HA_RENDIMENTO"
 

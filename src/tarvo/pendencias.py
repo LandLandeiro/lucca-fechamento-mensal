@@ -8,6 +8,9 @@ sem classificação segura etc.) num formato único, sem repetir.
 
 from __future__ import annotations
 
+import csv
+from pathlib import Path
+
 from tarvo.modelo import Pendencia
 
 
@@ -33,3 +36,13 @@ def pendencia_para_linha(p: Pendencia) -> dict:
         "motivo": p.motivo,
         "quem_decide": p.quem_decide,
     }
+
+
+def ler_pendencias_anteriores(caminho: Path) -> list[dict]:
+    """`pendencias.csv` do mês anterior (formato desta saída): uma linha por pendência (D50)."""
+    with open(caminho, encoding="utf-8", newline="") as f:
+        linhas = list(csv.DictReader(f, delimiter=";"))
+    faltando = [c for c in ("id_saida", "tipo", "ref_origem", "valor_brl", "motivo") if linhas and c not in linhas[0]]
+    if faltando:
+        raise ValueError(f"{caminho}: não parece um pendencias.csv (faltam {faltando})")
+    return linhas

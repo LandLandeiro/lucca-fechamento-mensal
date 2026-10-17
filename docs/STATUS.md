@@ -1,9 +1,9 @@
 # Status
 
-> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 ~09h15 (decisões da auditoria).
+> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 ~09h45 (prova de outubro).
 
 **Nível atual:** **Alvo** (todos os 6 CSVs gerados e validados); lançamentos por REGRA e IA verificada, sobras recusadas em HUMANO
-**Próximo passo:** README (outubro, limitações) e pitch.
+**Próximo passo:** README (limitações) e pitch.
 
 ## Mínimo
 
@@ -34,7 +34,7 @@
 - [x] Extra `contestacao_ponte.csv` (Q-L): 28 operações em 3 pendências CONTESTACAO_PONTE, pronto para a Helena mandar à Ponte
 - [x] **Rastro de 100% dos números** (17/10 ~09h15, D45): o validador recusa número sem rastro ou com soma diferente, e linha do rastro de qualquer `id_saida` que não exista na fonte (id_transacao, Nº Operação + linha, L<n>, FITID + linha); auditoria independente com 0 violações (`docs/AUDITORIA.md`)
 - [x] Auditoria independente da saída (`scripts/auditar_saida.py`, sem importar o pacote): formato sem violação; coerência com 1 achado (o −0,03 acima); matriz de conformidade Q-A…Q-M em `docs/CONFORMIDADE.md`
-- [ ] Roda em outubro sem mudar código: arquivos achados por prefixo, competência lida do relatório da Ponte, vigências e regras lidas do `regras.yaml`; falta testar com um arquivo de outro mês
+- [x] **Roda em outubro sem mudar código** (17/10, D48–D50): `tests/test_outubro.py` (12 testes, no CI) fecha um mês sintético gerado de setembro (`tests/fixtures/gerar_outubro.py`, datas +1 mês, EC novo, estorno da Bridge de venda de 05/09, TED de 300 mil em 01/10, PIX da EduAbroad). Resultado: exit 0, validador OK, auditoria 0 violações; competência 10/2026; Casa com taxa 0; EC novo vira pendência; estorno pela taxa antiga (2,59%); EduAbroad por REGRA (alias), 0 linhas para a IA; TED de 300 mil por REGRA; nenhuma pendência cita "setembro". Com `--pendencias-anteriores`, a L92 de setembro sai resolvida
 
 ## Regras (`regras.yaml`)
 

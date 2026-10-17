@@ -32,7 +32,7 @@ from decimal import Decimal
 from tarvo.cadastro import Cadastro, linha_vigente
 from tarvo.calculos.comissoes import ComissaoTransacao, ResultadoCheckout
 from tarvo.calculos.remessa import ClassificacaoRemessa, modo_participacao, participacao
-from tarvo.formatos import centavos, fmt_dinheiro, fmt_pct, modo_arredondamento
+from tarvo.formatos import centavos, fmt_dinheiro, fmt_pct, modo_arredondamento, nome_mes
 from tarvo.modelo import ItemRastro, OperacaoPonte, Pendencia
 from tarvo.regras import valor_da_regra
 
@@ -246,7 +246,8 @@ def divergencias_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: 
             pid, "EXCESSO_REMESSA", ", ".join(id_divergencia(o.ref_origem) for o, _ in itens[:3])
             + (f" e mais {len(itens) - 3}" if len(itens) > 3 else ""), metade,
             f"{cadastro.lojistas[cnpj].nome}: a Ponte cobrou {fmt_dinheiro(total_div)} a mais em {len(itens)} operações. "
-            f"A nota de setembro sai pelo realizado (Helena 21:45); a nossa metade ({fmt_dinheiro(metade)}) sai no mês "
+            f"A nota de {nome_mes(itens[0][0].data_contratacao.month)} sai pelo realizado (Helena 21:45); "
+            f"a nossa metade ({fmt_dinheiro(metade)}) sai no mês "
             f"em que a Ponte devolver a diferença ao lojista",
             "Helena",
         ))
