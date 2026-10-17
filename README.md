@@ -17,15 +17,16 @@
 | Divergência de checkout | 210 transações (o estorno de venda divergente entra com valor negativo); devolver aos lojistas **R$ 16.972,57**; recuperar da Orbe **R$ 1.575,80** (Rota e Bridge: condição contratada); custo para a Tarvo **R$ 15.396,77** (Casa: concessão do comercial fora do contrato) |
 | Remessa | Mundo Aberto R$ 1.418,85 a contestar com a Ponte; 4 spreads negativos: −R$ 1.834,05 no relatório (o que aconteceu), −R$ 3.565,98 até o spread do contrato (o que se pede à Ponte) |
 | Lançamentos | 184 dos dois extratos, todos por regra (0 para a IA) |
-| Pendências | **15**, cada uma com valor, motivo e quem decide (Helena 11, Helena + comercial 2, comercial 1, analista 1) |
+| Pendências | **15**, cada uma com valor, motivo e quem decide (Helena 10, Helena + comercial 2, analista 2, comercial 1) |
 | Rastro | **5.251 linhas**: cada número acima ligado às linhas de origem (relatório da Orbe, ajustes tardios, anexo da Ponte, extratos) |
 
 ## Como a banca roda
 
-Com Python 3.12 ou mais novo e Git (num Windows sem Python configurado, veja [Como rodar do zero](#como-rodar-do-zero)):
+Com Python 3.12 ou mais novo e Git. O resumo abaixo instala no Python que estiver no PATH; para um ambiente isolado (`.venv`) e no Windows, siga [Como rodar do zero](#como-rodar-do-zero), que é o passo a passo completo.
 
 ```
-git clone https://github.com/LandLandeiro/lucca-fechamento-mensal.git && cd lucca-fechamento-mensal
+git clone https://github.com/LandLandeiro/lucca-fechamento-mensal.git
+cd lucca-fechamento-mensal
 python -m pip install -e .
 python -m tarvo --dados data --saida saida
 ```
@@ -69,7 +70,7 @@ Lê os arquivos de `data/` exatamente como chegam e gera, em `saida/`:
 | `pendencias.csv` | o que precisa de uma pessoa, com motivo e quem decide |
 | `rastro.csv` | cada número de saída ligado às linhas de origem |
 
-Convenções: em `pendencias.csv`, `ref_origem` traz só os ids das linhas de origem (id_transacao, Nº Operação, `L<n>`, FITID) separados por `|`, e a explicação fica em `motivo`. Em `lancamentos_classificados.csv`, `confianca` nunca é vazia: REGRA = 1.00, decisão humana registrada = 1.00, IA = a confiança dela, HUMANO ainda sem decisão = 0.00.
+Convenções: em `pendencias.csv`, `ref_origem` traz só os ids das linhas de origem (id_transacao, Nº Operação, `L<n>`, FITID) separados por `|`, e a explicação fica em `motivo`. Em `lancamentos_classificados.csv`, `confianca` nunca é vazia: REGRA = 1.00, decisão humana registrada = 1.00, IA = a confiança dela, HUMANO ainda sem decisão = 0.00. No `rastro.csv`, os `id_saida` `EXC-REMESSA-*` (em setembro, a duplicata e os 4 spreads negativos) não são número de saída: marcam as linhas do anexo da Ponte excluídas da comissão, para que cada linha do anexo apareça uma vez (D23).
 
 Arquivos **extras** (além dos 6 do case):
 
@@ -87,12 +88,12 @@ Arquivos **extras** (além dos 6 do case):
 
 ## Como rodar do zero
 
-**Pré-requisito:** Python **3.12 ou mais novo** (python.org; testado com 3.12.10) e Git. No Windows, o `python` que vem no PATH sem instalação é só um atalho da Microsoft Store (`Python was not found ...`, código 9009): instale o Python e chame o executável instalado, como abaixo.
+**Pré-requisito:** Python **3.12 ou mais novo** (python.org; testado com 3.12.10) e Git. No Windows, o `python` que vem no PATH sem instalação é só um atalho da Microsoft Store (`Python was not found ...`, código 9009): instale o Python e chame o executável instalado, como abaixo. Ainda no Windows: clone num caminho curto (ex.: `C:\tarvo`) ou habilite os caminhos longos; num caminho longo o `pip` falha ao instalar o pacote `anthropic` (`OSError: [Errno 2]`).
 
 No PowerShell, a partir de uma pasta qualquer:
 
 ```powershell
-git clone <url-do-repositório> lucca-fechamento-mensal
+git clone https://github.com/LandLandeiro/lucca-fechamento-mensal.git lucca-fechamento-mensal
 cd lucca-fechamento-mensal
 
 # 1. ambiente (troque o caminho se instalou o Python em outro lugar; com o "py launcher": py -3.12 -m venv .venv)
@@ -135,8 +136,8 @@ Se uma regra mudar (taxa nova, nome novo de lojista no extrato, feriado do ano s
 
 Setembro não tem linha para a IA. O outubro sintético (`tests/fixtures/outubro/`, DADO SINTÉTICO) tem uma: um aporte da Nórdica que chega com nome novo, "PIX RECEB NEI EDUCACAO INTERNACIONAL".
 
-```
-python -m tarvo --dados tests/fixtures/outubro --saida saida_outubro
+```powershell
+.\.venv\Scripts\python.exe -m tarvo --dados tests/fixtures/outubro --saida saida_outubro
 ```
 
 - **Com a chave no `.env.local`** (ver [Chave de API](#chave-de-api)): o programa chama a API para a linha que não está no cache. Para forçar a chamada de verdade, rode com `--saida` numa pasta qualquer depois de apagar o arquivo do cache dessa linha (`cache_ia/112face5….json`); a tela mostra `1 chamadas à API`, os tokens e o custo (na nossa execução: 2.612 de entrada, 143 de saída, ~US$ 0,0003).
@@ -147,7 +148,7 @@ python -m tarvo --dados tests/fixtures/outubro --saida saida_outubro
 ## Limitações conhecidas
 
 - **Outubro é dado sintético** (`tests/fixtures/outubro/`): setembro deslocado um mês, com seis novidades (EC novo, estorno da Bridge, TED de 300 mil, PIX da EduAbroad, nome novo da Nórdica, contrato da Atlas). Prova que o código roda sem mudança, não que outubro real não traz caso novo.
-- **Perguntas sem resposta** (17/10): se o arquivo de ajustes tardios vem todo mês e o que vale quando ele repete um id do relatório (Lucca, 13:19: hoje vira pendência); e se o Spread R$ do ajuste da Ponte é o spread inteiro ou já a participação (Desbravadores, 12:04). O ajuste da Ponte tem a regra registrada (Q-Z) e vira pendência, mas o abatimento ainda não é calculado (D83).
+- **Pergunta sem resposta** (17/10): se o Spread R$ do ajuste da Ponte é o spread inteiro ou já a participação (Desbravadores, 12:04). O ajuste da Ponte tem a regra registrada (Q-Z) e vira pendência, mas o abatimento ainda não é calculado (D83). A do arquivo de ajustes tardios foi respondida (Q-AJ, 13:34): ele vem só quando a Orbe tem ajuste e entra no mês do movimento até a aprovação do fechamento (D91); o id repetido entre o 01 e o 06 vira pendência, premissa ASSUMO com aceite.
 - **Alerta de antecipação só para lojista sem histórico** (D66, D73). A antecipação pode cobrir recebíveis de meses anteriores, que não estão nos dados; com o critério do mês inteiro, o alerta seria alarme falso em 5 lojistas.
 - **Sem agenda de recebíveis da Orbe**: checar a antecipação de todos os lojistas e conciliar a Orbe com o banco exige essa agenda, que não veio no pacote.
 - **Conciliação Orbe × banco parcela por parcela fica de fora** (Q-M): os créditos da Orbe no Aurora são só classificados.
@@ -158,7 +159,7 @@ python -m tarvo --dados tests/fixtures/outubro --saida saida_outubro
 Três tipos de afirmação, cada um num lugar:
 
 - **Fato dos dados** → está nos arquivos de `data/` e cada número de saída aponta a linha de origem no `rastro.csv`. Regras do tipo no `regras.yaml`: **SEI** (13).
-- **Resposta do financeiro** → texto literal em `docs/FINANCEIRO_SLACK.md` (Q-A a Q-AH); a regra que ela fixa é **CONFIRMADO** no `regras.yaml` (48), com a fala literal na fonte (um teste confere, D90) e quem aprovou (`aprovado_por`, Q-S). Os exemplos concretos dela são testes com o valor que ela afirmou (`docs/TESTE_DAS_REGRAS.md`), e uma auditoria independente das regras conferiu a leitura (`docs/auditoria_regras/`).
+- **Resposta do financeiro** → texto literal em `docs/FINANCEIRO_SLACK.md` (Q-A a Q-AM); a regra que ela fixa é **CONFIRMADO** no `regras.yaml` (52), com a fala literal na fonte (um teste confere, D90) e quem aprovou (`aprovado_por`, Q-S). Os exemplos concretos dela são testes com o valor que ela afirmou (`docs/TESTE_DAS_REGRAS.md`), e uma auditoria independente das regras conferiu a leitura (`docs/auditoria_regras/`).
 - **Premissa nossa** → **ASSUMO** no `regras.yaml` (38), sempre com o motivo; as que a Helena delegou trazem o `aceite`. Em `HIPOTESES.md`, cada premissa diz o que muda se estiver errada.
 
 Nenhuma regra PENDENTE. O que nenhum dos três cobre vira pendência para uma pessoa, não regra.
@@ -177,11 +178,11 @@ Isso exige estado e usuários, então vira uma aplicação com backend e banco d
 
 ```
 data/      data pack original, sem alteração (ver .gitattributes)
-docs/      instruções do case
+docs/      instruções do case e documentação (STATUS, DIARIO, DECISOES, CAUSA_RAIZ, CHECKPOINTS, PAINEL, auditorias)
 src/       código
 saida/     arquivos gerados
 cache_ia/  respostas da IA em cache (reexecução sem chave e sem custo)
-scripts/   auditoria independente da saída (auditar_saida.py)
+scripts/   auditoria independente da saída (auditar_saida.py) e a conferência independente da outra sessão de IA (verificacao_independente/)
 PROMPTS/   histórico das sessões de IA + MOMENTOS.md
 HIPOTESES.md
 ```
