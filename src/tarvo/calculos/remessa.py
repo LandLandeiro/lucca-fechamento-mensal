@@ -7,6 +7,9 @@ a comissão REMESSA (`COM-<cnpj>-REMESSA`). Regras usadas (todas de `regras.yaml
   (fica a linha que não é "reprocessada"); cópias com conteúdo diferente → pendência;
 - remessa.status_aprovado_com_ressalva (CONFIRMADO 20:48): não muda nada;
 - remessa.spread_negativo (CONFIRMADO 20:48): fora da comissão e da nota → divergência;
+- remessa.spread_negativo_por_observacao (D60): só com a observação de trava vencida ("Taxa travada
+  no pedido (D-1)") o negativo segue para divergência e contestação; outra observação ou vazia →
+  pendência SPREAD_NEGATIVO_SEM_TRAVA para a Helena;
 - ponte.participacao_tarvo + ponte.base_participacao (CONFIRMADO 20:48): 50% do Spread R$;
 - remessa.arredondamento_participacao (CONFIRMADO 21:13, Q-H d): arredondamento comum por
   operação (meio para longe do zero), depois soma.
@@ -72,6 +75,8 @@ def classificar_remessa(
     valor_da_regra(regras, "remessa.operacao_duplicada")
     valor_da_regra(regras, "remessa.status_aprovado_com_ressalva")
     valor_da_regra(regras, "remessa.spread_negativo")
+    por_obs = valor_da_regra(regras, "remessa.spread_negativo_por_observacao")
+    travas = {_normalizar(t) for t in por_obs["trava_vencida"]}
     cls = ClassificacaoRemessa()
     if competencia is None:
         for op in operacoes:
@@ -121,11 +126,21 @@ def classificar_remessa(
             cls.pendentes.append((op, "REMESSA_SEM_CADASTRO", f"CNPJ {cnpj} ({op.cliente}) não está na planilha de taxas"))
             continue
         if op.spread_brl < 0:
-            cls.negativos.append((op, cnpj))
-            cls.excluidas.append((op, "SPREAD_NEGATIVO", valor_da_regra(regras, "remessa.motivo_spread_negativo")))
+            if _normalizar(op.observacao) in travas:  # trava vencida: fora da comissão, divergência e contestação
+                cls.negativos.append((op, cnpj))
+                cls.excluidas.append((op, "SPREAD_NEGATIVO", valor_da_regra(regras, "remessa.motivo_spread_negativo")))
+            else:  # outra observação ou vazia: a Helena só respondeu pela trava vencida (D60)
+                cls.pendentes.append((op, "SPREAD_NEGATIVO_SEM_TRAVA",
+                                      f"spread negativo (Spread R$ {op.spread_brl}) com observação {op.observacao!r}, "
+                                      f"que não é trava vencida ({' | '.join(sorted(por_obs['trava_vencida']))}): "
+                                      f"fora da comissão até a Helena dizer o que é"))
             continue
         cls.elegiveis.append((op, cnpj))
     return cls
+
+
+def _normalizar(texto: str | None) -> str:
+    return " ".join((texto or "").upper().split())
 
 
 def comissao_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: dict) -> ResultadoRemessa:

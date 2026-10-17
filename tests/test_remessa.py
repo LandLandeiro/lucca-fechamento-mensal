@@ -173,3 +173,23 @@ def test_casa_do_estudante_remessa_normal(cadastro, regras, divr):
     assert t.taxa == Decimal("0.0150")
     assert taxa_contratada(cadastro, "00520815000100", "Pix", date(2026, 9, 15), regras).taxa == 0
     assert not any(d["cnpj"] == "00520815000100" for d in divr.linhas)
+
+
+@pytest.mark.parametrize("observacao", [None, "Cliente pediu desconto", "taxa  travada no PEDIDO (d-1)"])
+def test_spread_negativo_depende_da_observacao(ponte, cadastro, regras, observacao):
+    """D60: só a trava vencida ("Taxa travada no pedido (D-1)", sem diferença de caixa/espaço) vai para
+    divergência e contestação; observação vazia ou outra vira pendência para a Helena, fora da comissão."""
+    from dataclasses import replace
+    ops = [replace(o, observacao=observacao) if o.ref_origem == "PC-0926-0210" else o for o in ponte.operacoes]
+    c = classificar_remessa(ops, ponte.competencia, cadastro, regras)
+    negativos = {o.ref_origem for o, _ in c.negativos}
+    pendentes = {o.ref_origem: tipo for o, tipo, _ in c.pendentes}
+    assert {"PC-0926-0326", "PC-0926-0491", "PC-0926-0545"} <= negativos  # os outros 3 continuam trava vencida
+    if observacao and "TRAVADA" in observacao.upper():
+        assert "PC-0926-0210" in negativos and "PC-0926-0210" not in pendentes
+    else:
+        assert "PC-0926-0210" not in negativos and pendentes["PC-0926-0210"] == "SPREAD_NEGATIVO_SEM_TRAVA"
+        rem = comissao_remessa(c, cadastro, regras)
+        (p,) = [p for p in rem.pendencias if p.id_saida == "PEN-SPREAD_NEGATIVO_SEM_TRAVA-PC-0926-0210"]
+        assert p.valor_brl < 0 and "Helena" in p.quem_decide
+        assert "PC-0926-0210" not in {o.ref_origem for o, _ in c.elegiveis}

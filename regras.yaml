@@ -258,6 +258,17 @@ remessa:
     status: CONFIRMADO
     fonte: "Slack Helena 20:48 (casos: anexo Operações R96, R141, R205, R228)"
     pergunta_ref: P01
+  spread_negativo_por_observacao:   # D60: a coluna Observação do anexo decide
+    valor:
+      trava_vencida: ["Taxa travada no pedido (D-1)"]   # comparação sem diferença de maiúsculas/espaços
+      outra_ou_vazia: PENDENCIA   # pendência SPREAD_NEGATIVO_SEM_TRAVA para a Helena, fora da comissão
+    status: ASSUMO
+    autor: Lucca
+    fonte: >-
+      pedido Lucca 17/10 após a avaliação simulada (D60). A resposta da Helena (20:48, Q-E b: 'A trava vale 2 horas
+      pelo contrato, e essas passaram do prazo') foi sobre os negativos com 'Taxa travada no pedido (D-1)' (anexo R96,
+      R141, R205, R228); negativo com outra observação não está coberto por ela
+    pergunta_ref: P01
   spread_padrao:            # col. J 'padrão' ou em branco
     valor: {spread_pct: 0.015, base: "PTAX"}
     status: CONFIRMADO
