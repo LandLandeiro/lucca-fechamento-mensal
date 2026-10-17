@@ -529,3 +529,13 @@ def test_provisao_do_mes_fica_fora_do_fechamento(saida, regras):
     """D78 (Q-AE 2): 'Fica fora do fechamento de vocês' — nenhuma pendência de provisão."""
     assert not [p for p in _csv(saida[0], "pendencias.csv") if p["tipo"] == "PROVISAO_DO_MES"]
     assert "Q-AE 2" in regras["contabil.provisao_do_mes"]["fonte"]
+
+
+def test_aurora_avisa_layout_mudado(tmp_path):
+    """D84 (Q-AF: 'Prefiro que a solução avise a que quebre sem ninguém perceber'): o leitor do Aurora lê por posição;
+    cabeçalho de colunas diferente vira aviso. Os outros leitores param com mensagem (cabeçalho diferente do esperado)."""
+    from conftest import copiar_dados
+    assert ler_extrato_aurora(AURORA).avisos == []
+    dados = copiar_dados(tmp_path / "d", {"05a_*.csv": [(b"Valor (R$)", b"Montante (R$)")]})
+    lido = ler_extrato_aurora(next(dados.glob("05a_*.csv")))
+    assert any("cabeçalho de colunas diferente do esperado" in a.mensagem for a in lido.avisos)
