@@ -107,7 +107,12 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
             t = c.transacao
             aplicada = t.taxa_aplicada_pct / 100
             outros = [x.transacao.ref_origem for x in itens if x is not c]
-            motivo = f"Orbe aplicou {fmt_pct(aplicada)}%; contratada {fmt_pct(c.taxa_contratada)}% ({c.fonte_taxa})"
+            if c.condicao is not None:  # condicao_nao_informada: a Orbe cobrou o contratado com ela, não se acusa a Orbe
+                motivo = (f"Isenção comercial da Tarvo, não registrada na Orbe: a Orbe aplicou {fmt_pct(aplicada)}% "
+                          f"(o contrato dela), o lojista tem {fmt_pct(c.taxa_contratada)}% contratado ({c.fonte_taxa}). "
+                          f"A Orbe cobrou o contratado com ela (Q-AA 1). A devolução é custo da Tarvo (Q-AE 1)")
+            else:
+                motivo = f"Orbe aplicou {fmt_pct(aplicada)}%; contratada {fmt_pct(c.taxa_contratada)}% ({c.fonte_taxa})"
             estorno_de_acima = (t.tipo_lancamento in ("ESTORNO", "REVERSAO ANTECIPACAO") and c is not cabeca
                                 and difs[0] > 0 and d < 0)
             if estorno_de_acima:  # D86: não é "a Orbe cobrou a menos" (Q-N 7), é o estorno de uma venda cobrada a mais
