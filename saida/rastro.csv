@@ -2341,10 +2341,10 @@ DIV-TX88444545;01_orbe_relatorio_comissoes_set2026.csv;TX88444545;64.41;1888;VEN
 DIV-TX88444622;01_orbe_relatorio_comissoes_set2026.csv;TX88444622;5.11;1880;VENDA;343.19;0;round(343.19 × (1.49% − 0%));
 DIV-TX88444796;01_orbe_relatorio_comissoes_set2026.csv;TX88444796;105.04;1911;VENDA;3292.86;0;round(3292.86 × (3.19% − 0%));
 EXC-REMESSA-DUPLICATA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0162;821.88;77;REMESSA;;;"exclusão anotada (valor = Spread R$): Nº PC-0926-0162 repetido; conta uma vez (R76); obs 'reprocessada' (Helena 20:48: número da operação é único)";821.88
-EXC-REMESSA-SPREAD_NEGATIVO;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0210;-687.52;96;REMESSA;;;"exclusão anotada (valor = Spread R$): trava vencida (2h); Helena contesta o desconto no repasse";-687.52
-EXC-REMESSA-SPREAD_NEGATIVO;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0326;-509.22;141;REMESSA;;;"exclusão anotada (valor = Spread R$): trava vencida (2h); Helena contesta o desconto no repasse";-509.22
-EXC-REMESSA-SPREAD_NEGATIVO;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0491;-292.28;205;REMESSA;;;"exclusão anotada (valor = Spread R$): trava vencida (2h); Helena contesta o desconto no repasse";-292.28
-EXC-REMESSA-SPREAD_NEGATIVO;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0545;-345.03;228;REMESSA;;;"exclusão anotada (valor = Spread R$): trava vencida (2h); Helena contesta o desconto no repasse";-345.03
+EXC-REMESSA-SPREAD_NEGATIVO;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0210;-687.52;96;REMESSA;;;"exclusão anotada (valor = Spread R$): trava vencida (2h); em contestação com a Ponte (Helena)";-687.52
+EXC-REMESSA-SPREAD_NEGATIVO;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0326;-509.22;141;REMESSA;;;"exclusão anotada (valor = Spread R$): trava vencida (2h); em contestação com a Ponte (Helena)";-509.22
+EXC-REMESSA-SPREAD_NEGATIVO;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0491;-292.28;205;REMESSA;;;"exclusão anotada (valor = Spread R$): trava vencida (2h); em contestação com a Ponte (Helena)";-292.28
+EXC-REMESSA-SPREAD_NEGATIVO;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0545;-345.03;228;REMESSA;;;"exclusão anotada (valor = Spread R$): trava vencida (2h); em contestação com a Ponte (Helena)";-345.03
 LAN-AURORA-L10;05a_extrato_banco_aurora_cc4471_set2026.csv;L10;-389.00;10;EXTRATO AURORA;;;lançamento AURORA;
 LAN-AURORA-L11;05a_extrato_banco_aurora_cc4471_set2026.csv;L11;209630.03;11;EXTRATO AURORA;;;lançamento AURORA;
 LAN-AURORA-L12;05a_extrato_banco_aurora_cc4471_set2026.csv;L12;-350000.00;12;EXTRATO AURORA;;;lançamento AURORA;
@@ -4525,12 +4525,262 @@ NF-95927868000148-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443503;68
 NF-95927868000148-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444545;462.47;1888;VENDA;12882.23;3.59;planilha R10 col. 'Créd. 7-12x';
 NF-95927868000148-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444143;6.65;1943;VENDA;746.93;0.89;planilha R10 col. 'Pix';
 PEN-APORTE_SEM_OPERACAO-MERIDIANO-MRD2026090425;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090425;18240.00;520;EXTRATO MERIDIANO;;;aporte sem operação na Ponte;
-PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;Spread total R$:;0.56;0;REMESSA;;;arredondamento por operação contra a participação do total declarado pela Ponte;
-PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0162;-410.94;77;REMESSA;;;−participação de duplicata: muda o repasse previsto pela Ponte;821.88
-PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0210;343.76;96;REMESSA;;;−participação de spread_negativo: muda o repasse previsto pela Ponte;-687.52
-PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0326;254.61;141;REMESSA;;;−participação de spread_negativo: muda o repasse previsto pela Ponte;-509.22
-PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0491;146.14;205;REMESSA;;;−participação de spread_negativo: muda o repasse previsto pela Ponte;-292.28
-PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0545;172.52;228;REMESSA;;;−participação de spread_negativo: muda o repasse previsto pela Ponte;-345.03
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0002;131.01;6;REMESSA;;;"50% de Spread R$ 262.01; status APROVADO; liquidada em 2026-10-01 (competência pela contratação)";262.01
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0003;270.39;7;REMESSA;;;"50% de Spread R$ 540.78; status APROVADO";540.78
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0004;244.23;8;REMESSA;;;"50% de Spread R$ 488.45; status APROVADO";488.45
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0007;130.93;9;REMESSA;;;"50% de Spread R$ 261.85; status APROVADO";261.85
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0011;73.77;10;REMESSA;;;"50% de Spread R$ 147.53; status APROVADO";147.53
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0012;189.46;11;REMESSA;;;"50% de Spread R$ 378.92; status APROVADO";378.92
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0013;140.76;12;REMESSA;;;"50% de Spread R$ 281.51; status APROVADO";281.51
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0014;446.10;13;REMESSA;;;"50% de Spread R$ 892.19; status APROVADO";892.19
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0016;170.54;14;REMESSA;;;"50% de Spread R$ 341.07; status APROVADO";341.07
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0020;135.51;15;REMESSA;;;"50% de Spread R$ 271.01; status APROVADO";271.01
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0023;87.57;16;REMESSA;;;"50% de Spread R$ 175.13; status APROVADO";175.13
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0024;171.69;17;REMESSA;;;"50% de Spread R$ 343.37; status APROVADO";343.37
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0025;165.57;18;REMESSA;;;"50% de Spread R$ 331.14; status APROVADO";331.14
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0026;171.99;19;REMESSA;;;"50% de Spread R$ 343.98; status APROVADO";343.98
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0027;119.16;20;REMESSA;;;"50% de Spread R$ 238.32; status APROVADO";238.32
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0031;174.53;21;REMESSA;;;"50% de Spread R$ 349.06; status APROVADO";349.06
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0032;265.80;22;REMESSA;;;"50% de Spread R$ 531.59; status APROVADO";531.59
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0033;170.46;23;REMESSA;;;"50% de Spread R$ 340.91; status APROVADO";340.91
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0035;76.34;24;REMESSA;;;"50% de Spread R$ 152.67; status APROVADO C/ RESSALVA";152.67
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0039;158.95;25;REMESSA;;;"50% de Spread R$ 317.89; status APROVADO";317.89
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0040;56.58;26;REMESSA;;;"50% de Spread R$ 113.16; status APROVADO";113.16
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0041;132.21;27;REMESSA;;;"50% de Spread R$ 264.42; status APROVADO";264.42
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0045;114.05;28;REMESSA;;;"50% de Spread R$ 228.10; status APROVADO";228.10
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0046;129.09;29;REMESSA;;;"50% de Spread R$ 258.18; status APROVADO";258.18
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0047;122.59;30;REMESSA;;;"50% de Spread R$ 245.18; status APROVADO";245.18
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0048;122.60;31;REMESSA;;;"50% de Spread R$ 245.19; status APROVADO";245.19
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0052;244.85;32;REMESSA;;;"50% de Spread R$ 489.70; status APROVADO";489.70
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0056;177.88;33;REMESSA;;;"50% de Spread R$ 355.76; status APROVADO C/ RESSALVA";355.76
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0059;110.57;34;REMESSA;;;"50% de Spread R$ 221.13; status APROVADO";221.13
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0060;208.22;35;REMESSA;;;"50% de Spread R$ 416.44; status APROVADO";416.44
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0063;252.35;36;REMESSA;;;"50% de Spread R$ 504.69; status APROVADO";504.69
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0067;61.51;37;REMESSA;;;"50% de Spread R$ 123.01; status APROVADO C/ RESSALVA";123.01
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0071;156.92;38;REMESSA;;;"50% de Spread R$ 313.84; status APROVADO";313.84
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0074;31.06;39;REMESSA;;;"50% de Spread R$ 62.11; status APROVADO";62.11
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0075;188.86;40;REMESSA;;;"50% de Spread R$ 377.72; status APROVADO";377.72
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0078;127.19;41;REMESSA;;;"50% de Spread R$ 254.38; status APROVADO";254.38
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0082;40.47;42;REMESSA;;;"50% de Spread R$ 80.94; status APROVADO";80.94
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0085;84.62;43;REMESSA;;;"50% de Spread R$ 169.23; status APROVADO";169.23
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0089;649.38;44;REMESSA;;;"50% de Spread R$ 1298.75; status APROVADO C/ RESSALVA";1298.75
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0093;292.86;45;REMESSA;;;"50% de Spread R$ 585.72; status APROVADO";585.72
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0095;103.70;46;REMESSA;;;"50% de Spread R$ 207.40; status APROVADO";207.40
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0096;260.84;47;REMESSA;;;"50% de Spread R$ 521.68; status APROVADO";521.68
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0097;158.04;48;REMESSA;;;"50% de Spread R$ 316.07; status APROVADO";316.07
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0098;46.46;49;REMESSA;;;"50% de Spread R$ 92.92; status APROVADO";92.92
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0100;83.83;50;REMESSA;;;"50% de Spread R$ 167.65; status APROVADO";167.65
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0102;102.60;51;REMESSA;;;"50% de Spread R$ 205.20; status APROVADO";205.20
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0103;126.19;52;REMESSA;;;"50% de Spread R$ 252.38; status APROVADO";252.38
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0107;233.68;53;REMESSA;;;"50% de Spread R$ 467.35; status APROVADO";467.35
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0108;120.76;54;REMESSA;;;"50% de Spread R$ 241.51; status APROVADO";241.51
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0110;209.79;55;REMESSA;;;"50% de Spread R$ 419.58; status APROVADO; liquidada em 2026-10-01 (competência pela contratação)";419.58
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0113;83.97;56;REMESSA;;;"50% de Spread R$ 167.94; status APROVADO";167.94
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0117;286.87;57;REMESSA;;;"50% de Spread R$ 573.74; status APROVADO";573.74
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0120;128.42;58;REMESSA;;;"50% de Spread R$ 256.83; status APROVADO";256.83
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0123;113.14;59;REMESSA;;;"50% de Spread R$ 226.28; status APROVADO";226.28
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0125;388.13;60;REMESSA;;;"50% de Spread R$ 776.26; status APROVADO";776.26
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0127;170.03;61;REMESSA;;;"50% de Spread R$ 340.06; status APROVADO";340.06
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0130;179.15;62;REMESSA;;;"50% de Spread R$ 358.30; status APROVADO";358.30
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0132;224.11;63;REMESSA;;;"50% de Spread R$ 448.21; status APROVADO";448.21
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0135;307.72;64;REMESSA;;;"50% de Spread R$ 615.43; status APROVADO";615.43
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0136;160.25;65;REMESSA;;;"50% de Spread R$ 320.49; status APROVADO";320.49
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0137;193.13;66;REMESSA;;;"50% de Spread R$ 386.26; status APROVADO";386.26
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0140;58.65;67;REMESSA;;;"50% de Spread R$ 117.29; status APROVADO";117.29
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0141;110.74;68;REMESSA;;;"50% de Spread R$ 221.47; status APROVADO";221.47
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0145;164.15;69;REMESSA;;;"50% de Spread R$ 328.29; status APROVADO";328.29
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0147;58.93;70;REMESSA;;;"50% de Spread R$ 117.86; status APROVADO";117.86
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0149;111.10;71;REMESSA;;;"50% de Spread R$ 222.19; status APROVADO";222.19
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0153;302.19;72;REMESSA;;;"50% de Spread R$ 604.37; status APROVADO";604.37
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0156;64.69;73;REMESSA;;;"50% de Spread R$ 129.38; status APROVADO";129.38
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0157;71.54;74;REMESSA;;;"50% de Spread R$ 143.07; status APROVADO";143.07
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0159;53.96;75;REMESSA;;;"50% de Spread R$ 107.92; status APROVADO C/ RESSALVA";107.92
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0162;410.94;76;REMESSA;;;"50% de Spread R$ 821.88; status APROVADO";821.88
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0166;130.53;78;REMESSA;;;"50% de Spread R$ 261.06; status APROVADO";261.06
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0170;108.02;79;REMESSA;;;"50% de Spread R$ 216.04; status APROVADO";216.04
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0171;84.35;80;REMESSA;;;"50% de Spread R$ 168.70; status APROVADO C/ RESSALVA";168.70
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0173;202.16;81;REMESSA;;;"50% de Spread R$ 404.31; status APROVADO";404.31
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0174;221.41;82;REMESSA;;;"50% de Spread R$ 442.82; status APROVADO";442.82
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0176;37.90;83;REMESSA;;;"50% de Spread R$ 75.80; status APROVADO";75.80
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0177;199.55;84;REMESSA;;;"50% de Spread R$ 399.09; status APROVADO";399.09
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0180;172.71;85;REMESSA;;;"50% de Spread R$ 345.42; status APROVADO";345.42
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0183;35.01;86;REMESSA;;;"50% de Spread R$ 70.02; status APROVADO";70.02
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0185;172.66;87;REMESSA;;;"50% de Spread R$ 345.32; status APROVADO";345.32
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0188;101.19;88;REMESSA;;;"50% de Spread R$ 202.37; status APROVADO C/ RESSALVA";202.37
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0192;278.23;89;REMESSA;;;"50% de Spread R$ 556.45; status APROVADO";556.45
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0196;288.66;90;REMESSA;;;"50% de Spread R$ 577.31; status APROVADO";577.31
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0197;38.22;91;REMESSA;;;"50% de Spread R$ 76.43; status APROVADO";76.43
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0200;134.75;92;REMESSA;;;"50% de Spread R$ 269.49; status APROVADO";269.49
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0203;242.06;93;REMESSA;;;"50% de Spread R$ 484.11; status APROVADO";484.11
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0207;416.47;94;REMESSA;;;"50% de Spread R$ 832.93; status APROVADO";832.93
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0208;122.81;95;REMESSA;;;"50% de Spread R$ 245.62; status APROVADO";245.62
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0214;223.50;97;REMESSA;;;"50% de Spread R$ 446.99; status APROVADO";446.99
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0218;228.72;98;REMESSA;;;"50% de Spread R$ 457.43; status APROVADO";457.43
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0221;118.72;99;REMESSA;;;"50% de Spread R$ 237.44; status APROVADO";237.44
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0222;141.80;100;REMESSA;;;"50% de Spread R$ 283.59; status APROVADO";283.59
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0226;98.21;101;REMESSA;;;"50% de Spread R$ 196.42; status APROVADO";196.42
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0228;128.21;102;REMESSA;;;"50% de Spread R$ 256.42; status APROVADO";256.42
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0230;135.07;103;REMESSA;;;"50% de Spread R$ 270.14; status APROVADO";270.14
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0231;70.18;104;REMESSA;;;"50% de Spread R$ 140.35; status APROVADO";140.35
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0234;134.83;105;REMESSA;;;"50% de Spread R$ 269.65; status APROVADO";269.65
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0236;177.98;106;REMESSA;;;"50% de Spread R$ 355.96; status APROVADO";355.96
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0240;41.76;107;REMESSA;;;"50% de Spread R$ 83.51; status APROVADO";83.51
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0242;116.54;108;REMESSA;;;"50% de Spread R$ 233.08; status APROVADO";233.08
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0243;173.43;109;REMESSA;;;"50% de Spread R$ 346.86; status APROVADO C/ RESSALVA";346.86
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0247;48.98;110;REMESSA;;;"50% de Spread R$ 97.96; status APROVADO";97.96
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0249;159.82;111;REMESSA;;;"50% de Spread R$ 319.63; status APROVADO; liquidada em 2026-10-01 (competência pela contratação)";319.63
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0250;169.59;112;REMESSA;;;"50% de Spread R$ 339.18; status APROVADO";339.18
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0254;251.76;113;REMESSA;;;"50% de Spread R$ 503.51; status APROVADO";503.51
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0258;96.14;114;REMESSA;;;"50% de Spread R$ 192.27; status APROVADO C/ RESSALVA";192.27
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0260;124.12;115;REMESSA;;;"50% de Spread R$ 248.24; status APROVADO C/ RESSALVA";248.24
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0261;283.24;116;REMESSA;;;"50% de Spread R$ 566.47; status APROVADO";566.47
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0265;221.96;117;REMESSA;;;"50% de Spread R$ 443.92; status APROVADO";443.92
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0266;164.63;118;REMESSA;;;"50% de Spread R$ 329.25; status APROVADO";329.25
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0267;132.78;119;REMESSA;;;"50% de Spread R$ 265.55; status APROVADO";265.55
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0271;135.57;120;REMESSA;;;"50% de Spread R$ 271.13; status APROVADO";271.13
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0275;68.84;121;REMESSA;;;"50% de Spread R$ 137.68; status APROVADO";137.68
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0276;226.76;122;REMESSA;;;"50% de Spread R$ 453.51; status APROVADO";453.51
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0279;116.31;123;REMESSA;;;"50% de Spread R$ 232.62; status APROVADO";232.62
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0280;102.13;124;REMESSA;;;"50% de Spread R$ 204.25; status APROVADO";204.25
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0284;171.19;125;REMESSA;;;"50% de Spread R$ 342.38; status APROVADO C/ RESSALVA";342.38
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0286;64.34;126;REMESSA;;;"50% de Spread R$ 128.67; status APROVADO C/ RESSALVA";128.67
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0288;441.23;127;REMESSA;;;"50% de Spread R$ 882.46; status APROVADO";882.46
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0291;87.88;128;REMESSA;;;"50% de Spread R$ 175.75; status APROVADO";175.75
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0293;137.00;129;REMESSA;;;"50% de Spread R$ 274.00; status APROVADO";274.00
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0296;308.77;130;REMESSA;;;"50% de Spread R$ 617.53; status APROVADO";617.53
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0300;130.63;131;REMESSA;;;"50% de Spread R$ 261.26; status APROVADO";261.26
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0303;122.73;132;REMESSA;;;"50% de Spread R$ 245.45; status APROVADO";245.45
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0304;101.09;133;REMESSA;;;"50% de Spread R$ 202.18; status APROVADO";202.18
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0307;134.76;134;REMESSA;;;"50% de Spread R$ 269.52; status APROVADO";269.52
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0311;81.10;135;REMESSA;;;"50% de Spread R$ 162.19; status APROVADO";162.19
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0313;80.15;136;REMESSA;;;"50% de Spread R$ 160.30; status APROVADO";160.30
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0316;209.51;137;REMESSA;;;"50% de Spread R$ 419.01; status APROVADO";419.01
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0318;475.67;138;REMESSA;;;"50% de Spread R$ 951.33; status APROVADO";951.33
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0321;383.22;139;REMESSA;;;"50% de Spread R$ 766.44; status APROVADO";766.44
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0322;93.18;140;REMESSA;;;"50% de Spread R$ 186.36; status APROVADO";186.36
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0329;250.72;142;REMESSA;;;"50% de Spread R$ 501.44; status APROVADO";501.44
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0333;73.98;143;REMESSA;;;"50% de Spread R$ 147.96; status APROVADO";147.96
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0337;203.43;144;REMESSA;;;"50% de Spread R$ 406.85; status APROVADO";406.85
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0341;172.33;145;REMESSA;;;"50% de Spread R$ 344.65; status APROVADO";344.65
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0343;254.78;146;REMESSA;;;"50% de Spread R$ 509.56; status APROVADO";509.56
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0344;91.35;147;REMESSA;;;"50% de Spread R$ 182.70; status APROVADO";182.70
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0346;95.58;148;REMESSA;;;"50% de Spread R$ 191.16; status APROVADO";191.16
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0350;209.20;149;REMESSA;;;"50% de Spread R$ 418.39; status APROVADO";418.39
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0352;129.96;150;REMESSA;;;"50% de Spread R$ 259.92; status APROVADO";259.92
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0355;189.84;151;REMESSA;;;"50% de Spread R$ 379.68; status APROVADO";379.68
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0356;76.88;152;REMESSA;;;"50% de Spread R$ 153.76; status APROVADO";153.76
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0358;112.16;153;REMESSA;;;"50% de Spread R$ 224.32; status APROVADO";224.32
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0360;251.58;154;REMESSA;;;"50% de Spread R$ 503.16; status APROVADO";503.16
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0361;51.99;155;REMESSA;;;"50% de Spread R$ 103.97; status APROVADO";103.97
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0362;367.37;156;REMESSA;;;"50% de Spread R$ 734.73; status APROVADO";734.73
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0364;108.49;157;REMESSA;;;"50% de Spread R$ 216.97; status APROVADO";216.97
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0367;125.33;158;REMESSA;;;"50% de Spread R$ 250.66; status APROVADO";250.66
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0370;146.66;159;REMESSA;;;"50% de Spread R$ 293.31; status APROVADO";293.31
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0371;197.58;160;REMESSA;;;"50% de Spread R$ 395.16; status APROVADO";395.16
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0373;283.69;161;REMESSA;;;"50% de Spread R$ 567.38; status APROVADO";567.38
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0374;149.14;162;REMESSA;;;"50% de Spread R$ 298.27; status APROVADO";298.27
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0377;103.97;163;REMESSA;;;"50% de Spread R$ 207.93; status APROVADO";207.93
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0380;262.20;164;REMESSA;;;"50% de Spread R$ 524.40; status APROVADO";524.40
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0384;207.37;165;REMESSA;;;"50% de Spread R$ 414.74; status APROVADO; liquidada em 2026-10-01 (competência pela contratação)";414.74
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0385;49.32;166;REMESSA;;;"50% de Spread R$ 98.63; status APROVADO";98.63
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0388;156.31;167;REMESSA;;;"50% de Spread R$ 312.61; status APROVADO";312.61
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0392;191.50;168;REMESSA;;;"50% de Spread R$ 382.99; status APROVADO";382.99
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0395;117.74;169;REMESSA;;;"50% de Spread R$ 235.48; status APROVADO";235.48
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0399;65.25;170;REMESSA;;;"50% de Spread R$ 130.50; status APROVADO";130.50
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0403;180.72;171;REMESSA;;;"50% de Spread R$ 361.43; status APROVADO";361.43
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0405;100.59;172;REMESSA;;;"50% de Spread R$ 201.17; status APROVADO";201.17
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0406;140.61;173;REMESSA;;;"50% de Spread R$ 281.22; status APROVADO";281.22
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0407;382.15;174;REMESSA;;;"50% de Spread R$ 764.30; status APROVADO";764.30
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0409;49.80;175;REMESSA;;;"50% de Spread R$ 99.59; status APROVADO";99.59
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0410;423.24;176;REMESSA;;;"50% de Spread R$ 846.47; status APROVADO";846.47
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0413;59.70;177;REMESSA;;;"50% de Spread R$ 119.40; status APROVADO";119.40
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0416;87.66;178;REMESSA;;;"50% de Spread R$ 175.32; status APROVADO";175.32
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0418;519.97;179;REMESSA;;;"50% de Spread R$ 1039.93; status APROVADO";1039.93
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0419;80.45;180;REMESSA;;;"50% de Spread R$ 160.90; status APROVADO";160.90
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0422;239.59;181;REMESSA;;;"50% de Spread R$ 479.18; status APROVADO C/ RESSALVA";479.18
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0426;79.61;182;REMESSA;;;"50% de Spread R$ 159.22; status APROVADO";159.22
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0430;117.57;183;REMESSA;;;"50% de Spread R$ 235.13; status APROVADO";235.13
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0434;589.98;184;REMESSA;;;"50% de Spread R$ 1179.96; status APROVADO";1179.96
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0436;53.79;185;REMESSA;;;"50% de Spread R$ 107.57; status APROVADO C/ RESSALVA";107.57
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0440;89.36;186;REMESSA;;;"50% de Spread R$ 178.71; status APROVADO";178.71
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0443;56.42;187;REMESSA;;;"50% de Spread R$ 112.84; status APROVADO";112.84
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0447;775.60;188;REMESSA;;;"50% de Spread R$ 1551.20; status APROVADO";1551.20
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0448;46.40;189;REMESSA;;;"50% de Spread R$ 92.79; status APROVADO";92.79
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0449;170.67;190;REMESSA;;;"50% de Spread R$ 341.34; status APROVADO";341.34
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0450;156.10;191;REMESSA;;;"50% de Spread R$ 312.20; status APROVADO";312.20
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0454;54.27;192;REMESSA;;;"50% de Spread R$ 108.53; status APROVADO";108.53
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0456;252.38;193;REMESSA;;;"50% de Spread R$ 504.76; status APROVADO";504.76
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0459;95.69;194;REMESSA;;;"50% de Spread R$ 191.38; status APROVADO";191.38
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0463;100.10;195;REMESSA;;;"50% de Spread R$ 200.20; status APROVADO";200.20
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0466;28.51;196;REMESSA;;;"50% de Spread R$ 57.01; status APROVADO";57.01
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0470;375.87;197;REMESSA;;;"50% de Spread R$ 751.73; status APROVADO";751.73
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0473;181.24;198;REMESSA;;;"50% de Spread R$ 362.47; status APROVADO";362.47
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0477;109.92;199;REMESSA;;;"50% de Spread R$ 219.83; status APROVADO";219.83
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0481;51.53;200;REMESSA;;;"50% de Spread R$ 103.05; status APROVADO";103.05
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0484;36.34;201;REMESSA;;;"50% de Spread R$ 72.68; status APROVADO";72.68
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0487;162.76;202;REMESSA;;;"50% de Spread R$ 325.52; status APROVADO";325.52
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0488;224.44;203;REMESSA;;;"50% de Spread R$ 448.88; status APROVADO";448.88
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0489;245.48;204;REMESSA;;;"50% de Spread R$ 490.96; status APROVADO";490.96
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0492;90.38;206;REMESSA;;;"50% de Spread R$ 180.75; status APROVADO";180.75
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0494;291.67;207;REMESSA;;;"50% de Spread R$ 583.33; status APROVADO";583.33
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0496;428.00;208;REMESSA;;;"50% de Spread R$ 856.00; status APROVADO";856.00
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0500;193.53;209;REMESSA;;;"50% de Spread R$ 387.05; status APROVADO C/ RESSALVA";387.05
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0502;121.62;210;REMESSA;;;"50% de Spread R$ 243.24; status APROVADO";243.24
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0505;140.81;211;REMESSA;;;"50% de Spread R$ 281.61; status APROVADO";281.61
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0507;37.26;212;REMESSA;;;"50% de Spread R$ 74.52; status APROVADO";74.52
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0509;124.35;213;REMESSA;;;"50% de Spread R$ 248.69; status APROVADO";248.69
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0510;205.76;214;REMESSA;;;"50% de Spread R$ 411.51; status APROVADO";411.51
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0514;186.99;215;REMESSA;;;"50% de Spread R$ 373.97; status APROVADO";373.97
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0515;232.02;216;REMESSA;;;"50% de Spread R$ 464.03; status APROVADO";464.03
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0516;58.19;217;REMESSA;;;"50% de Spread R$ 116.38; status APROVADO";116.38
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0517;310.83;218;REMESSA;;;"50% de Spread R$ 621.65; status APROVADO";621.65
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0521;78.46;219;REMESSA;;;"50% de Spread R$ 156.91; status APROVADO";156.91
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0524;84.02;220;REMESSA;;;"50% de Spread R$ 168.04; status APROVADO";168.04
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0528;532.44;221;REMESSA;;;"50% de Spread R$ 1064.88; status APROVADO";1064.88
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0529;45.73;222;REMESSA;;;"50% de Spread R$ 91.45; status APROVADO";91.45
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0530;146.69;223;REMESSA;;;"50% de Spread R$ 293.38; status APROVADO";293.38
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0534;402.52;224;REMESSA;;;"50% de Spread R$ 805.03; status APROVADO";805.03
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0536;124.47;225;REMESSA;;;"50% de Spread R$ 248.93; status APROVADO";248.93
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0540;93.99;226;REMESSA;;;"50% de Spread R$ 187.97; status APROVADO C/ RESSALVA";187.97
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0543;146.67;227;REMESSA;;;"50% de Spread R$ 293.33; status APROVADO";293.33
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0549;139.54;229;REMESSA;;;"50% de Spread R$ 279.07; status APROVADO; liquidada em 2026-10-01 (competência pela contratação)";279.07
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0553;225.24;230;REMESSA;;;"50% de Spread R$ 450.47; status APROVADO";450.47
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0557;789.42;231;REMESSA;;;"50% de Spread R$ 1578.84; status APROVADO";1578.84
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0558;53.25;232;REMESSA;;;"50% de Spread R$ 106.49; status APROVADO";106.49
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0561;272.82;233;REMESSA;;;"50% de Spread R$ 545.63; status APROVADO";545.63
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0562;144.84;234;REMESSA;;;"50% de Spread R$ 289.67; status APROVADO";289.67
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0563;51.21;235;REMESSA;;;"50% de Spread R$ 102.42; status APROVADO";102.42
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0566;191.84;236;REMESSA;;;"50% de Spread R$ 383.68; status APROVADO; liquidada em 2026-10-01 (competência pela contratação)";383.68
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0569;487.22;237;REMESSA;;;"50% de Spread R$ 974.44; status APROVADO";974.44
+PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0570;110.42;238;REMESSA;;;"50% de Spread R$ 220.83; status APROVADO";220.83
+PEN-CONTESTACAO_PONTE-DUPLICATA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0162;821.88;77;REMESSA;;;contestação com a Ponte (duplicata): repetida no relatório (conta uma vez: R76);821.88
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0011;29.56;10;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.5007% × contratado 1.2% sobre a PTAX;147.53
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0016;68.32;14;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.5006% × contratado 1.2% sobre a PTAX;341.07
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0033;68.20;23;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.5001% × contratado 1.2% sobre a PTAX;340.91
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0039;63.59;25;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.5001% × contratado 1.2% sobre a PTAX;317.89
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0045;45.66;28;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.5003% × contratado 1.2% sobre a PTAX;228.10
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0075;75.41;40;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.4993% × contratado 1.2% sobre a PTAX;377.72
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0098;18.59;49;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.5002% × contratado 1.2% sobre a PTAX;92.92
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0141;44.40;68;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.5009% × contratado 1.2% sobre a PTAX;221.47
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0145;65.71;69;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.5003% × contratado 1.2% sobre a PTAX;328.29
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0180;69.12;85;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.5002% × contratado 1.2% sobre a PTAX;345.42
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0188;40.38;88;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.4991% × contratado 1.2% sobre a PTAX;202.37
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0236;71.36;106;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.5009% × contratado 1.2% sobre a PTAX;355.96
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0240;16.71;107;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.5003% × contratado 1.2% sobre a PTAX;83.51
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0266;65.78;118;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.4996% × contratado 1.2% sobre a PTAX;329.25
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0364;43.42;157;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.5002% × contratado 1.2% sobre a PTAX;216.97
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0373;113.41;161;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.4998% × contratado 1.2% sobre a PTAX;567.38
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0388;62.40;167;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.4993% × contratado 1.2% sobre a PTAX;312.61
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0409;19.90;175;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.4996% × contratado 1.2% sobre a PTAX;99.59
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0434;235.74;184;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.4996% × contratado 1.2% sobre a PTAX;1179.96
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0487;65.02;202;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.4995% × contratado 1.2% sobre a PTAX;325.52
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0492;36.13;206;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.4998% × contratado 1.2% sobre a PTAX;180.75
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0516;23.28;217;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.5001% × contratado 1.2% sobre a PTAX;116.38
+PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0566;76.76;236;REMESSA;;;contestação com a Ponte (spread_acima_do_contratado): aplicado 1.5001% × contratado 1.2% sobre a PTAX;383.68
+PEN-CONTESTACAO_PONTE-SPREAD_NEGATIVO;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0210;-687.52;96;REMESSA;;;"contestação com a Ponte (spread_negativo): spread negativo no relatório; Taxa travada no pedido (D-1)";-687.52
+PEN-CONTESTACAO_PONTE-SPREAD_NEGATIVO;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0326;-509.22;141;REMESSA;;;"contestação com a Ponte (spread_negativo): spread negativo no relatório; Taxa travada no pedido (D-1)";-509.22
+PEN-CONTESTACAO_PONTE-SPREAD_NEGATIVO;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0491;-292.28;205;REMESSA;;;"contestação com a Ponte (spread_negativo): spread negativo no relatório; Taxa travada no pedido (D-1)";-292.28
+PEN-CONTESTACAO_PONTE-SPREAD_NEGATIVO;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0545;-345.03;228;REMESSA;;;"contestação com a Ponte (spread_negativo): spread negativo no relatório; Taxa travada no pedido (D-1)";-345.03
 PEN-DEVOLUCAO_PIX_LOJISTA-AURORA-L65;05a_extrato_banco_aurora_cc4471_set2026.csv;L65;12400.00;65;EXTRATO AURORA;;;"PIX de repasse que voltou; motivo ainda desconhecido (Helena 20:49, Q-F 4b)";
 PEN-EXCESSO_REMESSA-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;arredondamento;-0.03;0;REMESSA;;;round(50% × total) − Σ round(50% × divergência por operação);
 PEN-EXCESSO_REMESSA-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0011;14.78;10;REMESSA;;;nossa metade da divergência da operação;147.53

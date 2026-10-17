@@ -35,6 +35,10 @@ COLUNAS = {
     "pendencias.csv": ["id_saida", "tipo", "ref_origem", "valor_brl", "motivo", "quem_decide"],
     "rastro.csv": ["id_saida", "arquivo_origem", "ref_origem", "valor"],
 }
+# extras (fora dos 6 do case): só colunas próprias, sem obrigatórias do case
+EXTRAS = {
+    "contestacao_ponte.csv": ["id_pendencia", "motivo", "ref_origem", "linha_anexo", "valor_contestado_brl"],
+}
 
 
 def formatar(coluna: str, valor: object) -> str:
@@ -51,7 +55,7 @@ def formatar(coluna: str, valor: object) -> str:
 
 def escrever_csv(caminho: Path, linhas: list[dict]) -> Path:
     """Escreve um CSV do case: obrigatórias na ordem do case + extras na ordem em que aparecem."""
-    obrigatorias = COLUNAS[caminho.name]
+    obrigatorias = {**COLUNAS, **EXTRAS}[caminho.name]
     extras: list[str] = []
     for linha in linhas:
         faltando = [c for c in obrigatorias if c not in linha]
@@ -70,7 +74,7 @@ def escrever_csv(caminho: Path, linhas: list[dict]) -> Path:
 
 def escrever_saida(arquivos: dict[str, list[dict]], pasta: Path) -> list[Path]:
     """Escreve os CSVs pedidos ({nome_arquivo: linhas}) e devolve os caminhos."""
-    desconhecidos = set(arquivos) - set(COLUNAS)
+    desconhecidos = set(arquivos) - set(COLUNAS) - set(EXTRAS)
     if desconhecidos:
         raise ValueError(f"arquivos de saída fora do case: {sorted(desconhecidos)}")
     return [escrever_csv(pasta / nome, linhas) for nome, linhas in arquivos.items()]

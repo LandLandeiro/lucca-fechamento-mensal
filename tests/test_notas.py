@@ -64,19 +64,72 @@ def test_rastro_da_nota_e_o_da_comissao(saida):
     assert len(nf_rem) == 228  # as operações elegíveis
 
 
-def test_conferencia_do_repasse(saida):
+def test_conferencia_do_ted_sem_prever_desconto(saida):
+    """Q-K (Helena 22:33): conferir o TED quando cair; não contar que a Ponte vai descontar nada."""
     pasta, _ = saida
     p = next(p for p in _csv(pasta, "pendencias.csv") if p["tipo"] == "CONFERENCIA_REPASSE")
-    assert p["valor_brl"] == "506.65" and p["quem_decide"] == "Helena"
-    for trecho in ("TED da Ponte previsto para 06/10", "(78073.59)", "seria 39036.80", "faturamos 39543.45",
-                   "Diferença 506.65 = 917.03", "− 410.94 (duplicata PC-0926-0162, a Ponte pagaria a mais; avisar)",
-                   "+ 0.56 (arredondamento por operação contra 50% do total da Ponte)"):
-        assert trecho in p["motivo"], trecho
+    assert p["quem_decide"] == "Helena" and p["valor_brl"] == "39543.45"  # o faturado
+    assert p["motivo"] == (
+        "Conferir o TED da Ponte quando cair (previsto 06/10). Faturado: 39543.45. Total do relatório da Ponte: "
+        "78073.59, que inclui 4 spreads negativos (-1834.05) e a duplicata PC-0926-0162 (821.88), ambos em contestação."
+    )
+    assert "descont" not in p["motivo"] and "seria" not in p["motivo"]
     rastro = [l for l in _csv(pasta, "rastro.csv") if l["id_saida"] == p["id_saida"]]
-    assert sum(Decimal(l["valor"]) for l in rastro) == Decimal("506.65")
-    assert {l["ref_origem"] for l in rastro} == {
-        "PC-0926-0210", "PC-0926-0326", "PC-0926-0491", "PC-0926-0545", "PC-0926-0162", "Spread total R$:"
+    nota = [l for l in _csv(pasta, "rastro.csv") if l["id_saida"] == "NF-75374179000146-REMESSA"]
+    assert sum(Decimal(l["valor"]) for l in rastro) == Decimal("39543.45")
+    assert sorted((l["ref_origem"], l["linha_arquivo"]) for l in rastro) == sorted((l["ref_origem"], l["linha_arquivo"]) for l in nota)
+
+
+def test_divergencia_de_remessa_sem_coluna_de_impacto(saida):
+    pasta, _ = saida
+    linhas = _csv(pasta, "divergencias_taxa.csv")
+    assert "impacto_repasse_tarvo" not in linhas[0] and "participacao_tarvo_no_spread" in linhas[0]
+
+
+def test_contestacao_ponte_uma_pendencia_por_motivo(saida):
+    """Q-L (Helena 22:34): uma pendência por motivo, com valor e operações; duplicata conta uma vez e entra na lista."""
+    pasta, _ = saida
+    pend = {p["id_saida"]: p for p in _csv(pasta, "pendencias.csv") if p["tipo"] == "CONTESTACAO_PONTE"}
+    assert {k: v["valor_brl"] for k, v in pend.items()} == {
+        "PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111": "1418.85",
+        "PEN-CONTESTACAO_PONTE-SPREAD_NEGATIVO": "-1834.05",
+        "PEN-CONTESTACAO_PONTE-DUPLICATA": "821.88",
     }
+    assert all(p["quem_decide"] == "Helena" for p in pend.values())
+    lista = _csv(pasta, "contestacao_ponte.csv")
+    por_pid: dict[str, list] = {}
+    for l in lista:
+        por_pid.setdefault(l["id_pendencia"], []).append(l)
+    assert {k: len(v) for k, v in por_pid.items()} == {
+        "PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111": 23,
+        "PEN-CONTESTACAO_PONTE-SPREAD_NEGATIVO": 4,
+        "PEN-CONTESTACAO_PONTE-DUPLICATA": 1,
+    }
+    for pid, ls in por_pid.items():
+        assert sum(Decimal(l["valor_contestado_brl"]) for l in ls) == Decimal(pend[pid]["valor_brl"])
+    assert {l["ref_origem"] for l in por_pid["PEN-CONTESTACAO_PONTE-SPREAD_NEGATIVO"]} == {
+        "PC-0926-0210", "PC-0926-0326", "PC-0926-0491", "PC-0926-0545"}
+    (dup,) = por_pid["PEN-CONTESTACAO_PONTE-DUPLICATA"]
+    assert (dup["ref_origem"], dup["linha_anexo"]) == ("PC-0926-0162", "77") and "R76" in dup["observacao"]
+    # a duplicata continua contando uma vez: a comissão da R76 está no rastro de um COM-, a R77 em EXC-
+    rastro = [l for l in _csv(pasta, "rastro.csv") if l["ref_origem"] == "PC-0926-0162" and not l["id_saida"].startswith(("PEN-", "NF-"))]
+    assert sorted((l["id_saida"][:4], l["linha_arquivo"]) for l in rastro) == [("COM-", "76"), ("EXC-", "77")]
+
+
+def test_validador_recusa_contestacao_que_nao_fecha(saida, tmp_path):
+    from tarvo.saida.validador import validar_saida
+
+    pasta, _ = saida
+    for p in pasta.iterdir():
+        (tmp_path / p.name).write_bytes(p.read_bytes())
+
+    def adulterar(linhas):
+        linhas[1][4] = "0.00"
+        return linhas
+
+    _reescrever(tmp_path / "contestacao_ponte.csv", adulterar)
+    erros = validar_saida(tmp_path)
+    assert any("contestacao_ponte.csv" in e and "≠ Σ" in e for e in erros)
 
 
 def test_pendencia_metade_do_excesso_da_mundo_aberto(saida):

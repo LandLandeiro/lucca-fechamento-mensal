@@ -15,6 +15,7 @@ from pathlib import Path
 
 from tarvo.cadastro import adicionar_nomes_orbe, montar_cadastro, normalizar_nome
 from tarvo.calculos.comissoes import comissao_checkout, ordem_comissao
+from tarvo.calculos.contestacao import contestacao_ponte
 from tarvo.calculos.divergencias import divergencias_checkout, divergencias_remessa
 from tarvo.calculos.notas import conferencia_repasse, notas_a_emitir
 from tarvo.calculos.remessa import classificar_remessa, comissao_remessa
@@ -115,8 +116,10 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
     notas = notas_a_emitir(comissoes, checkout.rastro + remessa.rastro, regras, next(iter(meses_orbe)), ponte.competencia)
     nf_remessa = sum((n["valor_brl"] for n in notas.linhas if n["linha_negocio"] == "REMESSA"), ZERO)
     pend_repasse, rastro_repasse = conferencia_repasse(
-        nf_remessa, ponte.totais_declarados.get("Spread total R$:"), cls_remessa, mail.corpo, ponte.arquivo, regras
+        nf_remessa, [l for l in notas.rastro if l["id_saida"].endswith("-REMESSA")],
+        ponte.totais_declarados.get("Spread total R$:"), cls_remessa, mail.corpo, regras,
     )
+    contestacao = contestacao_ponte(cls_remessa, div_remessa.linhas, regras)
     # extratos (E6b): classificação por regra + conferências entre fontes
     competencia = next(iter(meses_orbe))
     plano = contas_lancaveis(ler_plano_contas(achar_unico(dados, PADRAO_PLANO)))
@@ -147,12 +150,12 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
 
     pendencias = consolidar_pendencias(
         checkout.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura, notas.pendencias, pend_repasse,
-        div_remessa.pendencias_derivadas, *[c.pendencias for c in classif], conf.pendencias,
+        div_remessa.pendencias_derivadas, contestacao.pendencias, *[c.pendencias for c in classif], conf.pendencias,
     )
     divs = divergencias.linhas + div_remessa.linhas
     rastro = sorted(
         checkout.rastro + divergencias.rastro + remessa.rastro + div_remessa.rastro
-        + notas.rastro + notas.rastro_pendencias + rastro_repasse + div_remessa.rastro_pendencias
+        + notas.rastro + notas.rastro_pendencias + rastro_repasse + div_remessa.rastro_pendencias + contestacao.rastro
         + [l for c in classif for l in c.rastro + c.rastro_pendencias] + conf.rastro_pendencias,
         key=lambda l: (l["id_saida"], l["linha_arquivo"], l["ref_origem"]),
     )
@@ -164,6 +167,7 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
             "lancamentos_classificados.csv": lancamentos,
             "pendencias.csv": [pendencia_para_linha(p) for p in pendencias],
             "rastro.csv": rastro,
+            "contestacao_ponte.csv": contestacao.linhas,  # extra (Q-L): o que a Helena manda para a Ponte
         },
         saida,
     )
@@ -211,7 +215,7 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
         "total_checkout": sum((c["comissao_brl"] for c in checkout.comissoes), ZERO),
         "lojistas": {c["cnpj"]: c["lojista"] for c in comissoes},
         "notas": notas.linhas,
-        "pendencias_novas": notas.pendencias + pend_repasse + div_remessa.pendencias_derivadas,
+        "pendencias_novas": notas.pendencias + pend_repasse + div_remessa.pendencias_derivadas + contestacao.pendencias,
         "residuo_checkout": (divergencias.residuo, divergencias.linhas_com_residuo),
         "pendencias": pendencias,
         "transacoes_em_pendencia": len(checkout.em_pendencia) + len(orbe.linhas_invalidas),
@@ -274,9 +278,9 @@ def _imprimir_remessa(r: dict) -> None:
         chave = ("SPREAD_NEGATIVO" if d["spread_brl"] < 0 else "ACIMA_DO_CONTRATADO", d["cnpj"])
         grupos.setdefault(chave, []).append(d)
     for (tipo, cnpj), ds in sorted(grupos.items()):
-        impacto = sum((d["impacto_repasse_tarvo"] or ZERO for d in ds), ZERO)
+        part = sum((d["participacao_tarvo_no_spread"] or ZERO for d in ds), ZERO)
         print(f"  {tipo:<20} {cnpj} {ds[0]['lojista'][:30]:<30} {len(ds):>3}  {fmt_dinheiro(sum((d['diferenca_brl'] for d in ds), ZERO)):>10}"
-              + (f"  impacto no repasse {fmt_dinheiro(impacto)}" if tipo == "SPREAD_NEGATIVO" else ""))
+              + (f"  participação Tarvo no spread {fmt_dinheiro(part)} (informativa)" if tipo == "SPREAD_NEGATIVO" else ""))
 
 
 def _imprimir_notas(r: dict) -> None:

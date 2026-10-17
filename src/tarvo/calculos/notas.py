@@ -10,7 +10,8 @@ Regras usadas (todas de `regras.yaml`):
 - ponte.tomador_nf_remessa (CONFIRMADO 20:47): 1 nota só, tomadora Ponte Câmbio, total da
   participação do mês;
 - notas.discriminacao (ASSUMO Lucca): textos com {competencia};
-- notas.conferencia_repasse (ASSUMO Lucca): repasse previsto pela Ponte × nota REMESSA.
+- notas.conferencia_repasse (CONFIRMADO 22:33, Q-K): conferir o TED da Ponte quando cair, sem
+  prever desconto.
 """
 
 from __future__ import annotations
@@ -19,13 +20,21 @@ import re
 from dataclasses import dataclass, field
 from decimal import Decimal
 
-from tarvo.calculos.remessa import ClassificacaoRemessa, modo_participacao, participacao
+from tarvo.calculos.remessa import ClassificacaoRemessa
 from tarvo.formatos import fmt_dinheiro
 from tarvo.modelo import Pendencia
 from tarvo.regras import valor_da_regra
 
 ZERO = Decimal("0")
 _RE_DATA_CREDITO = re.compile(r"creditad[oa]\s+em\s+(\d{2}/\d{2}/\d{4})", re.IGNORECASE)
+# o que o total do relatório da Ponte inclui e o fechamento não conta: motivo → (singular, plural)
+_ROTULOS_RELATORIO = {
+    "SPREAD_NEGATIVO": ("o spread negativo", "spreads negativos"),
+    "DUPLICATA": ("a duplicata", "duplicatas"),
+    "FORA_COMPETENCIA": ("a operação fora da competência", "operações fora da competência"),
+    "PENDENCIA": ("a operação em pendência", "operações em pendência"),
+}
+_EM_CONTESTACAO = {"SPREAD_NEGATIVO", "DUPLICATA"}  # Q-L: entram na contestação com a Ponte
 
 
 @dataclass
@@ -119,67 +128,48 @@ def notas_a_emitir(
 
 def conferencia_repasse(
     nota_remessa: Decimal,
+    rastro_nota: list[dict],
     spread_declarado: Decimal | None,
     cls: ClassificacaoRemessa,
     corpo_email: str,
-    arquivo_ponte: str,
     regras: dict,
 ) -> tuple[list[Pendencia], list[dict]]:
-    """Repasse previsto pela Ponte (participação × total declarado) × nota REMESSA → pendência para a Helena.
+    """Pendência para a Helena conferir o TED da Ponte quando cair (Q-K, Helena 22:33).
 
-    A diferença é decomposta, a partir da classificação, em spreads negativos (a Ponte desconta;
-    contestar) e duplicata (a Ponte pagaria a mais; avisar). Valores calculados, nunca fixos.
+    Não prevê desconto nem diferença: a Ponte ainda não disse como vai pagar ("Não conte que ela
+    vai descontar nada do repasse"). Informa o faturado (valor da pendência, rastro = linhas da
+    nota REMESSA) e o total do relatório da Ponte com o que ele inclui e o fechamento não conta.
     """
     valor_da_regra(regras, "notas.conferencia_repasse")
-    if spread_declarado is None:
+    if nota_remessa <= 0:
         return [], []
-    fracao = Decimal(str(valor_da_regra(regras, "ponte.participacao_tarvo")))
-    modo = modo_participacao(regras)
-    previsto = participacao(spread_declarado, fracao, modo)
-    diferenca = nota_remessa - previsto
-    if diferenca == 0:
-        return [], []
-
     m = _RE_DATA_CREDITO.search(corpo_email or "")
-    quando = f"TED da Ponte previsto para {m.group(1)[:5]}" if m else "data do TED da Ponte não informada no e-mail"
-    # cada linha do relatório que não está na nota muda o repasse em −participação(spread)
-    rotulos = {
-        "SPREAD_NEGATIVO": ("spreads negativos", "contestar"),
-        "DUPLICATA": ("duplicata", "a Ponte pagaria a mais; avisar"),
-        "FORA_COMPETENCIA": ("fora da competência", "conferir"),
-        "PENDENCIA": ("operações em pendência", "decidir a pendência"),
-    }
-    componentes: dict[str, list] = {}
-    for op, motivo, _ in cls.excluidas:
-        componentes.setdefault(motivo, []).append((op, -participacao(op.spread_brl, fracao, modo)))
-    for op, _, _ in cls.pendentes:
-        componentes.setdefault("PENDENCIA", []).append((op, -participacao(op.spread_brl, fracao, modo)))
-    soma = sum((v for itens in componentes.values() for _, v in itens), ZERO)
-    residuo = diferenca - soma
-
-    partes = []
-    for motivo in [m for m in rotulos if m in componentes]:
-        itens = componentes[motivo]
-        total = sum((v for _, v in itens), ZERO)
-        nome, acao = rotulos[motivo]
-        sinal = "− " if total < 0 and partes else ("+ " if partes else "")
-        valor_txt = fmt_dinheiro(abs(total)) if partes else fmt_dinheiro(total)
-        partes.append(f"{sinal}{valor_txt} ({nome} {', '.join(o.ref_origem for o, _ in itens)}, {acao})")
-    if residuo:
-        partes.append(f"{'+ ' if residuo > 0 else '− '}{fmt_dinheiro(abs(residuo))} "
-                      f"(arredondamento por operação contra {fracao * 100:.0f}% do total da Ponte)")
-    motivo_txt = (f"{quando}. Pelo total do relatório da Ponte ({fmt_dinheiro(spread_declarado)}) o repasse seria "
-                  f"{fmt_dinheiro(previsto)}; faturamos {fmt_dinheiro(nota_remessa)}. Diferença {fmt_dinheiro(diferenca)} = "
-                  + " ".join(partes) + ".")
+    quando = f"previsto {m.group(1)[:5]}" if m else "data não informada no e-mail da Ponte"
+    texto = f"Conferir o TED da Ponte quando cair ({quando}). Faturado: {fmt_dinheiro(nota_remessa)}."
+    if spread_declarado is not None:
+        grupos: dict[str, list] = {}
+        for op, motivo, _ in cls.excluidas:
+            grupos.setdefault(motivo, []).append(op)
+        for op, _, _ in cls.pendentes:
+            grupos.setdefault("PENDENCIA", []).append(op)
+        partes, em_contestacao = [], 0
+        for motivo, (um, varios) in _ROTULOS_RELATORIO.items():
+            ops = grupos.get(motivo)
+            if not ops:
+                continue
+            soma = fmt_dinheiro(sum((o.spread_brl for o in ops), ZERO))
+            if len(ops) == 1:
+                partes.append(f"{um} {ops[0].ref_origem} ({soma})")
+            else:
+                partes.append(f"{len(ops)} {varios} ({soma})")
+            em_contestacao += motivo in _EM_CONTESTACAO
+        texto += f" Total do relatório da Ponte: {fmt_dinheiro(spread_declarado)}"
+        if partes:
+            texto += ", que inclui " + (" e ".join([", ".join(partes[:-1]), partes[-1]]) if len(partes) > 1 else partes[0])
+            if em_contestacao == len(partes):
+                texto += ", ambos em contestação" if len(partes) == 2 else ", em contestação"
+        texto += "."
     pid = "PEN-CONFERENCIA_REPASSE-REMESSA"
-    pend = Pendencia(pid, "CONFERENCIA_REPASSE", "Spread total R$ (relatório da Ponte)", diferenca, motivo_txt, "Helena")
-    rastro = [{
-        "id_saida": pid, "arquivo_origem": op.arquivo_origem, "ref_origem": op.ref_origem, "valor": v,
-        "linha_arquivo": op.linha_planilha, "tipo_lancamento": "REMESSA", "spread_brl": op.spread_brl,
-        "nota": f"−participação de {motivo.lower()}: muda o repasse previsto pela Ponte",
-    } for motivo, itens in componentes.items() for op, v in itens]
-    if residuo:
-        rastro.append({"id_saida": pid, "arquivo_origem": arquivo_ponte, "ref_origem": "Spread total R$:",
-                       "valor": residuo, "linha_arquivo": 0, "tipo_lancamento": "REMESSA",
-                       "nota": "arredondamento por operação contra a participação do total declarado pela Ponte"})
-    return [pend], rastro
+    ref = rastro_nota[0]["id_saida"] if rastro_nota else "nota REMESSA"
+    pend = Pendencia(pid, "CONFERENCIA_REPASSE", ref, nota_remessa, texto, "Helena")
+    return [pend], [{**l, "id_saida": pid} for l in rastro_nota]

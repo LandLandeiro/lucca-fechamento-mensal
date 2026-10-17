@@ -265,4 +265,4 @@ def test_nomes_da_orbe_so_para_ec_sem_vinculo(cadastro, orbe, regras):
 
 def test_total_de_pendencias(saida):
     tipos = sorted(p["tipo"] for p in _csv(saida[0], "pendencias.csv"))
-    assert len(tipos) == 15 and tipos.count("SEM_REGRA") == 7
+    assert len(tipos) == 18 and tipos.count("SEM_REGRA") == 7 and tipos.count("CONTESTACAO_PONTE") == 3

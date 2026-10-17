@@ -31,7 +31,7 @@ Espelho executável: `regras.yaml` (mesmo status, mesma fonte). Evidências: `do
 | H22 | Obrigações de 08/2026: fatos | Folha, ISS, INSS, FGTS e DARFs são de agosto e já estavam provisionados; o repasse da Ponte de 04/09 é o spread de agosto, já registrado como comissão a receber | CONFIRMADO | Slack Helena 20:49 | R$ 411.790,94 de classificação | Era PENDENTE |
 | H24 | Obrigações de 08/2026: contas | Baixa de passivo por **padrão de descrição** (`classificacao_extratos`): FOLHA do mês anterior 2.1.04.001; PAGTO ISS 2.1.03.003; GPS INSS 2.1.04.002; GRF FGTS 2.1.04.003; DARF 0561 2.1.03.004; DARF 8109 2.1.03.001; DARF 2172 2.1.03.002; repasse da Ponte (REPASSE COMISSAO) 1.1.03.002 | CONFIRMADO (Helena 21:14, Q-I a) | Fatos de H22 + plano de contas | R$ 411.790,94 de classificação | Era por número de linha de setembro; virou padrão (D32) para rodar em outubro |
 | H25 | Valor da divergência de remessa | round((Spread % do relatório − contratado) × PTAX × Valor ME), valor cheio | ASSUMO (Lucca ~22h50, D28; lógica da Q-H c; "É o valor cheio" Helena 20:58) | Mundo Aberto 1.418,85 | Pelo Spread R$ (D22) seria 1.418,88 | Trocou duas vezes: D22 (Spread R$) → D28 (coluna Spread %) |
-| H26 | Divergência do spread negativo | `diferenca_brl` = valor cheio contra o contrato (−3.565,98); coluna `impacto_repasse_tarvo` = 50% × Spread R$ (−917,03); motivo "trava vencida (2h); Helena contesta o desconto no repasse" | ASSUMO (Lucca ~22h20, D21) | Fato: Helena 20:48 (fora da comissão e da nota; ela contesta) | 4 operações | Era "a confirmar" |
+| H26 | Divergência do spread negativo | `diferenca_brl` = valor cheio contra o contrato (−3.565,98); coluna `participacao_tarvo_no_spread` = 50% × Spread R$ (−917,03), **informativa, sem afirmar desconto** (Q-K, D38); motivo "trava vencida (2h); em contestação com a Ponte (Helena)" | ASSUMO (Lucca ~22h20, D21; renomeada na D38) | Fato: Helena 20:48 (fora da comissão e da nota; ela contesta) | 4 operações | Era "a confirmar" |
 | H27 | Arredondamento da divergência | Arredondamento comum por linha/operação | CONFIRMADO (Helena 21:13, Q-H; D27) | Q-H (a), (d) | Centavos | Era ASSUMO HALF_EVEN (D20) |
 | H28 | Reversão de antecipação na divergência | Líquida com a antecipação que ela anula (`id_referencia`), como o estorno | ASSUMO (Lucca, confirmada ~22h20, D17) | Helena 20:47: "a reversão só anula a taxa da antecipação que ela reverte" | Zero em set/2026 | — |
 | H29 | Discriminação das notas | CHECKOUT: "Serviço de intermediação de pagamentos (checkout) - competência MM/AAAA"; REMESSA: "Intermediação de operações de câmbio - participação de 50% do spread realizado - competência MM/AAAA" | ASSUMO (redação Lucca) | Helena 20:47 (d): "Algo simples com o serviço e a competência resolve" | Texto das 21 notas | — |
@@ -45,6 +45,9 @@ Espelho executável: `regras.yaml` (mesmo status, mesma fonte). Evidências: `do
 | H37 | RENDIMENTO APLIC AUTOMATICA (R$ 3.912,66) | Regra "RENDIMENTO APLIC" → 3.2.01 "Rendimentos de aplicações" | ASSUMO (Lucca ~23h30) | Plano de contas | 1 lançamento | Era HUMANO |
 | H38 | Resgate acima do aplicado (FIFO) | Resgate de 09/09 (162.128,00) excede em 392,00 a aplicação de 05/09: fica inteiro em 1.1.02.001, sem pendência; premissa de saldo aplicado anterior a 01/09 | ASSUMO (Lucca ~23h30, D36) | Linha própria de rendimento (MRD2026090680); saldo inicial implícito 204.118,03 | R$ 392,00 | Era pendência |
 | H39 | Repasse à Atlas | O repasse é devido independente do faturamento: PIX ENVIADO ATLAS → 2.1.01.001 por regra; a nota da Atlas continua bloqueada (pendência para o comercial) | ASSUMO (Lucca ~23h30, D35) | Helena 20:24: "Não fatura a Atlas" (não "não repassa") | R$ 249.301,77 (L34 + L60) | Era HUMANO |
+| H40 | Conferência do repasse da Ponte | Pendência CONFERENCIA_REPASSE: conferir o TED quando cair (previsto 06/10); valor = faturado (39.543,45); o texto mostra o total do relatório (78.073,59) e o que ele inclui e o fechamento não conta (4 spreads negativos −1.834,05; duplicata PC-0926-0162 821,88), em contestação. Sem prever desconto | CONFIRMADO (Helena 22:33, Q-K); texto Lucca | "Não conte que ela vai descontar nada do repasse. Conferir o TED quando ele cair é uma pendência boa." | Antes a pendência previa 506,65 de diferença (desconto) | D38 |
+| H41 | Contestação com a Ponte | Uma pendência CONTESTACAO_PONTE por motivo, com valor e operações (`contestacao_ponte.csv`): (a) Mundo Aberto acima de 1,20%, 23 ops, 1.418,85; (b) 4 spreads negativos, −1.834,05 (Spread R$; −3.565,98 contra o contrato vai na lista); (c) duplicata PC-0926-0162 R77, 821,88. O valor de cada motivo é ASSUMO (D39) | CONFIRMADO (Helena 22:34, Q-L); valor por motivo ASSUMO (D39) | "Mantenham como pendência de contestação, com o valor e as operações" | 3 pendências | Novo |
+| H42 | TED RECEBIDA ORBE no Aurora | → 1.1.03.001 (recebível de adquirente), só classificar | CONFIRMADO (Helena 22:34, Q-M) | "Os créditos da Orbe vocês classificam" | 21 lançamentos | Era ASSUMO |
 | H23 | Créditos sem origem | PIX RECEBIDO … SEM IDENTIFICACAO → 1.1.09.002 + pendência; DEVOLUCAO PIX - <lojista> → 2.1.01.001 + pendência (motivo); TRANSF … P/ BCO MERIDIANO → 1.1.09.001, sem par no Meridiano em 1 dia útil → pendência (em trânsito) | ASSUMO (Lucca; a Helena devolveu a decisão em 20:49) | Slack Helena 20:49 (Q-F 4) | R$ 319.750,00 de classificação | Era por número de linha (L50, L65, L92); virou padrão (D32) |
 
 ## Perguntas ao financeiro
@@ -68,6 +71,9 @@ Fonte única dos textos: `docs/FINANCEIRO_SLACK.md` (copiado do Slack sem ediç�
 | P12 | Arredondamento (truncar ou arredondar; por linha; divergência; meio centavo no 50%) | Q-H | Fox AI | Helena · 21:13 | respondida | D09/D19/D20 substituídas pela D27; H10, H14, H27, H31 → CONFIRMADO |
 | P13 | Nota de remessa com o excesso da Mundo Aberto | Q-J | Theo Garcia · 21:45 | Helena · 21:45 | respondida | nota pelo realizado; pendência EXCESSO_REMESSA (D30, H34) |
 | P14 | Plano de contas: contrapartida, provisionado × despesa direta | Q-I | Fox AI | Helena · 21:14 | respondida | H24 e H33 → CONFIRMADO; `contabil.despesas_diretas` para a E6b |
+| P15 | Remessa: validação do número e repasse da Ponte | Q-K | Lucca | Helena · 22:33 | respondida | CONFERENCIA_REPASSE sem prever desconto: conferir o TED quando cair (H40, D38); coluna `participacao_tarvo_no_spread` |
+| P16 | Contestação com a Ponte | Q-L | Insper AI | Helena · 22:34 | respondida | pendência CONTESTACAO_PONTE por motivo + `contestacao_ponte.csv` (H41, D39) |
+| P17 | Créditos da Orbe no Aurora e saldo negativo | Q-M | Insper AI | Helena · 22:34 | respondida | `orbe_recebivel` CONFIRMADO (H42); saldo negativo e conciliação por parcela ficam de fora |
 
 **Nota de autocorreção (Q-F, item 1):** na minha pergunta, os rótulos de modalidade estão trocados. 2,49/2,99/3,59% são as faixas **crédito à vista / 2–6x / 7–12x** da planilha (o débito é 1,49%). A resposta não muda: o contrato não mudou. O código compara por modalidade direto na planilha.
 
@@ -219,10 +225,36 @@ Fonte única dos textos: `docs/FINANCEIRO_SLACK.md` (copiado do Slack sem ediç�
 **Resposta (21:45):**
 > Entra. A nota de setembro sai pelo realizado, porque é o que a Ponte vai repassar para a gente agora. A contestação é um processo à parte. Se a Ponte devolver a diferença para a Mundo Aberto, a nossa metade sai no mês em que o ajuste acontecer. Deixar como pendência para mim é o caminho certo.
 
+#### Q-K · Lucca Landeiro · resposta 22:33 · remessa: número e conferência do repasse
+
+**Pergunta:** mensagem do Lucca sobre a remessa (texto da pergunta não copiado aqui; consultar o Slack).
+
+**Resposta (22:33):**
+> Número eu não valido. Quem fecha é você, e a banca vai olhar o rastro. Sobre o raciocínio, duas coisas que eu sei: • Não sei ainda como a Ponte vai pagar, porque a contestação nem foi aberta. Não conte que ela vai descontar nada do repasse. • Conferir o TED quando ele cair é uma pendência boa. Fica comigo.
+
+#### Q-L · Insper AI · resposta 22:34 · contestação com a Ponte
+
+**Pergunta:** sobre a contestação com a Ponte (texto da pergunta não copiado aqui; consultar o Slack).
+
+**Resposta (22:34):**
+> Ainda não contestei nada. É para isso que eu preciso do fechamento de vocês. Considerem que estamos dentro do prazo: o fechamento é esta semana. Mantenham como pendência de contestação, com o valor e as operações, porque é isso que eu mando para a Ponte. A duplicada vocês contam uma vez no fechamento, e ela também entra na lista para a Ponte corrigir o relatório.
+
+#### Q-M · Insper AI · resposta 22:34 · Aurora e Orbe
+
+**Pergunta:** sobre os créditos da Orbe no Aurora e o saldo negativo (texto da pergunta não copiado aqui; consultar o Slack).
+
+**Resposta (22:34):**
+> A Orbe deposita tudo no Aurora. Ela não paga lojista direto. Débito e Pix caem no dia seguinte. Crédito e parcelado caem ao longo dos meses seguintes, conforme as parcelas. Por isso o que entra no banco em setembro não bate com o líquido do relatório de setembro. O saldo negativo é a conta garantida que a gente tem no Aurora para pagar os lojistas antes de a Orbe liquidar. Conciliar a Orbe contra o banco, parcela por parcela, não é o que eu preciso neste fechamento. Os créditos da Orbe vocês classificam, e o resto fica para quando tivermos a agenda de recebíveis.
+
 ## Decisões de escopo
 
 - Faço:
 - Não faço (e por quê):
+
+### Fica de fora
+
+- **Conciliação Orbe × banco parcela por parcela** (CONFIRMADO, Helena 22:34, Q-M): crédito e parcelado caem nos meses seguintes, então o que entra no Aurora em setembro não bate com o líquido do relatório de setembro. Os créditos da Orbe são só classificados (1.1.03.001); o resto espera a agenda de recebíveis. Regra `extratos.conciliacao_orbe_por_parcela`.
+- **Saldo negativo do Aurora** (CONFIRMADO, Helena 22:34, Q-M): é a conta garantida para pagar os lojistas antes de a Orbe liquidar. Não é pendência. Regra `extratos.saldo_negativo_aurora`.
 
 ## Origem do código
 

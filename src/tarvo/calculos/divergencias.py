@@ -156,7 +156,7 @@ def divergencias_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: 
     PTAX × Valor ME), valor cheio), remessa.divergencia_spread, remessa.spread_padrao
     (branco/"padrão" = 1,5% sobre a PTAX), ponte.tolerancia_spread_pct (comparada com a coluna
     "Spread %"), remessa.arredondamento_divergencia, remessa.motivo_spread_negativo,
-    remessa.divergencia_spread_negativo (impacto_repasse_tarvo) e
+    remessa.divergencia_spread_negativo (participacao_tarvo_no_spread, informativa: D38) e
     remessa.excesso_cobrado_na_remessa (Q-J: pendência com a nossa metade do excesso).
     """
     valor_da_regra(regras, "remessa.formula_divergencia")
@@ -219,7 +219,7 @@ def divergencias_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: 
             "ptax_ref": str(op.ptax_ref),
             "taxa_cliente": str(op.taxa_cliente),
             "spread_brl": op.spread_brl,
-            "impacto_repasse_tarvo": participacao(op.spread_brl, fracao, modo_part) if negativo else None,  # D21
+            "participacao_tarvo_no_spread": participacao(op.spread_brl, fracao, modo_part) if negativo else None,  # D38: informativa
             "direcao": "COBROU_A_MAIS" if dif > 0 else "COBROU_A_MENOS",
             "motivo": motivo,
             "decisao": "Helena",

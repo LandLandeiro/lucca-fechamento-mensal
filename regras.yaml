@@ -115,6 +115,16 @@ extratos:
     status: SEI
     fonte: "04_plano: 1.1.01.001 'Banco Aurora C/C 4471-0' e 1.1.01.002 'Banco Meridiano C/C 90233-5 (Câmbio)' = conta dos extratos 05a (4471-0) e 05b (90233-5)"
     pergunta_ref: null
+  saldo_negativo_aurora:    # fica de fora: não é pendência
+    valor: "conta garantida do Aurora (paga lojistas antes de a Orbe liquidar): não é pendência"
+    status: CONFIRMADO
+    fonte: "Slack Helena 22:34 (Q-M): 'O saldo negativo é a conta garantida que a gente tem no Aurora para pagar os lojistas antes de a Orbe liquidar.'"
+    pergunta_ref: P17
+  conciliacao_orbe_por_parcela:   # fica de fora
+    valor: "fora do escopo deste fechamento: crédito e parcelado caem nos meses seguintes; o que entra em setembro não bate com o líquido do relatório de setembro"
+    status: CONFIRMADO
+    fonte: "Slack Helena 22:34 (Q-M): 'Conciliar a Orbe contra o banco, parcela por parcela, não é o que eu preciso neste fechamento.'"
+    pergunta_ref: P17
 
 # ---------------------------------------------------------------------------
 # REGRAS DE NEGÓCIO
@@ -168,14 +178,14 @@ notas:
     autor: Lucca
     fonte: "redação Lucca (~22h20); Slack Helena 20:47 (d): 'Não temos texto padrão. Algo simples com o serviço e a competência resolve.'"
     pergunta_ref: P03
-  conferencia_repasse:      # repasse previsto pela Ponte × nota REMESSA
+  conferencia_repasse:      # D38: conferir o TED da Ponte quando cair; sem prever desconto
     valor: >-
-      comparar participação × 'Spread total R$' declarado pela Ponte com a nota REMESSA; a diferença vira
-      pendência CONFERENCIA_REPASSE para a Helena, decomposta em spreads negativos (contestar) e duplicata (avisar)
-    status: ASSUMO
-    autor: Lucca
-    fonte: "decisão Lucca ~22h20; e-mail Ponte: repasse 'creditado em' data do corpo, 'em caso de divergência, responder em até 5 dias úteis'"
-    pergunta_ref: null
+      pendência CONFERENCIA_REPASSE para a Helena: conferir o TED da Ponte quando cair (data 'creditado em' do
+      e-mail); informa o faturado (nota REMESSA) e o total do relatório da Ponte com o que ele inclui e o
+      fechamento não conta (spreads negativos, duplicata), em contestação; não prevê desconto nem diferença
+    status: CONFIRMADO
+    fonte: "Slack Helena 22:33 (Q-K): 'Não sei ainda como a Ponte vai pagar, porque a contestação nem foi aberta. Não conte que ela vai descontar nada do repasse. Conferir o TED quando ele cair é uma pendência boa. Fica comigo.' Texto da pendência: Lucca (~22h40)"
+    pergunta_ref: P15
 
 divergencias:
   reversao_liquida_com_antecipacao:   # D17
@@ -261,10 +271,10 @@ remessa:
   divergencia_spread_negativo:  # D21
     valor:
       diferenca_brl: "valor cheio contra o contrato (remessa.formula_divergencia)"
-      impacto_repasse_tarvo: "round(participação × Spread R$) (remessa.arredondamento_participacao), coluna extra"
+      participacao_tarvo_no_spread: "round(participação × Spread R$) (remessa.arredondamento_participacao), coluna extra informativa: não afirma desconto no repasse (Q-K, D38)"
     status: ASSUMO
     autor: Lucca
-    fonte: "decisão Lucca ~22h20 (D21); fato: Slack Helena 20:48 (fora da comissão e da nota; ela contesta)"
+    fonte: "decisão Lucca ~22h20 (D21); coluna renomeada após a Q-K (D38); fato: Slack Helena 20:48 (fora da comissão e da nota; ela contesta)"
     pergunta_ref: P01
   excesso_cobrado_na_remessa:   # Q-J
     valor: >-
@@ -274,11 +284,29 @@ remessa:
     status: CONFIRMADO
     fonte: "Slack Helena 21:45 (Q-J): 'Entra. A nota de setembro sai pelo realizado ... Se a Ponte devolver a diferença para a Mundo Aberto, a nossa metade sai no mês em que o ajuste acontecer. Deixar como pendência para mim é o caminho certo.'"
     pergunta_ref: P13
-  motivo_spread_negativo:
-    valor: "trava vencida (2h); Helena contesta o desconto no repasse"
+  contestacao_ponte:        # Q-L
+    valor: >-
+      pendência CONTESTACAO_PONTE para a Helena, uma por motivo, com valor e lista de operações
+      (extra contestacao_ponte.csv, uma linha por operação): (a) spread acima do contratado, por lojista;
+      (b) spreads negativos com trava vencida; (c) operação duplicada, que o fechamento conta uma vez e
+      entra na lista para a Ponte corrigir o relatório
+    status: CONFIRMADO
+    fonte: "Slack Helena 22:34 (Q-L): 'Ainda não contestei nada. ... Mantenham como pendência de contestação, com o valor e as operações, porque é isso que eu mando para a Ponte. A duplicada vocês contam uma vez no fechamento, e ela também entra na lista para a Ponte corrigir o relatório.'"
+    pergunta_ref: P16
+  valor_contestado:         # D39
+    valor:
+      SPREAD_ACIMA_DO_CONTRATADO: "Σ divergência COBROU_A_MAIS (valor cheio, remessa.formula_divergencia)"
+      SPREAD_NEGATIVO: "Σ Spread R$ do relatório (a divergência contra o contrato vai na lista, por operação)"
+      DUPLICATA: "Σ Spread R$ das cópias que ficaram fora"
     status: ASSUMO
     autor: Lucca
-    fonte: "redação Lucca (D21) sobre o fato da Slack Helena 20:48 ('A trava vale 2 horas pelo contrato, e essas passaram do prazo. Fica fora da comissão e da nota, e eu contesto.')"
+    fonte: "proposta ~22h40 (D39): o valor de (a) é o que o lojista pagou a mais (Helena 20:58: 'é o total que eu contesto'); o de (b) e (c) é o que está no relatório da Ponte e o fechamento não aceita"
+    pergunta_ref: P16
+  motivo_spread_negativo:
+    valor: "trava vencida (2h); em contestação com a Ponte (Helena)"
+    status: ASSUMO
+    autor: Lucca
+    fonte: "redação Lucca (D21, sem 'desconto' após a Q-K, D38) sobre o fato da Slack Helena 20:48 ('A trava vale 2 horas pelo contrato, e essas passaram do prazo. Fica fora da comissão e da nota, e eu contesto.')"
     pergunta_ref: P01
 
 cadastro:
@@ -365,10 +393,9 @@ classificacao_extratos:
   aurora:
     orbe_recebivel:
       valor: {padrao: "^TED RECEBIDA .*ORBE ADQUIRENCIA", sinal: "+", conta: "1.1.03.001"}
-      status: ASSUMO
-      autor: Lucca
-      fonte: "baixa de recebível de adquirente (plano 1.1.03.001 'Recebíveis de adquirente - Orbe'); caso: 05a L9"
-      pergunta_ref: null
+      status: CONFIRMADO
+      fonte: "Slack Helena 22:34 (Q-M): 'A Orbe deposita tudo no Aurora. ... Os créditos da Orbe vocês classificam, e o resto fica para quando tivermos a agenda de recebíveis.' Conta: plano 1.1.03.001 'Recebíveis de adquirente - Orbe'; caso: 05a L9. Conciliação por parcela fora de escopo"
+      pergunta_ref: P17
     folha_mes_anterior:
       valor: {padrao: "^PAGTO SALARIOS - FOLHA (?P<mes>\\d{2}/\\d{4})", sinal: "-", conta: "2.1.04.001", mes_anterior: true}
       status: CONFIRMADO

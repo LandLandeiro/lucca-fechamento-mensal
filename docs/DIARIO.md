@@ -90,3 +90,8 @@ Log cronológico: hora, etapa, o que foi feito, como foi verificado, commit.
 - **Diferenças levadas ao Lucca:** (1) a união com **todos** os nomes da Orbe resolveria também a EduAbroad ("EDU ABROAD CONSULTORIA" é o nome da Orbe do EC dela), contra a D37 e o esperado; restringi aos ECs sem vínculo. (2) Pendências: **15**, não 16 (eram 19; saíram 3 SEM_REGRA — L34, L60, MRD2026090680 — e a do resgate).
 - **Commit:** `decisões da E6b parte 1: rendimento, resgate, Atlas e plano da EduAbroad`.
 
+### 17/10 ~00h15–00h30 · Respostas Q-K, Q-L, Q-M
+- **Feito:** Q-K, Q-L e Q-M no FINANCEIRO_SLACK, no HIPOTESES (P15–P17, H40–H42, H26, "Fica de fora") e no `regras.yaml`. Q-K: CONFERENCIA_REPASSE reescrita sem prever desconto (valor = faturado, rastro = linhas da nota REMESSA); coluna `participacao_tarvo_no_spread` (D38). Q-L: módulo `calculos/contestacao.py`, 3 pendências CONTESTACAO_PONTE e extra `saida/contestacao_ponte.csv` (D39); validador confere Σ por pendência. Q-M: `orbe_recebivel` CONFIRMADO; saldo negativo e conciliação por parcela fora.
+- **Verificado:** Mundo Aberto 23 ops = 1.418,85 (mesmo número da divergência); negativos 4 ops = −1.834,05 (Σ Spread R$; −3.565,98 contra o contrato); duplicata R77 = 821,88; a R76 continua em COM- e a R77 em EXC- (conta uma vez). Pendências 15 → 18. `pytest`: 151 passed (testes novos: TED sem desconto, coluna renomeada, contestação por motivo, validador recusa contestação que não fecha). Validador OK.
+- **Commit:** `Q-K/Q-L/Q-M: conferência do TED sem desconto, contestação com a Ponte e créditos da Orbe`.
+

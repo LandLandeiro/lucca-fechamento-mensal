@@ -60,7 +60,8 @@ def _ler(caminho: Path, erros: list[str]) -> list[dict] | None:
 PREFIXOS_COBERTURA = ("COM-", "PEN-", "EXC-")
 PREFIXO_EXCLUSAO = "EXC-"
 # pendências derivadas de um número já calculado: reapontam linhas que já têm destino
-PREFIXOS_DERIVADOS = ("PEN-NF_NEGATIVA-", "PEN-CONFERENCIA_REPASSE-", "PEN-EXCESSO_REMESSA-", "PEN-APORTE_")
+PREFIXOS_DERIVADOS = ("PEN-NF_NEGATIVA-", "PEN-CONFERENCIA_REPASSE-", "PEN-EXCESSO_REMESSA-", "PEN-APORTE_",
+                      "PEN-CONTESTACAO_PONTE-")
 
 
 def _d(texto: str | None) -> Decimal:
@@ -149,6 +150,8 @@ def validar_saida(
 
     if "notas_a_emitir.csv" in dados:
         erros.extend(_notas(dados))
+    if (pasta / "contestacao_ponte.csv").exists():
+        erros.extend(_contestacao(pasta / "contestacao_ponte.csv", dados))
     if fonte_orbe:
         if modo_checkout is None:
             raise ValueError("fonte_orbe exige modo_checkout")
@@ -174,6 +177,28 @@ def validar_saida(
                 erros.append(f"{arquivo}: {len(repetidas)} linhas contadas mais de uma vez (ex.: {repetidas[:5]})")
             if estranhas:
                 erros.append(f"{arquivo}: {len(estranhas)} ref_origem no rastro que não existem na fonte (ex.: {estranhas[:5]})")
+    return erros
+
+
+def _contestacao(caminho: Path, dados: dict[str, list[dict]]) -> list[str]:
+    """contestacao_ponte.csv (extra): Σ valor_contestado_brl por id_pendencia = valor da pendência
+    CONTESTACAO_PONTE, e toda pendência desse tipo tem a sua lista de operações."""
+    erros: list[str] = []
+    with open(caminho, encoding="utf-8", newline="") as f:
+        linhas = list(csv.DictReader(f, delimiter=";"))
+    somas: dict[str, Decimal] = {}
+    for i, l in enumerate(linhas, start=2):
+        if not _RE_DINHEIRO.match(l.get("valor_contestado_brl") or ""):
+            erros.append(f"{caminho.name}:{i}: valor_contestado_brl={l.get('valor_contestado_brl')!r} fora do formato 0.00")
+        somas[l.get("id_pendencia", "")] = somas.get(l.get("id_pendencia", ""), Decimal("0")) + _d(l.get("valor_contestado_brl"))
+    pend = {p["id_saida"]: _d(p["valor_brl"]) for p in dados.get("pendencias.csv", []) if p["tipo"] == "CONTESTACAO_PONTE"}
+    for pid in sorted(set(pend) | set(somas)):
+        if pid not in pend:
+            erros.append(f"{caminho.name}: {pid} não é pendência CONTESTACAO_PONTE")
+        elif pid not in somas:
+            erros.append(f"{pid}: pendência de contestação sem lista de operações em {caminho.name}")
+        elif somas[pid] != pend[pid]:
+            erros.append(f"{pid}: pendência {pend[pid]} ≠ Σ {caminho.name} {somas[pid]}")
     return erros
 
 
