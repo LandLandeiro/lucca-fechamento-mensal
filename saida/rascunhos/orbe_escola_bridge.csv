@@ -1,6 +1,6 @@
-id_transacao;data;tipo_lancamento;valor_bruto;taxa_aplicada_pct;taxa_contratada_pct;valor_taxa_orbe;comissao_contratada;valor_brl
-TX88428053;2026-09-15;VENDA;1124.71;2.59;2.19;29.12;24.63;4.49
-TX88428930;2026-09-16;VENDA;859.57;2.59;2.19;22.26;18.82;3.44
-TX88429199;2026-09-16;VENDA;715.68;2.59;2.19;18.53;15.67;2.86
-TX88429931;2026-09-17;VENDA;1987.36;2.59;2.19;51.47;43.52;7.95
-TX88431123;2026-09-18;VENDA;2801.20;2.59;2.19;72.55;61.35;11.20
+id_transacao;data;tipo_lancamento;valor_bruto;taxa_aplicada_pct;taxa_contratada_pct;valor_taxa_orbe;comissao_contratada;diferenca_formula_q_h_brl;valor_brl
+TX88428053;2026-09-15;VENDA;1124.71;2.59;2.19;29.12;24.63;4.50;4.49
+TX88428930;2026-09-16;VENDA;859.57;2.59;2.19;22.26;18.82;3.44;3.44
+TX88429199;2026-09-16;VENDA;715.68;2.59;2.19;18.53;15.67;2.86;2.86
+TX88429931;2026-09-17;VENDA;1987.36;2.59;2.19;51.47;43.52;7.95;7.95
+TX88431123;2026-09-18;VENDA;2801.20;2.59;2.19;72.55;61.35;11.20;11.20

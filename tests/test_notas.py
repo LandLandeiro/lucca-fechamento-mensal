@@ -6,6 +6,7 @@ from decimal import Decimal
 import pytest
 
 from tarvo.__main__ import executar
+from tarvo.formatos import fmt_brl
 from conftest import DADOS, RAIZ
 
 
@@ -233,6 +234,19 @@ def test_rascunhos_de_contestacao(saida):
         assert sum(Decimal(l["valor_brl"]) for l in _csv(pasta, f"{nome}.csv")) == Decimal(total)
     assert len(_csv(pasta, "orbe_rota_global.csv")) == 87  # D77: os 4 pares venda/estorno entram, com sinal
     assert "RASCUNHO para a Helena revisar" in (pasta / "orbe_rota_global.md").read_text(encoding="utf-8")
+
+
+def test_rascunho_orbe_mostra_formula_q_h_ao_lado(saida):
+    """D88 (Q-H c; Q-AH 'A diferença para a fórmula é centavo'): o rascunho pede o valor a recuperar (descontado de fato)
+    e mostra ao lado o valor pela fórmula bruto × Δtaxa, com a diferença de centavos explicada."""
+    pasta = saida[0] / "rascunhos"
+    for nome, recuperar, formula, dif in [("orbe_rota_global", "1.545,86", "1.546,28", "0,42"),
+                                          ("orbe_escola_bridge", "29,94", "29,95", "0,01")]:
+        md = (pasta / f"{nome}.md").read_text(encoding="utf-8")
+        assert f"**Valor a recuperar (o que foi descontado de fato):** R$ {recuperar}" in md
+        assert f"Q-H c): R$ {formula}. A diferença, R$ {dif}, são centavos" in md
+        linhas = _csv(pasta, f"{nome}.csv")
+        assert fmt_brl(sum(Decimal(l["diferenca_formula_q_h_brl"]) for l in linhas)) == f"R$ {formula}"
 
 
 @pytest.mark.parametrize("estrago, trecho", [("total", "≠ Σ"), ("casa", "condicao_nao_informada")])
