@@ -99,3 +99,8 @@ Log cronológico: hora, etapa, o que foi feito, como foi verificado, commit.
 - **Feito:** clone em `%TEMP%\tarvo-repro`, seguindo o README como avaliador num Windows sem Python no PATH. Achados: (1) a seção "Como rodar do zero" do README estava vazia (`[preencher]`); (2) `python` do PATH = atalho da Store (código 9009); (3) sem `pip install -e .` → "No module named tarvo"; (4) fora da raiz sem `--regras` → código 2 (`regras.yaml` relativo à pasta atual); (5) `Activate.ps1` costuma estar bloqueado num Windows limpo; (6) o README não dizia se roda sem chave (roda: a IA ainda não está ligada). README corrigido com pré-requisito, passos, comando único, saída esperada e esses avisos (D40). Código não mudou.
 - **Verificado:** duas execuções no clone + `saida/` commitada no clone + `saida/` do projeto: SHA-256 idêntico nos 7 CSVs. Com `--dados "%TEMP%\teste ação\dados"` e `--saida "%TEMP%\teste ação\saída com espaço"` rodando de fora do repo (com `--regras`): código 0, validador OK, 7 CSVs idênticos. Segundo clone seguindo o README novo ao pé da letra: código 0, `pytest` 151 passed, `git status` sem mudança em `saida/`.
 - **Commit:** `teste de reprodutibilidade`.
+
+### 17/10 ~00h50–00h55 · regras.yaml padrão relativo ao repositório
+- **Feito:** padrão de `--regras` resolvido a partir do pacote (raiz do repo), não da pasta atual; `--regras` explícito continua com prioridade (D41). Aviso de "rodar na raiz" removido do README.
+- **Verificado:** teste novo primeiro (falhou: código 2), depois a correção: rodar de fora do repo sem `--regras`, com `--saida` com espaço e acento, dá código 0 e validador OK; `--regras` explícito inexistente dá código 2 (prioridade). `pytest`: 153 passed.
+- **Commit:** `regras.yaml padrão relativo ao repositório`.

@@ -41,7 +41,7 @@ cd tarvo-fechamento
 .\.venv\Scripts\python.exe -m pytest
 ```
 
-- Rode **na raiz do repositório**: o padrão de `--regras` é `regras.yaml` relativo à pasta atual. De outra pasta, passe os três caminhos: `--dados <pasta> --saida <pasta> --regras <repo>\regras.yaml`. Caminhos com espaço e acento funcionam (entre aspas).
+- `--dados` e `--saida` aceitam qualquer pasta, inclusive com espaço e acento (entre aspas). Sem `--regras`, vale o `regras.yaml` da raiz do repositório, de onde quer que se rode; `--regras <arquivo>` tem prioridade.
 - Os comandos usam `.\.venv\Scripts\python.exe` direto, sem `Activate.ps1`: num Windows limpo a política de execução do PowerShell costuma bloquear o script de ativação.
 - Saída esperada: lista de comissões, divergências, notas, lançamentos e pendências, terminando em `VALIDADOR: OK`, código de saída 0 (1 = saída inválida; 2 = erro de entrada). Os CSVs vão para `--saida`; o resultado é determinístico (mesmo hash a cada execução, em qualquer pasta).
 

@@ -41,6 +41,8 @@ PADRAO_PLANO = "04_plano_de_contas*.csv"
 PADRAO_AURORA = "05a_extrato_banco_aurora_*.csv"
 PADRAO_MERIDIANO = "05b_extrato_banco_meridiano_*.ofx"
 ZERO = Decimal("0")
+# regras.yaml da raiz do repositório (src/tarvo/__main__.py → raiz), não da pasta atual (D41)
+REGRAS_PADRAO = Path(__file__).resolve().parents[2] / "regras.yaml"
 
 
 class ErroEntrada(RuntimeError):
@@ -54,7 +56,8 @@ def criar_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--dados", type=Path, default=Path("data"), help="pasta do data pack (padrão: data)")
     parser.add_argument("--saida", type=Path, default=Path("saida"), help="pasta dos CSVs gerados (padrão: saida)")
-    parser.add_argument("--regras", type=Path, default=Path("regras.yaml"), help="arquivo de regras (padrão: regras.yaml)")
+    parser.add_argument("--regras", type=Path, default=REGRAS_PADRAO,
+                        help="arquivo de regras (padrão: regras.yaml da raiz do repositório)")
     return parser
 
 

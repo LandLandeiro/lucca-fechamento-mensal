@@ -40,3 +40,18 @@ def test_console_cp1252_nao_derruba_a_cli(tmp_path):
 
 def test_pasta_de_dados_inexistente(tmp_path):
     assert main(["--dados", str(tmp_path / "nao_existe"), "--saida", str(tmp_path)]) == 2
+
+
+def test_regras_padrao_e_do_repositorio_nao_da_pasta_atual(tmp_path):
+    """Rodar de fora do repo sem --regras usa o regras.yaml da raiz do repositório (D41)."""
+    r = subprocess.run(
+        [sys.executable, "-m", "tarvo", "--dados", str(RAIZ / "data"), "--saida", str(tmp_path / "saída com espaço")],
+        cwd=tmp_path, capture_output=True, text=True, encoding="utf-8", errors="replace",
+    )
+    assert r.returncode == 0, r.stderr
+    assert "VALIDADOR: OK" in r.stdout
+
+
+def test_regras_explicito_tem_prioridade(tmp_path):
+    codigo = main(["--dados", str(RAIZ / "data"), "--saida", str(tmp_path / "saida"), "--regras", str(tmp_path / "nao_existe.yaml")])
+    assert codigo == 2
