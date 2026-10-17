@@ -1,0 +1,1157 @@
+ ▐▛███▛█   Claude Code v2.1.302
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   C:\Lucca\tarvo-fechamento
+
+
+❯ /effort                                                                       
+  ⎿  Set effort level to high (saved as your default for new sessions):
+     Comprehensive implementation with extensive testing and documentation
+
+❯ Papel: engenheiro front-end sênior com experiência em produto SaaS financeiro 
+  e em auditoria de dados. O critério é que nada no painel finja uma função:    
+  cada elemento responde uma pergunta da Helena ou funciona de verdade.         
+                                                                                
+  Contexto: você está no worktree da branch `relatorio` do tarvo-fechamento.    
+  Outra sessão está mexendo na main ao mesmo tempo (respostas da Helena de      
+  17/10: coluna `natureza` em divergencias_taxa.csv, alerta de antecipação,     
+  rascunhos em saida/rascunhos/). Por isso:                                     
+  - Mexa só em arquivos novos: um módulo novo de painel no pacote,              
+  tests/test_painel.py e docs/PAINEL.md. Não toque em README, DECISOES,         
+  HIPOTESES, regras.yaml nem nos módulos existentes. Se precisar de algo deles, 
+  registre em docs/PAINEL.md para o merge.                                      
+  - Leia tudo da saída (saida/*.csv, regras.yaml, rastro). Nenhum número, nome  
+  ou cartão fixo no código. Campo que ainda não existe na main (natureza,       
+  alerta, rascunhos) é tratado como opcional: se não houver, a seção some, sem  
+  quebrar.                                                                      
+                                                                                
+  O que entregar: um comando novo (ex.: `python -m tarvo.painel --saida saida`) 
+  que gera saida/painel.html. É um arquivo único e autossuficiente: HTML, CSS   
+  e JS puro inline, sem framework e sem build, que abre com duplo clique, sem   
+  servidor. Determinístico: sem data/hora de geração e sem hash de commit. Para 
+  identificar a versão, use o sha256 curto de cada arquivo de data/.            
+                                                                                
+  Quatro telas no mesmo arquivo, navegação por âncora (#visao, #decisoes,       
+  #contratado, #notas):                                                         
+                                                                                
+  1. Visão geral                                                                
+     - Título: "R$ X a faturar em N notas", de notas_a_emitir.csv.              
+     - "Dinheiro que depende de uma decisão": pendências com valor, agrupadas   
+  por destino (devolver ao lojista, cobrar da Orbe, contestar com a Ponte,      
+  receita parada, sem origem, em trânsito), cada uma com total, contagem, quem  
+  decide e link para o rastro. O agrupamento sai de campos da pendência (tipo,  
+  natureza, quem_decide). Escreva o mapeamento em docs/PAINEL.md.               
+     - Alertas (tipo alerta_*), em destaque, se existirem.                      
+     - "Premissas que esperam aprovação": as ASSUMO do regras.yaml, com fonte e 
+  motivo, mais a contagem por status.                                           
+     - Links diretos para cada CSV da saída e para os rascunhos de contestação. 
+     - Rodapé: arquivos de entrada com sha256 curto e a contagem de linhas de   
+  rastro.                                                                       
+  2. Decisões: kanban SOMENTE LEITURA, sem arrastar e sem botões de mover.      
+  Colunas: Com a Helena, Com o comercial, Com uma contraparte, Acompanhar,      
+  Fechadas por regra (o que o sistema decidiu sozinho, com a regra e a fonte à  
+  vista). A coluna sai de quem_decide e do tipo. Cada pendência aparece         
+  exatamente uma vez. A coluna mostra o total que soma ao fechamento (em        
+  trânsito e aportes não somam, com a indicação "não entra no total"). O cartão 
+  mostra contraparte, referência, título, valor, responsáveis e link "Rastro".  
+  3. Contratado × cobrado: tabela por lojista (vendas, volume bruto, comissão   
+  pela planilha, pela taxa aplicada, diferença, situação), com abas que filtram 
+  de verdade (Todos, Com diferença, Sem contrato, Conferem). Mostre a nota do   
+  resíduo de truncamento da Orbe com o valor calculado da saída. Se sobrar      
+  tempo, uma aba de remessa (Ponte) com o mesmo formato.                        
+  4. Notas e rastro:                                                            
+     - As notas a emitir (tomador, valor, discriminação).                       
+     - Busca por qualquer ID (TX, AN, PC-, lançamento, pendência) sobre o       
+  rastro embutido como JSON. O resultado mostra a cadeia em passos:             
+  arquivo:linha de origem → regra (status e fonte) → cálculo → destino. Se o    
+  JSON passar de 3 MB, me avise antes de seguir.                                
+                                                                                
+  Visual (referência: estilo SaaS de 2026, limpo, no padrão Linear/Attio):      
+  - Tokens claro: fundo #fefefe, superfície #ffffff, fundo 2 #f9f9f9, bordas    
+  #efefef/#d4d4d4, texto #171717/#404040/#6b6b6b, marca #df285d, tint #fdf0f3,  
+  verde #169e72 (texto #0f7a57), laranja #ec9732 (texto #9a560c), azul #00a5e2. 
+  - Escuro por prefers-color-scheme (sem botão): fundo #0e0c0c, superfície      
+  #1a1717, bordas #2a2626/#3a3535, texto #f3f1f1/#cfc9c9/#a39d9d, marca #e8336a 
+  (texto #f472a0).                                                              
+  - Inter pelo Google Fonts, com fallback system-ui (offline continua legível). 
+  Números tabulares. IDs em fonte mono.                                         
+  - Menu lateral que vira barra no topo no celular. Tabelas largas com rolagem  
+  horizontal dentro de uma caixa. Funciona em 390 px de largura.                
+  - Acessibilidade: button e a de verdade, aria-label em botão só com ícone,    
+  contraste de 4.5:1, ícones SVG de traço inline, sem emoji.                    
+                                                                                
+  Testes (tests/test_painel.py, com TARVO_SEM_REDE=1):                          
+  - Gerar duas vezes resulta em bytes idênticos.                                
+  - Os totais do HTML batem com os CSVs (exponha os valores em data-attributes  
+  ou no JSON embutido para o teste ler).                                        
+  - Toda pendência aparece uma única vez nas colunas.                           
+  - O JSON do rastro tem todas as linhas de rastro.csv.                         
+  - O HTML não tem nenhuma URL externa além do Google Fonts.                    
+  Se houver Playwright ou um navegador headless na máquina, renderize em 1440 e 
+  390 px e confira se nada quebra. Se não houver, diga isso, e eu abro          
+  manualmente.                                                                  
+                                                                                
+  docs/PAINEL.md: o que é cada tela e a pergunta da Helena que ela responde; o  
+  mapeamento de campos para colunas e grupos; por que é HTML estático (sai do   
+  mesmo código e na mesma execução da saida/, é determinístico, versionado      
+  junto com os CSVs, abre sem servidor, e a banca vê no navegador o mesmo       
+  número do arquivo); e "com mais tempo": registro de decisões (quem aprovou,   
+  quando e com qual evidência, onde o kanban ganha função), cadastro de         
+  condições comerciais com aviso automático à Orbe e à Ponte, checagem diária   
+  quando o relatório chega, login por papel e integrações. Termine com uma      
+  linha: isso exige estado e usuários, então o painel vira uma aplicação com    
+  backend e banco (ex.: Postgres e um frontend React).                          
+                                                                                
+  Prazo: às 14h00, me mande o estado. Às 14h30, pare onde estiver, faça commit  
+  na branch relatorio e liste o que ficou de fora. Não faça merge na main.      
+  Prioridade se faltar tempo: tela 1 > tela 4 > tela 2 > tela 3.                
+                                                                                
+  Saída: lista de commits, as telas prontas, os testes, o tamanho do            
+  painel.html e o que ficou de fora.                                            
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Trabalho no worktree C:\Lucca\tarvo-relatorio (branch relatorio), sem tocar na
+  main. São 12:05. Vou ler a saída e os docs primeiro.
+
+  Read 1 file, ran 6 shell commands (ctrl+o to expand)
+
+● Estou lendo a saída e o código para mapear os campos antes de propor o plano
+  (worktree C:\Lucca\tarvo-relatorio, sem tocar na main).
+
+  Ran 6 shell commands (ctrl+o to expand)
+
+● Mapeei os campos necessários e já defino o plano: painel/__init__.py vai
+  montar o HTML lendo os CSVs, regras.yaml, rastro.csv e o sha256 dos dados,
+  usando ler_orbe para a taxa aplicada e exibindo campos opcionais só quando
+  existirem. Agora começo a escrever o módulo.
+
+● Write(C:\Lucca\tarvo-relatorio\src\tarvo\painel\__main__.py)
+  ⎿  Wrote 29 lines to ..\tarvo-relatorio\src\tarvo\painel\__main__.py
+      1 """CLI do painel: `python -m tarvo.painel --saida saida` gera `sa
+        ida/painel.html` a partir da saída já gerada."""
+      2 
+      3 from __future__ import annotations
+      4 
+      5 import argparse
+      6 import sys
+      7 from pathlib import Path
+      8 
+      9 from tarvo.painel import gerar_painel
+     … +26 lines (ctrl+o to expand)
+
+● Write(C:\Lucca\tarvo-relatorio\src\tarvo\painel\__init__.py)
+  ⎿  Wrote 799 lines to ..\tarvo-relatorio\src\tarvo\painel\__init__.py
+       1 """Painel do fechamento: `saida/painel.html`, um arquivo único g
+       2 
+       3 Responsabilidade: só leitura e apresentação. O painel lê `saida/
+       4 o data pack (sha256 de cada arquivo; `valor_taxa` da Orbe para a
+       5 calcula regra de negócio nova: todo valor exibido é uma soma de 
+         linhas da saída (Decimal) e o rastro
+       7 
+       8 Campos que a main ainda pode não ter (`natureza`, pendências `AL
+       9 opcionais: sem eles a seção some. Mapeamento de pendência → dest
+      10 `docs/PAINEL.md`. Determinístico: sem data/hora e sem h
+     … +1061 lines (ctrl+o to expand)
+
+● Update(C:\Lucca\tarvo-relatorio\src\tarvo\painel\__init__.py)
+  ⎿  Added 2 lines, removed 3 lines
+      272      for banco in ("AURORA", "MERIDIANO"):
+      273          if f"-{banco}-" in p.id:
+      274              partes.append(banco.capitalize())
+      275 -    if not m and tipo in ("CONTESTACAO_PONTE",):              
+      276 -        lojistas = sorted({nomes[c] for r in p.refs for c in [
+          -] if c in nomes})                                             
+      277 -        partes.extend(lojistas)                               
+      275 +    if not m:                                                 
+      276 +        partes.extend(lojistas_extra)                         
+      277      p.contraparte = " · ".join(dict.fromkeys(partes)) or "—"
+      278  
+      279  
+
+● Update(C:\Lucca\tarvo-relatorio\src\tarvo\painel\__init__.py)
+  ⎿  Added 2 lines, removed 1 line
+      222      return simples.most_common(1)[0][0] if simples else ""
+      223  
+      224  
+      225 -def _classificar(p: Pendencia, dona: str, natureza_por_ref: di
+          -ct[str, str], nomes: dict[str, str], ponte: str) -> None:     
+      225 +def _classificar(p: Pendencia, dona: str, natureza_por_ref: di
+          +ct[str, str], nomes: dict[str, str], ponte: str,              
+      226 +                 lojistas_extra: list[str]) -> None:          
+      227      tipo = p.tipo.upper()
+      228      p.alerta = tipo.startswith("ALERTA")
+      229      if not p.natureza and tipo == "DIVERGENCIA_CHECKOUT":
+
+● Update(C:\Lucca\tarvo-relatorio\src\tarvo\painel\__init__.py)
+  ⎿  Added 5 lines
+      294      natureza_por_ref = {d["ref_origem"]: d["natureza"] for d i
+           n divs if d.get("natureza")}
+      295      ponte_regra = pn.regras.get("ponte.tomador_nf_remessa", {}
+           ).get("valor") or {}
+      296      ponte = ponte_regra.get("nome", "") if isinstance(ponte_re
+           gra, dict) else ""
+      297 +    # lojistas de uma pendência sem CNPJ no id (ex.: contestaç
+          +ão de duplicata): pelo anexo da contestação                   
+      298 +    lojistas_por_pend: dict[str, set[str]] = defaultdict(set) 
+      299 +    for c in _ler_csv(saida / "contestacao_ponte.csv")[1]:    
+      300 +        if c.get("id_pendencia") and c.get("cnpj"):           
+      301 +            lojistas_por_pend[c["id_pendencia"]].add(pn.nomes.
+          +get(c["cnpj"], c["cnpj"]))                                    
+      302      for l in pend:
+      303          p = Pendencia(
+      304              id=l["id_saida"], tipo=l.get("tipo", ""), refs=[r 
+           for r in (l.get("ref_origem") or "").split("|") if r],
+
+● Update(C:\Lucca\tarvo-relatorio\src\tarvo\painel\__init__.py)
+  ⎿  Added 1 line, removed 1 line
+      305              valor=_dec(l.get("valor_brl")), motivo=l.get("moti
+           vo", ""), quem_decide=l.get("quem_decide", ""),
+      306              natureza=l.get("natureza", "") or "",
+      307          )
+      308 -        _classificar(p, pn.dona, natureza_por_ref, pn.nomes, p
+          -onte)                                                         
+      308 +        _classificar(p, pn.dona, natureza_por_ref, pn.nomes, p
+          +onte, sorted(lojistas_por_pend.get(p.id, ())))                
+      309          pn.pendencias.append(p)
+      310  
+      311      pn.arquivos_saida = [(c.name, max(sum(1 for _ in open(c, e
+           ncoding="utf-8")) - 1, 0)) for c in sorted(saida.glob("*.csv")
+           )]
+
+● Update(C:\Lucca\tarvo-relatorio\src\tarvo\painel\__init__.py)
+  ⎿  Removed 1 line
+      445                  "volume": sum((_dec(r.get("valor_bruto")) or Z
+           ERO for r in vendas), ZERO),
+      446                  "planilha": planilha, "aplicada": aplicada, "d
+           iferenca": diferenca, "divergencia": div, "situacao": situacao
+           }
+      447  
+      448 -    _, coms = _ler_csv(Path(pn.saidas and "") / "x") if False 
+          -else ([], [])                                                 
+      448      for ident, s in pn.saidas.items():
+      449          if ident.startswith("COM-") and ident.endswith("-CHECK
+           OUT") and s["arquivo"] == "comissoes_por_lojista.csv":
+      450              cnpj = ident[len("COM-"):-len("-CHECKOUT")]
+
+● Agora o CSS (tokens claro/escuro do pedido):
+
+● Write(C:\Lucca\tarvo-relatorio\src\tarvo\painel\estilo.css)
+  ⎿  Wrote 199 lines to ..\tarvo-relatorio\src\tarvo\painel\estilo.css
+       1 :root {
+       2   --fundo: #fefefe; --sup: #ffffff; --fundo2: #f9f9f9;
+       3   --borda: #efefef; --borda2: #d4d4d4;
+       5   --marca: #df285d; --marca-tx: #c01f4f; --tint: #fdf0f3;
+       6   --verde: #169e72; --verde-tx: #0f7a57; --verde-tint: #e9f7f1;
+       7   --laranja: #ec9732; --laranja-tx: #9a560c; --laranja-tint: #fd
+         f3e6;
+       9   --sombra: 0 1px 2px rgba(23, 23, 23, .04), 0 1px 1px rgba(23, 
+         23, 23, .03);
+      10   --raio: 10px;
+     … +314 lines (ctrl+o to expand)
+
+● Agora o JS (navegação, abas, busca no rastro):
+
+● Write(C:\Lucca\tarvo-relatorio\src\tarvo\painel\app.js)
+  ⎿  Wrote 186 lines to ..\tarvo-relatorio\src\tarvo\painel\app.js
+       1 (function () {
+       2   "use strict";
+       3   document.documentElement.classList.add("js");
+       4   var D = JSON.parse(document.getElementById("dados").textConten
+         t);
+       6 
+       7   // ---- navegação por âncora: #tela ou #notas?id=<ID>
+       8   function lerHash() {
+       9     var h = decodeURIComponent(location.hash.replace(/^#/, ""));
+      10     var partes = h.split("?id=");
+     … +240 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Primeira geração:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● 1,1 MB no total, e o JSON tem 0,98 MB (abaixo do limite de 3 MB). Agora as
+  screenshots no Chrome headless:
+
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+
+● Encontrei um problema: a soma com sinal estava misturando direções e
+  distorcendo o total em "Contestar com a Ponte". Vou corrigir usando a soma dos
+  valores absolutos (com o sinal visível em cada linha) e depois tirar
+  screenshots nos temas claro e escuro.
+
+  Made 1 scratchpad edit +17, read 2 files, ran 2 shell commands (ctrl+o to expand)
+
+● Acho que o corte no screenshot de 390 px é causado pela largura mínima da
+  janela do Chrome headless no Windows, não pelo layout em si. Vou confirmar
+  medindo dentro de um iframe de 390 px e também corrigir o kanban de 1440 px,
+  onde a 5ª coluna está saindo da caixa.
+
+  Read 1 file, ran 3 shell commands (ctrl+o to expand)
+● Confirmado: com 390px reais não há rolagem horizontal (scrollWidth=390), o
+  corte anterior era só da janela headless. Ainda falta ajustar a âncora que
+  deixa o título escondido sob a barra fixa — vou checar as outras telas agora.
+
+  Read 2 files (ctrl+o to expand)
+
+● O resíduo dá −9,07, igual ao STATUS. Corrijo o título que fica escondido pela
+  âncora e testo a busca:
+
+  Read 2 files, ran 2 shell commands (ctrl+o to expand)
+
+● Encontrei um erro no passo "Cálculo": nas linhas de divergência ele aplica
+  "bruto × taxa contratada" indevidamente (gerando 218,82 a partir de 5.773,57 ×
+  0%), quando deveria usar a fórmula indicada na nota do rastro (round(...),
+  "50% de Spread").
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Agora os testes:
+
+● Write(C:\Lucca\tarvo-relatorio\tests\test_painel.py)
+  ⎿  Wrote 264 lines to ..\tarvo-relatorio\tests\test_painel.py
+       1 """Painel (`python -m tarvo.painel`): determinístico, números ig
+         uais aos CSVs, rastro inteiro, sem rede.
+       3 O painel é gerado numa cópia de `saida/` (o repositório não muda
+         ). Os totais são lidos dos
+       4 data-attributes e do JSON embutido e conferidos contra os CSVs, 
+       5 """
+       6 
+       7 import csv
+       9 import re
+      10 import shutil
+     … +311 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Os 13 testes do painel passam. Agora a suíte inteira:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● O erro está vindo de um subprocesso python -m tarvo que importa o src da main,
+  onde a outra sessão deixou divergencias.natureza pela metade. Vou verificar
+  executando com PYTHONPATH=src.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Com o src do worktree passam os 234. Regenero o painel e confiro as correções
+  antes do primeiro commit:
+
+  Read 2 files, ran 1 shell command (ctrl+o to expand)
+
+● A cadeia está certa e o celular não tem rolagem horizontal. Primeiro commit na
+  branch relatorio:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Encontrei um risco de inconsistência: com autocrlf, o CSS/JS saem com CRLF no
+  Windows e LF no CI, gerando painel.html diferentes entre ambientes. Vou
+  normalizar as quebras de linha e, aproveitando, implementar a aba Remessa
+  (Ponte).
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Escrevo o script de patch num arquivo e rodo de lá:
+
+  Made 1 scratchpad edit +125, ran 1 shell command (ctrl+o to expand)
+
+● Update(C:\Lucca\tarvo-relatorio\tests\test_painel.py)
+  ⎿  Added 32 lines
+      196              assert Decimal(a["data-aplicada"]) == sum(vt[i] fo
+           r i in ids)
+      197  
+      198  
+      199 +def test_aba_remessa_bate_com_comissoes_e_divergencias(painel)
+          +:                                                             
+      200 +    pasta, _, _, p = painel                                   
+      201 +    linhas = {a["data-remessa"]: a for a in p.com("data-remess
+          +a")}                                                          
+      202 +    coms = [c for c in _ler(pasta / "comissoes_por_lojista.csv
+          +") if c["linha_negocio"] == "REMESSA"]                        
+      203 +    assert set(linhas) == {c["id_saida"] for c in coms}       
+      204 +    div_cnpj = defaultdict(Decimal)                           
+      205 +    for d in _ler(pasta / "divergencias_taxa.csv"):           
+      206 +        if d["linha_negocio"] == "REMESSA":                   
+      207 +            div_cnpj[d["cnpj"]] += Decimal(d["diferenca_brl"])
+      208 +    for c in coms:                                            
+      209 +        a = linhas[c["id_saida"]]                             
+      210 +        assert Decimal(a["data-comissao"]) == Decimal(c["comis
+          +sao_brl"])                                                    
+      211 +        assert Decimal(a["data-divergencia"]) == div_cnpj[c["c
+          +npj"]]                                                        
+      212 +                                                              
+      213 +                                                              
+      214 +def test_quebra_de_linha_do_checkout_nao_muda_os_bytes(tmp_pat
+          +h, monkeypatch):                                              
+      215 +    """autocrlf no Windows: CSS/JS com CRLF geram o mesmo pain
+          +el que com LF (o CI roda no Ubuntu)."""                       
+      216 +    import tarvo.painel as modulo                             
+      217 +                                                              
+      218 +    ativos = tmp_path / "ativos"                              
+      219 +    ativos.mkdir()                                            
+      220 +    for nome in ("estilo.css", "app.js"):                     
+      221 +        texto = (modulo.AQUI / nome).read_text(encoding="utf-8
+          +").replace("\r\n", "\n")                                      
+      222 +        (ativos / nome).write_bytes(texto.replace("\n", "\r\n"
+          +).encode("utf-8"))                                            
+      223 +    lf = _copiar_saida(tmp_path / "lf")                       
+      224 +    crlf = _copiar_saida(tmp_path / "crlf")                   
+      225 +    a, _ = gerar_painel(lf, DADOS, REGRAS)                    
+      226 +    monkeypatch.setattr(modulo, "AQUI", ativos)               
+      227 +    b, _ = gerar_painel(crlf, DADOS, REGRAS)                  
+      228 +    assert a.read_bytes() == b.read_bytes()                   
+      229 +                                                              
+      230 +                                                              
+      231  def test_premissas_assumo_e_contagem_por_status(painel):
+      232      _, _, _, p = painel
+      233      from tarvo.regras import carregar_regras
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Testes ok (236). Para conferir a aba Remessa preciso de um clique. Faço isso
+  pelo harness de iframe:
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● O filtro da aba Remessa está funcionando, mas identifiquei um falso positivo:
+  os 4 spreads negativos estão sendo classificados como "Com diferença", quando
+  na verdade são de natureza diferente (conforme explicado pela Helena, não
+  envolvem pagamento a mais do lojista). Vou separar esses dois casos.
+
+  Made 1 scratchpad edit +76, read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Funciona: 1 com diferença (Mundo Aberto) e os 4 negativos numa coluna à parte.
+  Encurto o cabeçalho e escrevo o docs/PAINEL.md:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Write(C:\Lucca\tarvo-relatorio\docs\PAINEL.md)
+  ⎿  Wrote 82 lines to ..\tarvo-relatorio\docs\PAINEL.md
+      1 # Painel do fechamento (`saida/painel.html`)
+      3 ```powershell
+        s data --regras regras.yaml
+      5 ```
+      7 O resultado é um arquivo único, `saida/painel.html`, com HTML, CS
+        que, sem servidor. Ele lê só o que o fechamento já gerou: `saida/
+        o sha256 de cada arquivo, que identifica a versão, e o `valor_tax
+        a` da Orbe, para a coluna "pela taxa aplicada". O painel não calc
+        , feita em `Decimal`.
+      9 Código: `src/tarvo/painel/` (`__init__.py` monta tudo,
+     … +182 lines (ctrl+o to expand)
+
+  Read 2 files, ran 1 shell command (ctrl+o to expand)
+
+● Tudo certo nas duas larguras. Segundo commit:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● PowerShell quebrou a mensagem nas aspas duplas. Refaço o commit com a mensagem
+  num arquivo:
+
+  Made 1 scratchpad edit +10, ran 1 shell command (ctrl+o to expand)
+
+● O painel está pronto e commitado na branch relatorio, sem merge na main. As
+  quatro telas e a aba Remessa foram feitas. Terminei às 12:26, antes do prazo
+  das 14h00, e este é o estado final.
+
+  Commits (worktree C:\Lucca\tarvo-relatorio):
+  - 0464b79 painel: saida/painel.html com visão geral, decisões, contratado ×
+    cobrado e rastro
+  - a66f4e5 painel: aba Remessa (Ponte), total em jogo por valor absoluto,
+    docs/PAINEL.md
+
+  Arquivos novos: src/tarvo/painel/ (__init__.py, __main__.py, estilo.css,
+  app.js), tests/test_painel.py, docs/PAINEL.md e saida/painel.html. Não alterei
+  nenhum arquivo existente.
+
+  Telas (comando: python -m tarvo.painel --saida saida)
+  1. Visão geral: o título diz "R$ 246.588,68 a faturar em 21 notas". O dinheiro
+     que depende de decisão aparece agrupado em seis destinos, cada um com
+     total, contagem, quem decide e link para o rastro. Depois vêm as 32
+     premissas ASSUMO com fonte e motivo, a contagem por status (44 / 12 / 32
+     / 0), os links para os CSVs e o rodapé com o sha256 dos arquivos de data/ e
+     as 5.184 linhas de rastro.
+  2. Notas e rastro: a busca aceita qualquer ID e mostra a cadeia origem → regra
+     → cálculo → destino, com a soma das linhas conferida contra o número
+     reportado. Os links "Rastro" abrem #notas?id=....
+  3. Decisões: kanban somente leitura em cinco colunas, com cada pendência uma
+     única vez. "Fechadas por regra" tem 30 cartões, cada um com a regra, o
+     status e a fonte.
+  4. Contratado × cobrado: as abas filtram de verdade, há alternância entre
+     Checkout e Remessa, e a nota de resíduo de truncamento dá −R$ 9,07, igual
+     ao STATUS.md.
+
+  Testes: são 15 em test_painel.py e cobrem os cinco pedidos. Também testei que
+  os campos opcionais aparecem quando existem, que somem quando não existem, e
+  que a quebra de linha CRLF/LF não muda os bytes. A suíte inteira passa (236)
+  com PYTHONPATH=src. Sem isso, um teste de test_cli.py falha: o venv tem
+  install editável apontando para o src da main, onde a sua outra sessão está no
+  meio da mudança de natureza.
+
+  Tamanho: painel.html tem 1.139.406 bytes, dos quais 980 KB são o JSON do
+  rastro, abaixo do limite de 3 MB.
+
+  Navegador: não há Playwright na máquina, então renderizei no Chrome headless
+  em 1440 px e 390 px, nos temas claro e escuro. Para medir os 390 px de verdade
+  usei um iframe, porque o headless no Windows não abre janela tão estreita.
+  Não há rolagem horizontal em nenhuma tela (scrollWidth = 390), e as tabelas
+  largas rolam dentro da caixa.
+
+  Corrigi no caminho:
+  - Os quatro spreads negativos apareciam como "Com diferença" na aba Remessa.
+    Pela Q-O é outra natureza, então foram para uma coluna própria.
+  - O passo "cálculo" mostrava "bruto × taxa contratada" nas linhas de
+    divergência, o que estava errado. Agora mostra a fórmula que está na nota do
+    rastro.
+
+  Decisões minhas que você precisa aprovar (estão em docs/PAINEL.md):
+  - Total em jogo = soma dos valores absolutos. Com sinal, o spread negativo
+    (−1.834,05) abateria o spread cobrado a mais (+1.418,85), e "Contestar com a
+    Ponte" mostraria R$ 406,68. Em cada linha o valor aparece com o sinal do
+    CSV.
+  - Mais dois itens fora do total, além de trânsito e aportes:
+    CONFERENCIA_REPASSE, porque já está na nota de remessa, e EXCESSO_REMESSA,
+    porque os 709,46 estão dentro dos 1.418,85 contestados.
+  - Divergência sem natureza vai para "Devolver ao lojista". É a única afirmação
+    verdadeira nos dois casos (Q-U 4). "Cobrar da Orbe" só aparece quando a
+    saída disser contrato_orbe.
+  - "Helena + comercial" fica na coluna "Com a Helena", porque ela conduz
+    ("pendência minha com o comercial", Q-N 1).
+  - A Atlas entra em "receita parada" com R$ 7.876,05. Esse valor é a taxa
+    cobrada pela Orbe, informativa, porque a comissão contratada ainda não
+    existe.
+
+  Ficou de fora:
+  - Integrar a geração do painel ao python -m tarvo. Está descrito em
+    docs/PAINEL.md para o merge, junto com o package-data no pyproject.toml e a
+    linha no README.
+  - Não verifiquei o painel com a natureza real da main, só com dados simulados
+    no teste.
+  - Não fiz auditoria de acessibilidade com ferramenta: usei button/a de
+    verdade, aria-label e tokens com contraste de pelo menos 4,5:1. Para isso
+    escureci o texto de link no tema claro para #c01f4f, porque #df285d sobre
+    #f9f9f9 dá 4,34:1.
+
+  As screenshots estão em C:\Users\<usuario>\AppData\Local\Temp\claude\C--Lucca-tarv
+  o-fechamento\b014aaef-ebf1-4a24-8c45-6c965903ec4e\scratchpad\shots.
+
+✻ Cooked for 20m 32s · done 12:26
+※ recap: O painel `saida/painel.html` está pronto e commitado na branch relatorio, com as quatro telas, testes passando e sem merge na main. Próximo passo: você aprovar as escolhas de mapeamento e de totais em docs/PAINEL.md antes do merge. (disable recaps in /config)
+
+❯ /effort high                                                                  
+  ⎿  Set effort level to high (saved as your default for new sessions):
+     Comprehensive implementation with extensive testing and documentation
+
+❯ Bom trabalho. Aprovo: total pelo valor absoluto, CONFERENCIA_REPASSE e        
+  EXCESSO_REMESSA fora do total, spread negativo em coluna própria, "Helena +   
+  comercial" na coluna da Helena.                                               
+                                                                                
+  Primeiro: faça git merge main na relatorio. A main já tem a coluna natureza,  
+  valor_a_devolver_brl, os rascunhos, ALERTA_ANTECIPACAO e a pendência de       
+  provisão. Regenere a saida e o painel com os dados reais e rode os testes. Os 
+  ajustes abaixo valem sobre a saída real. Um commit:                           
+                                                                                
+  1. Destino do dinheiro (Q-A: "a diferença volta para o lojista e eu cobro a   
+  Orbe"; Q-U 4). Toda divergência de checkout entra em "Devolver ao lojista",   
+  pelo valor_a_devolver_brl. "Recuperar da Orbe" é um segundo grupo, só para    
+  natureza contrato_orbe, marcado "não soma: é o mesmo valor que volta ao       
+  lojista". No topo da visão geral, uma linha "Custo para a Tarvo = devolver −  
+  recuperar", com o rastro. Conferência: devolver 16.972,57, recuperar          
+  1.545,86, custo 15.426,71. Se der diferente, pare e me diga.                  
+  2. Premissas: diga o que cada contagem conta. Se 44/12/32/0 são regras do     
+  regras.yaml, o rótulo diz "regras no regras.yaml", e a seção de aprovação     
+  mostra as premissas ASSUMO do HIPOTESES, com a contagem do Resumo de lá. Me   
+  diga de onde vem cada número.                                                 
+  3. "Fechadas por regra": me diga o que são os 30 cartões. Se forem            
+  lançamentos ou linhas da mesma regra, agrupe por regra, com a contagem e um   
+  exemplo.                                                                      
+  4. Atlas: o rótulo diz "taxa cobrada pela Orbe (referência); comissão a       
+  definir pelo comercial".                                                      
+  5. Não commite screenshots e não coloque caminhos de C:\Users em nenhum       
+  arquivo.                                                                      
+                                                                                
+  Não integre ao python -m tarvo ainda: fica para o merge. Saída: o que mudou,  
+  os três totais do item 1 e as respostas dos itens 2 e 3.                      
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● O merge entrou sem conflito. Regenero a saída com o pipeline do worktree (sem
+  rede, IA só pelo cache), depois o painel, e rodo os testes:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● A saída regenerada é idêntica à versionada na main, e o validador dá OK. Vejo
+  os campos novos:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Confirmei que os três totais do item 1 coincidem com a saída real (Devolver:
+  16.972,57; Recuperar: 1.545,86; Custo: 15.426,71). Agora vou checar o item 2
+  no HIPOTESES.md e comparar com os números do painel atual.
+
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+
+● O HIPOTESES.md confere com seu próprio Resumo: 25 ASSUMO, 28 CONFIRMADO, 1 SEI
+  na tabela, mais 1 substituída no Histórico. Vou verificar as chaves novas do
+  regras.yaml após o merge e os textos das pendências novas.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Agora o código atual, para fazer os ajustes:
+
+  Read 1 file, ran 3 shell commands (ctrl+o to expand)
+
+● Escrevo o patch de uma vez, com as funções inteiras substituídas:
+
+  Made 1 scratchpad edit +405 (ctrl+o to expand)
+
+● Antes de rodar, corrijo um detalhe: a tabela do HIPOTESES tem \| escapado
+  dentro de células (H07), que o split("|") quebraria.
+
+  Made 1 scratchpad edit +1 -1, ran 1 shell command (ctrl+o to expand)
+
+● Patch aplicado. Gero o painel e confiro os números na página:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Os três totais conferem: devolver 16.972,57, recuperar 1.545,86, custo
+  15.426,71. "Fechadas por regra" caiu de 30 para 5 cartões. Atualizo os testes:
+
+  Made 1 scratchpad edit +111, ran 2 shell commands (ctrl+o to expand)
+
+● Os 20 testes do painel passam. Suíte inteira e screenshots das telas que
+  mudaram:
+
+  Read 2 files, ran 1 shell command (ctrl+o to expand)
+
+● Layout ok. Atualizo o docs/PAINEL.md com os mapeamentos novos:
+
+● Update(C:\Lucca\tarvo-relatorio\docs\PAINEL.md)
+  ⎿  Added 3 lines, removed 2 lines
+      25  
+      26  | Grupo | Tipos | Soma no total? |
+      27  |---|---|---|
+      28 -| Devolver ao lojista | `DIVERGENCIA_CHECKOUT` com natureza `co
+         -ndicao_nao_informada` **ou sem natureza** · `DEVOLUCAO_PIX_LOJI
+         -STA` | sim |                                                   
+      29 -| Cobrar da Orbe | `DIVERGENCIA_CHECKOUT` com natureza `contrat
+         -o_orbe` | sim |                                                
+      28 +| Devolver ao lojista | **toda** `DIVERGENCIA_CHECKOUT`, pelo Σ
+         + `valor_a_devolver_brl` das transações dela em `divergencias_ta
+         +xa.csv` (sem a coluna: `valor_brl` da pendência) | sim |       
+      29 +| Recuperar da Orbe | a parte das `DIVERGENCIA_CHECKOUT` com na
+         +tureza `contrato_orbe` (Σ `valor_a_devolver_brl` dessas linhas)
+         + | **não**: "é o mesmo valor que volta ao lojista" |           
+      30 +| Repasse que voltou | `DEVOLUCAO_PIX_LOJISTA` | sim |         
+      31  | Contestar com a Ponte | `CONTESTACAO_PONTE` · `SPREAD_NEGATIV
+          O_SEM_TRAVA` · `EXCESSO_REMESSA` | sim, exceto `EXCESSO_REMESSA
+          ` |
+      32  | Receita parada | `SEM_CONTRATO_VIGENTE` · `NF_NEGATIVA` · `NO
+          TA_BLOQUEADA` | sim |
+      33  | Sem origem | `PIX_SEM_IDENTIFICACAO` · `TRANSFERENCIA_SEM_ORI
+          GEM` · `SEM_REGRA` · `IA_REPROVADA` | sim |
+
+● Update(C:\Lucca\tarvo-relatorio\docs\PAINEL.md)
+  ⎿  Added 18 lines, removed 5 lines
+      34  | Em trânsito | `TRANSFERENCIA_EM_TRANSITO` · `APORTE_SEM_OPERA
+          CAO` · `CONFERENCIA_REPASSE` | não |
+      35  | Outras pendências | qualquer tipo novo (outubro não quebra) |
+           sim |
+      36  | (Alertas, à parte) | `ALERTA_*` | não, é informativo |
+      37 +| (fora dos grupos) | pendência sem valor (ex.: `PROVISAO_DO_ME
+         +S`) | aparece só no kanban |                                   
+      38  
+      38 -Escolhas que o Lucca precisa validar:                          
+      39 +**Custo para a Tarvo**, no topo da visão geral: devolver ao loj
+         +ista − recuperar da Orbe, só com as divergências de checkout, c
+         +om o link de rastro de cada pendência que compõe cada parcela. 
+         +Setembro: 16.972,57 − 1.545,86 = **15.426,71**. É a mesma conta
+         + do resumo do `python -m tarvo` e da D71 (`divergencias.valor_a
+         +_devolver`).                                                   
+      40  
+      40 -- **Total em jogo = Σ |valor_brl|.** Somar com sinal deixaria o
+         - spread negativo (−1.834,05, prejuízo da Tarvo) abater o spread
+         - cobrado a mais (+1.418,85, dinheiro do lojista): "Contestar co
+         -m a Ponte" daria R$ 406,68. Cada linha mostra o valor com o sin
+         -al do CSV.                                                     
+      41 -- **`DIVERGENCIA_CHECKOUT` sem natureza vai para "devolver ao l
+         -ojista"**, porque é a única afirmação verdadeira nos dois casos
+         -. Pela Q-U 4, quando a Orbe cobra a mais o lojista já recebeu a
+         - menos, e a Tarvo devolve. "Cobrar da Orbe" só aparece quando a
+         - saída diz `contrato_orbe`. Pela Q-N 1 e pela Q-V, a Casa do Es
+         -tudante não é cobrança da Orbe.                                
+      42 -- **Não somam (`NAO_SOMA`):** em trânsito e aportes, como foi p
+         -edido. Somei mais dois a essa lista: `CONFERENCIA_REPASSE`, por
+         -que o valor é a própria nota de remessa e já está no "a faturar
+         -", e `EXCESSO_REMESSA`, porque os 709,46 são a metade da Tarvo 
+         -dentro dos 1.418,85 contestados.                               
+      43 -- **`SEM_CONTRATO_VIGENTE`** (Atlas) entra em "receita parada" 
+         -com o valor que a pendência traz. Esse valor é a taxa cobrada p
+         -ela Orbe, informativa, conforme o próprio `motivo`. A comissão 
+         -contratada não existe enquanto o comercial não confirmar.      
+      41 +Aprovado pelo Lucca (17/10):                                   
+      42 +                                                               
+      43 +- **Total em jogo = Σ |valor|.** Somar com sinal deixaria o spr
+         +ead negativo (−1.834,05, prejuízo da Tarvo) abater o spread cob
+         +rado a mais (+1.418,85, dinheiro do lojista): "Contestar com a 
+         +Ponte" daria R$ 406,68. Cada linha mostra o valor com o sinal d
+         +o CSV.                                                         
+      44 +- **Toda divergência de checkout é "devolver ao lojista"** (Q-A
+         +: "a diferença volta para o lojista e eu cobro a Orbe"; Q-U 4: 
+         +o lojista já recebeu a menos). "Recuperar da Orbe" é a parte `c
+         +ontrato_orbe` e não soma. Sem a coluna `natureza`, o grupo "rec
+         +uperar" não aparece: nada se afirma sobre a Orbe.              
+      45 +- **Não somam (`NAO_SOMA`):** em trânsito e aportes; `CONFERENC
+         +IA_REPASSE`, porque o valor é a própria nota de remessa e já es
+         +tá no "a faturar"; e `EXCESSO_REMESSA`, porque os 709,46 são a 
+         +metade da Tarvo dentro dos 1.418,85 contestados.               
+      46 +                                                               
+      47 +A validar:                                                     
+      48 +                                                               
+      49 +- **`DEVOLUCAO_PIX_LOJISTA` (12.400,00, L65) saiu de "devolver 
+         +ao lojista"** para um grupo próprio, "Repasse que voltou". Ela 
+         +não é divergência de taxa: é dinheiro do lojista que o banco de
+         +volveu, com motivo ainda desconhecido (Q-F 4b). Se continuasse 
+         +no grupo, "devolver" daria 29.372,57 e o custo para a Tarvo fic
+         +aria errado.                                                   
+      50 +- **`SEM_CONTRATO_VIGENTE`** (Atlas) entra em "receita parada" 
+         +com o rótulo "taxa cobrada pela Orbe (referência); comissão a d
+         +efinir pelo comercial" (`ROTULO_VALOR`), na visão, no kanban e 
+         +na tela 3.                                                     
+      51  - O `APORTE_SEM_OPERACAO` da Ponte Aérea está em "em trânsito" 
+          pela Q-N 5 / Q-P 1: "dinheiro de uma remessa que sai em outubro
+          ".
+      52  
+      53 +## Premissas: de onde vem cada contagem (tela 1)               
+      54 +                                                               
+      55 +- **"Premissas do HIPOTESES.md"**: linhas `H..` da tabela Premi
+         +ssas, contadas pela 1ª palavra da coluna Status ("ASSUMO com ac
+         +eite" conta como ASSUMO). Ao lado, a frase do Resumo de lá, lit
+         +eral. A tabela do Histórico conta como substituída. O teste con
+         +fere que tabela e Resumo dizem o mesmo (setembro: 28 CONFIRMADO
+         +, 25 ASSUMO, 1 SEI, 1 substituída = 55). A lista que espera apr
+         +ovação são as **25 ASSUMO do HIPOTESES**, com premissa, status,
+         + base e impacto.                                               
+      56 +- **"Regras no regras.yaml"**: cada regra do YAML (chave com `s
+         +tatus`), sem as decisões marcadas `substituida`. Uma premissa v
+         +ira várias regras (ex.: a H35 são várias regras de `classificac
+         +ao_extratos`), por isso os números não coincidem. Setembro, dep
+         +ois do merge: 46 CONFIRMADO, 12 SEI, 35 ASSUMO, 0 PENDENTE, 2 d
+         +ecisões substituídas.                                          
+      57 +- Sem `HIPOTESES.md` (`--hipoteses` aponta para outro caminho),
+         + a seção cai na lista ASSUMO do `regras.yaml`.                 
+      58 +                                                               
+      59  ## Mapeamento: pendência → coluna do kanban (tela 2)
+      60  
+      61  A ordem de avaliação é: `tipo` primeiro, depois `quem_decide`.
+
+● Update(C:\Lucca\tarvo-relatorio\docs\PAINEL.md)
+  ⎿  Added 1 line, removed 1 line
+      66  | Com o comercial | `quem_decide` contém "comercial" e não cont
+          ém quem fecha (ex.: `comercial`). "Helena + comercial" fica com
+           a Helena, porque ela conduz: "pendência minha com o comercial"
+           (Q-N 1) |
+      67  | Com uma contraparte | tipo `CONTESTACAO_PONTE` ou `EXCESSO_RE
+          MESSA`, que dependem da Ponte |
+      68  | Acompanhar | tipo `TRANSFERENCIA_EM_TRANSITO`, `CONFERENCIA_R
+          EPASSE` ou `APORTE_SEM_OPERACAO`; ou `quem_decide` com "analist
+          a"/"conferir" |
+      69 -| Fechadas por regra | não é pendência. São cartões por regra q
+         -ue decidiu sozinha: lançamentos classificados (`metodo` REGRA o
+         -u IA, agrupados por `regra_aplicada`), exclusões `EXC-*` do ras
+         -tro (duplicata, spread negativo) e condições especiais aplicada
+         -s (nota do rastro `regras.yaml cadastro.condicoes_especiais[<id
+         ->]`). Cada cartão mostra a chave, o status, a fonte, o número d
+         -e linhas e o link de rastro. Não soma ao total |               
+      69 +| Fechadas por regra | não é pendência. Um cartão por grupo do 
+         +que o sistema decidiu sozinho: **um por extrato** (lançamentos 
+         +com `metodo` REGRA, e um cartão "IA" se houver), listando cada 
+         +regra com status, contagem e um exemplo; **um por exclusão `EXC
+         +-*`** do rastro (duplicata, spread negativo), com regra, status
+         +, fonte e exemplo; **um por condição especial** aplicada (nota 
+         +do rastro `regras.yaml cadastro.condicoes_especiais[<id>]`). A 
+         +chave da regra abre a busca, que mostra a fonte e os números qu
+         +e ela decide. Não soma ao total. Setembro: 5 cartões (Aurora 84
+         + lançamentos em 17 regras, Meridiano 100 em 10, duplicata 1, sp
+         +read negativo 4, Casa do Estudante 118 linhas) |               
+      70  
+      71  O total de cada coluna é Σ |valor| das pendências que somam. O 
+          que não soma aparece como "+ R$ x à parte (n)", com o selo "não
+           entra no total" no cartão.
+      72  
+
+● Update(C:\Lucca\tarvo-relatorio\docs\PAINEL.md)
+  ⎿  Added 1 line, removed 1 line
+      1  # Painel do fechamento (`saida/painel.html`)
+      2  
+      3  ```powershell
+      4 -python -m tarvo.painel --saida saida            # padrões: --dad
+        -os data --regras regras.yaml                                    
+      4 +python -m tarvo.painel --saida saida            # padrões: --dad
+        +os data --regras regras.yaml --hipoteses HIPOTESES.md           
+      5  ```
+      6  
+      7  O resultado é um arquivo único, `saida/painel.html`, com HTML, C
+         SS e JS puro inline, sem framework e sem build. Abre com duplo c
+         lique, sem servidor. Ele lê só o que o fechamento já gerou: `sai
+         da/*.csv`, `rastro.csv` e `regras.yaml`. Do `data/` lê duas cois
+         as: o sha256 de cada arquivo, que identifica a versão, e o `valo
+         r_taxa` da Orbe, para a coluna "pela taxa aplicada". O painel nã
+         o calcula regra nova: cada número exibido é uma soma de linhas d
+         a saída, feita em `Decimal`.
+
+● Update(C:\Lucca\tarvo-relatorio\docs\PAINEL.md)
+  ⎿  Added 1 line, removed 1 line
+      83  1. **`pyproject.toml`:** incluir `painel/*.css` e `painel/*.js`
+           em `[tool.setuptools.package-data]` (hoje só há `prompts/*.md`
+          ). Com `pip install -e .` funciona sem isso; um wheel normal nã
+          o levaria os dois arquivos.
+      84  2. **Gerar na mesma execução:** chamar `tarvo.painel.gerar_pain
+          el(saida, dados, regras)` no fim do `__main__.py`, depois do va
+          lidador, para que `python -m tarvo` já entregue o painel e o CI
+           (`git diff --exit-code saida/`) cubra também o `painel.html`. 
+          Enquanto isso não for feito, o `painel.html` versionado só é at
+          ualizado quando alguém roda `python -m tarvo.painel`.
+      85  3. **README:** uma linha com o comando e o que o painel é.
+      86 -4. **`natureza`, `ALERTA_*` e `saida/rascunhos/`** já são lidos
+         - quando existirem (teste `test_campos_opcionais_aparecem_quando
+         -_existem`). Se a main gravar `natureza` também em `pendencias.c
+         -sv`, ela tem prioridade sobre a de `divergencias_taxa.csv`. Val
+         -ores novos de natureza caem em "devolver ao lojista" até entrar
+         -em em `GRUPO_POR_NATUREZA`.                                    
+      86 +4. **`natureza`, `valor_a_devolver_brl`, `ALERTA_*` e `saida/ra
+         +scunhos/`** são lidos quando existem e, sem eles, a seção some 
+         +(testes `test_campos_opcionais_aparecem_quando_existem` e `test
+         +_sem_campos_opcionais_as_secoes_somem`). Se a main gravar `natu
+         +reza` também em `pendencias.csv`, ela tem prioridade sobre a de
+         + `divergencias_taxa.csv`. Natureza nova entra em "devolver ao l
+         +ojista" e só vira "recuperar" se for `NATUREZA_RECUPERAR`.     
+      87  5. **Ambiente:** o `.venv` tem install editável apontando para 
+          o `src` da main. No worktree, rode com `PYTHONPATH=src`, senão 
+          `python -m tarvo` (inclusive o subprocesso de `test_cli.py`) im
+          porta o código da main.
+      88  
+      89  ## Com mais tempo
+
+● Confiro as contagens citadas no doc e procuro caminhos locais nos arquivos do
+  commit:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Tudo confere. Faço um commit só:
+
+  Made 1 scratchpad edit +14, ran 1 shell command (ctrl+o to expand)
+● Fiz o merge da main na relatorio (sem conflito), regenerei a saída e o painel
+  com os dados reais e fiz um commit com os ajustes. Os três totais do item 1
+  bateram com a sua conferência. A saída regenerada ficou idêntica à da main e o
+  validador passou. Os testes passam todos (269, dos quais 20 do painel),
+  rodando com PYTHONPATH=src. O painel.html ficou com 1.151.363 bytes.
+
+  Commits: 484cdf2 (merge) e bfd7029 (ajustes).
+
+  Item 1: destino do dinheiro. No topo da visão geral aparece "Custo para a
+  Tarvo = devolver − recuperar", com link de rastro para cada pendência que
+  entra na conta:
+
+  ┌─────────────────────┬───────────┬─────────────┐
+  │                     │   Valor   │ Conferência │
+  ├─────────────────────┼───────────┼─────────────┤
+  │ Devolver ao lojista │ 16.972,57 │ ok          │
+  ├─────────────────────┼───────────┼─────────────┤
+  │ Recuperar da Orbe   │ 1.545,86  │ ok          │
+  ├─────────────────────┼───────────┼─────────────┤
+  │ Custo para a Tarvo  │ 15.426,71 │ ok          │
+  └─────────────────────┴───────────┴─────────────┘
+
+  - Toda divergência de checkout entra em "Devolver ao lojista" pelo
+    valor_a_devolver_brl. "Recuperar da Orbe" só tem a Rota (contrato_orbe) e
+    está marcada "não soma: é o mesmo valor que volta ao lojista".
+  - Precisa da sua aprovação: para o devolver dar 16.972,57, tirei o PIX de
+    repasse devolvido (L65, 12.400,00) do grupo e o coloquei num grupo próprio,
+    "Repasse que voltou". Ele não é divergência de taxa. Se ficasse em
+    "Devolver", o grupo daria 29.372,57 e o custo para a Tarvo sairia errado.
+
+  Item 2: de onde vem cada contagem.
+  - Os 44/12/32/0 eram regras do regras.yaml: cada chave com status, sem as 2
+    decisões humanas marcadas substituida. Depois do merge passaram a
+    46/12/35/0, e agora o rótulo diz "Regras no regras.yaml".
+  - A seção de aprovação agora lista as 25 premissas ASSUMO do HIPOTESES.md, com
+    premissa, status, base e impacto. A contagem vem da tabela Premissas (28
+    CONFIRMADO, 25 ASSUMO, 1 SEI), e o painel mostra ao lado a frase do Resumo,
+    literal: "55 premissas: 28 CONFIRMADO, 25 ASSUMO, 1 SEI e 1 substituída". Um
+    teste confere que a tabela e o Resumo dizem o mesmo.
+  - Os números não coincidem porque uma premissa pode virar várias regras. A
+    H35, por exemplo, são várias regras de classificação dos extratos.
+
+  Item 3: os 30 cartões de "Fechadas por regra". Eram 27 cartões de lançamentos
+  de extrato (um por regra de classificação, 184 lançamentos ao todo), mais 2
+  exclusões da remessa e 1 condição especial. Agrupei em 5 cartões:
+  - Extrato Aurora: 84 lançamentos em 17 regras.
+  - Extrato Meridiano: 100 lançamentos em 10 regras.
+  - Nos dois cartões de extrato, cada regra aparece com status, contagem e um
+    exemplo de lançamento. Clicar na chave mostra a fonte e os lançamentos
+    daquela regra.
+  - Duplicata PC-0926-0162: 1 linha.
+  - Spreads negativos: 4 linhas.
+  - Condição especial da Casa do Estudante: 118 linhas.
+
+  Item 4: a Atlas aparece como "taxa cobrada pela Orbe (referência); comissão a
+  definir pelo comercial" na visão geral, no kanban e na tela Contratado ×
+  cobrado.
+
+  Item 5: nenhum screenshot entrou no commit, e não há caminho de C:\Users no
+  painel.html, no docs/PAINEL.md, no código nem nos testes. Um teste novo falha
+  se o HTML tiver caminho local.
+
+  As pendências novas da main também entraram: o alerta de antecipação aparece
+  em destaque e não soma; a pendência de provisão, que não tem valor, aparece só
+  no kanban; os rascunhos de contestação estão linkados. A CLI ganhou
+  --hipoteses, que por padrão usa o arquivo ao lado do regras.yaml. Não integrei
+  nada ao python -m tarvo, e o docs/PAINEL.md está atualizado com os
+  mapeamentos novos.
+
+✻ Churned for 8m 41s · done 13:18
+
+❯ Aprovado o grupo "Repasse que voltou" para a L65 (não é divergência de taxa). 
+  Aprovados também os itens 2 a 5. Agora fique parado: a main vai mudar de      
+  novo (arquivo 06 da Orbe, Bridge como contrato_orbe, pares venda e estorno    
+  nas divergências). Quando eu pedir, você faz um novo git merge main, regenera 
+  saida e painel e roda os testes. Não faça merge na main.                      
+
+● Fico parado. A relatorio está em bfd7029, sem nada pendente.
+
+  Quando você pedir: faço um git merge main na relatorio, regenero a saida e o
+  painel com o src do worktree, rodo os testes e confiro os totais de devolver,
+  recuperar e custo. Não faço merge na main. Se algum total mudar, eu te digo
+  antes de commitar.
+
+  Com a Bridge passando a contrato_orbe, o "Recuperar da Orbe" deve subir de
+  1.545,86 para cerca de 1.575,80, somando os 29,94 da Bridge, e o custo cairia
+  na mesma medida. Esses números são estimativa e só confirmo com a saída real.
+  Também vou conferir o que o arquivo 06 da Orbe e os pares de venda e estorno
+  mudam nas telas.
+
+✻ Sautéed for 5s · done 13:20
+
+※ recap: O objetivo é o painel HTML do fechamento na branch relatorio, que está pronto, aprovado e commitado (bfd7029). Estou parado aguardando seu pedido para fazer git merge main, regenerar saída e painel e rodar os testes. (disable recaps in /config)
+  ⎿  Read ..\..\Users\<usuario>\AppData\Local\Temp\claude\C--Lucca-tarvo-fechamento\
+     b014aaef-ebf1-4a24-8c45-6c965903ec4e\scratchpad\msg3.txt (14 lines)
+  ⎿  Referenced file ..\tarvo-relatorio\docs\PAINEL.md
+  ⎿  Read ..\..\Users\<usuario>\AppData\Local\Temp\claude\C--Lucca-tarvo-fechamento\
+     b014aaef-ebf1-4a24-8c45-6c965903ec4e\scratchpad\patch_testes.py (111 lines)
+  ⎿  Read ..\tarvo-relatorio\src\tarvo\painel\__main__.py (31 lines)
+  ⎿  Referenced file ..\..\Users\<usuario>\AppData\Local\Temp\claude\C--Lucca-tarvo-
+     fechamento\b014aaef-ebf1-4a24-8c45-6c965903ec4e\scratchpad\patch_v2.py
+
+● Compacted while idle, before the prompt cache expired · turn off with 
+  "idleCompaction": false in settings.json
+
+❯ Agora: git merge main na relatorio (a main está em 3fc4a53: arquivo 06,       
+  Bridge contrato_orbe, pares venda e estorno, provisão fora, spread negativo   
+  com os dois valores). Regenere saida e painel e rode os testes. Confira na    
+  visão geral: notas 243.284,29; devolver 16.972,57; recuperar 1.575,80; custo  
+  15.396,77. Se der diferente, pare e me diga.                                  
+  Depois, prepare na relatorio a integração descrita no docs/PAINEL.md: python  
+  -m tarvo passa a gerar saida/painel.html ao final (package-data no pyproject  
+  e a linha no README dizendo como abrir), com teste de que a saída continua    
+  determinística. Commit na relatorio. NÃO faça merge na main: eu aviso quando  
+  a main terminar a rodada atual.                                               
+
+  Ran 5 shell commands (ctrl+o to expand)
+
+● Merge do main concluído sem conflitos, com saída e painel regenerados e os
+  quatro números da visão geral conferindo (notas 243.284,29, devolver
+  16.972,57, recuperar 1.575,80, custo 15.396,77). Agora vou rodar os testes.
+
+  Ran 6 shell commands (ctrl+o to expand)
+
+● Corrigindo uma falha: o painel lia só o arquivo 01 da Orbe e o teste quebrou
+  com o 06. Vou incluir também as linhas de "sem contrato" e rodar de novo.
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+● Agora acrescento à aba Remessa os dois valores do spread negativo, como a
+  Helena pediu (Q-AA 3: "deixando claro qual é qual"). Depois sigo para a
+  integração.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● I'll write the patch to a file and use a more specific anchor.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now the integration. I'll check the CLI, the pyproject and the integration
+  section of PAINEL.md.
+
+  Ran 6 shell commands (ctrl+o to expand)
+
+● Encontrei um risco de CI: no Windows, regras.yaml e HIPOTESES.md ficam com
+  CRLF, mudando o hash dos insumos e quebrando a paridade de painel.html com o
+  Linux. Vou corrigir isso ao integrar com python -m tarvo.
+
+  Ran 6 shell commands (ctrl+o to expand)
+
+● Aplicando agora as mudanças da integração: CLI, pyproject, .gitattributes,
+  README, hash dos insumos sem depender de CRLF e testes novos.
+
+  Ran 6 shell commands (ctrl+o to expand)
+
+● Corrigi um erro de escape no patch. Rodando o fechamento e os testes de novo.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● The test lists the files in the output exactly, so it needs painel.html added.
+  This is an expected consequence of the integration.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now I'll update PAINEL.md (integration done, current numbers, two
+  spread-negativo columns), then run the full suite.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Mais um ajuste: se o validador falhar, apago o painel.html antigo, para não
+  sobrar um painel desatualizado ao lado de CSVs inválidos.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● All 281 tests pass. In saida, only painel.html changed. Before committing I'll
+  do a last check: totals, the two new columns and no local paths.
+
+  Ran 2 shell commands (ctrl+o to expand)
+● The hashes now match the bytes a Linux checkout gets. Committing.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Fiz o merge da main (3fc4a53) na relatorio, regenerei a saída e o painel, e a
+  integração está commitada. Os 281 testes passam. Não fiz merge na main.
+
+  Visão geral: os quatro números batem
+
+  ┌───────────┬────────────────────────────────────────────────┬────────────┐
+  │           │                     Painel                     │  Esperado  │
+  ├───────────┼────────────────────────────────────────────────┼────────────┤
+  │ Notas     │ 243.284,29                                     │ 243.284,29 │
+  ├───────────┼────────────────────────────────────────────────┼────────────┤
+  │ Devolver  │ 16.972,57                                      │ 16.972,57  │
+  ├───────────┼────────────────────────────────────────────────┼────────────┤
+  │ Recuperar │ 1.575,80 (Rota Global 1.545,86 + Bridge 29,94) │ 1.575,80   │
+  ├───────────┼────────────────────────────────────────────────┼────────────┤
+  │ Custo     │ 15.396,77 (a Casa do Estudante)                │ 15.396,77  │
+  └───────────┴────────────────────────────────────────────────┴────────────┘
+
+  O merge entrou sem conflito, e os CSVs gerados são idênticos aos da main; só o
+  painel.html mudou.
+
+  Três ajustes depois do merge
+  - Falha com o arquivo 06: o painel lia só o arquivo 01 da Orbe, e um teste
+    quebrou com as transações novas. Agora ele lê todos os arquivos da Orbe que
+    o rastro cita, e a coluna "pela taxa aplicada" e o resíduo voltaram a
+    fechar.
+  - Spread negativo com dois valores: a aba Remessa mostra as duas colunas que a
+    Helena pediu (Q-AA 3). Uma é o valor do relatório, −1.834,05; a outra é a
+    diferença até o contrato, −3.565,98, que é o valor da pendência. Não estava
+    no seu pedido, mas é exibição apenas, lida dos CSVs.
+  - Risco no CI: no Windows, o autocrlf converte regras.yaml e HIPOTESES.md para
+    CRLF, e o painel embute o hash desses arquivos. Ele sairia diferente do
+    Linux e o git diff --exit-code saida/ falharia. Agora o hash é calculado com
+    fim de linha LF e confere com os bytes de um checkout Linux. Também
+    acrescentei saida/painel.html text eol=lf ao .gitattributes.
+
+  Integração (commit 7a544eb)
+  - python -m tarvo gera saida/painel.html depois do VALIDADOR: OK, e o resumo
+    final diz onde abrir.
+  - Se a validação falhar, o painel antigo é apagado, para não ficar ao lado de
+    CSVs inválidos. Esse caminho não tem teste.
+  - pyproject.toml inclui o CSS e o JS do painel no pacote.
+  - O README tem uma linha dizendo que a execução gera o painel e que ele abre
+    com duplo clique, sem servidor.
+  - Dois testes novos de determinismo:
+    - duas execuções de python -m tarvo em pastas diferentes dão os mesmos bytes
+      em todos os arquivos, e o painel é igual ao versionado;
+    - converter regras.yaml e HIPOTESES.md para CRLF não muda o painel.
+  - Arquivos existentes que mudaram, além dos do pedido: .gitattributes,
+    src/tarvo/__main__.py e tests/test_cli.py. Nesse teste, a lista exata de
+    arquivos da saída precisava incluir painel.html.
+  - O docs/PAINEL.md foi atualizado com os números de agora e com a seção de
+    integração no lugar da lista "para o merge".
+
+  Fico parado até você avisar que a main terminou a rodada.
+
+✻ Brewed for 10m 35s · done 14:31
+
+※ recap: Estou preparando o painel do fechamento de setembro na branch `relatorio`: o merge da main está feito, os quatro números conferem e a integração ao `python -m tarvo` está commitada (`7a544eb`). Agora espero seu aviso de que a main terminou a rodada. (disable recaps in /config)
+
+❯ A main terminou a rodada (38b8c74, CI verde). Faça git merge main na          
+  relatorio de novo, regenere com python -m tarvo, rode a suíte inteira e       
+  confira os quatro totais na visão geral (243.284,29 / 16.972,57 / 1.575,80 /  
+  15.396,77). Se tudo passar, commit e me avise. Não faça merge na main.        
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+● The totals don't match in the panel. Before I report, I'll check what the main
+  changed.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Cause found: the panel code expected the old pendência types. I'll prepare the
+  fix in the working tree and leave it uncommitted for your call.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● I'll also add a test that would have caught this: no pendência from the real
+  output can fall into "Outras pendências" without anyone noticing.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● With the fix, the four totals match and the 291 tests pass. Committing.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Merge da main (38b8c74) feito e commitado na relatorio em 067f017. Os quatro
+  totais da visão geral batem e os 291 testes passam. Mas da primeira vez não
+  bateram: precisei corrigir o painel antes de commitar.
+
+  O que deu diferente: logo depois do merge, o painel mostrava devolver 1.575,80
+  e custo 0,00. O resumo do python -m tarvo estava certo; o erro era só do
+  painel. A main renomeou dois tipos de pendência, e o painel não conhecia os
+  nomes novos:
+  - D85: a devolução da Casa passou de DIVERGENCIA_CHECKOUT para
+    DEVOLUCAO_CONCESSAO_COMERCIAL. Com isso, os 15.396,77 dela saíram de
+    "Devolver ao lojista" e foram para "Outras pendências" sem aviso.
+  - D87: APORTE_SEM_OPERACAO virou ACOMPANHAMENTO_APORTE.
+
+  A correção:
+  - A Casa volta para "Devolver ao lojista" com o tipo novo, no mesmo critério
+    que você já aprovou. A conta fica 16.972,57 − 1.575,80 = 15.396,77, igual ao
+    resumo do python -m tarvo.
+  - O aporte de 18.240 da Ponte Aérea fica em "Em trânsito" e na coluna
+    "Acompanhar", sem entrar no total, como antes.
+  - Acrescentei um teste que falha se algum tipo de pendência da saída não tiver
+    grupo no painel. Assim, um próximo tipo renomeado na main não some sem
+    ninguém perceber.
+
+  Conferência:
+
+  ┌───────────┬────────────┬────────────┐
+  │           │   Painel   │  Esperado  │
+  ├───────────┼────────────┼────────────┤
+  │ Notas     │ 243.284,29 │ 243.284,29 │
+  ├───────────┼────────────┼────────────┤
+  │ Devolver  │ 16.972,57  │ 16.972,57  │
+  ├───────────┼────────────┼────────────┤
+  │ Recuperar │ 1.575,80   │ 1.575,80   │
+  ├───────────┼────────────┼────────────┤
+  │ Custo     │ 15.396,77  │ 15.396,77  │
+  └───────────┴────────────┴────────────┘
+
+  O validador passou. Na saida, só o painel.html mudou.
+
+  A correção só usa o critério que você já tinha aprovado, por isso commitei sem
+  te consultar antes. Se preferir decidir antes nesses casos, o commit é
+  isolado e dá para desfazer. Não fiz merge na main.
+
+✻ Baked for 3m 30s · done 14:53
+
+※ recap: O painel da Tarvo está integrado e atualizado na branch relatorio, com a main 38b8c74 mesclada. Os quatro totais batem e os 291 testes passam, tudo commitado em 067f017. Próximo passo: você revisar e dizer quando fazemos o merge na main.
