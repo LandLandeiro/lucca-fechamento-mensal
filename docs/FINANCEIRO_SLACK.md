@@ -479,7 +479,7 @@ Copiadas do `#duvidas-hackathon-ai` sem edição (lidas no Slack às 13h30, perg
 
 ---
 
-## Q-AI · David Deodato · 13:19 · resposta 13:34 (Casa: data-base da antecipação)
+## Q-AI · David · 13:19 · resposta 13:34 (Casa: data-base da antecipação)
 
 **Pergunta:**
 > *[Financeiro]* 

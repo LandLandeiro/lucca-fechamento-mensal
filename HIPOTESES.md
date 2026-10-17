@@ -120,7 +120,7 @@ Fonte única dos textos: `docs/FINANCEIRO_SLACK.md` (copiado do Slack sem ediç�
 | P36 | Arquivo faltando, layout, provisório | Q-AF | Turma do Barulho · 12:27 | Helena · 12:31 | respondida | aviso de layout no Aurora (D84); 06 opcional e arquivo desconhecido (D75) |
 | P37 | Alerta pelo pico | Q-AG | Fox AI · 12:36 | Helena · 12:50 | respondida | H53 (D73, D81) |
 | P38 | Valor da devolução | Q-AH | Lucca · 12:44 | Helena · 12:50 | respondida | `divergencias.valor_a_devolver` CONFIRMADO (D79) |
-| P39 | Casa: data-base da antecipação | Q-AI | David Deodato · 13:19 | Helena · 13:34 | respondida | `checkout.data_base_antecipacao` CONFIRMADO (D92): as 4 antecipações da Casa ficam isentas pela data delas; caso-ouro AN88445172 |
+| P39 | Casa: data-base da antecipação | Q-AI | David · 13:19 | Helena · 13:34 | respondida | `checkout.data_base_antecipacao` CONFIRMADO (D92): as 4 antecipações da Casa ficam isentas pela data delas; caso-ouro AN88445172 |
 | P40 | O 06 vem todo mês? Id repetido? | Q-AJ | Lucca · 13:19 | Helena · 13:34 | respondida | `orbe.mes_do_ajuste_tardio` CONFIRMADO, opção `--fechamento-anterior-aprovado` (H56, D91); id repetido segue ASSUMO, com aceite |
 | P41 | Bandeira diferente no estorno | Q-AK | Turma do Barulho · 13:35 | Helena · 14:08 | respondida | `checkout.bandeira_no_estorno` CONFIRMADO (D93): os 7 estornos do 06 seguem pela referência, sem pendência nem aviso; caso-ouro TX88447011 |
 | P42 | Id repetido; ajuste sem a original | Q-AL | Desbravadores · 13:36 | Helena · 14:10 | respondida | `orbe.ajuste_sem_original` CONFIRMADO (D94): entra pelo valor que veio + pendência AJUSTE_SEM_ORIGINAL; testado no outubro sintético (setembro não tem) |
