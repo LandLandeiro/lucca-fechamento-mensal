@@ -79,13 +79,13 @@ ponte:
     valor: 0.50
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 20:48 (e 03_email corpo: 'participação de 50% (cinquenta por cento) do spread realizado')"
+    fonte: "Slack Helena 20:48 (e 03_email corpo: 'participação de 50% (cinquenta por cento) do spread realizado'); fala (Q-E a): 'A nossa comissão é 50% do \"Spread R$\" realizado'"
     pergunta_ref: null
   base_participacao:
     valor: SPREAD_REALIZADO   # coluna 'Spread R$', não 'Spread Estimado R$ (D-1)'
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 20:48 (e 03_email corpo: 'do spread realizado')"
+    fonte: "Slack Helena 20:48 (e 03_email corpo: 'do spread realizado'); fala (Q-E a): 'A nossa comissão é 50% do \"Spread R$\" realizado'"
     pergunta_ref: null
   tomador_nf_remessa:
     valor:
@@ -96,7 +96,7 @@ ponte:
       discriminacao: "serviço + competência"
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 20:47"
+    fonte: "Slack Helena 20:47; fala (Q-D c): 'uma nota só, com a Ponte Câmbio como tomadora'"
     pergunta_ref: P03
   status_ressalva_segue_liquidacao:
     valor: true
@@ -166,13 +166,13 @@ checkout:
     valor: "bruto × taxa contratada, por transação"
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 20:05"
+    fonte: "Slack Helena 20:05; fala (Q-A): 'A gente fatura pela taxa contratada: valor bruto × taxa da planilha, linha por linha'"
     pergunta_ref: P03
   arredondamento_comissao_contratada:   # substitui o ASSUMO de truncar (D09), corrigido pelo cliente (D27)
     valor: ROUND_HALF_UP_POR_LINHA      # arredondamento comum no centavo (meio para longe do zero), linha por linha, depois soma
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 21:13 (Q-H a, b): 'A gente não trunca. Arredondamento comum para o centavo. Meio centavo vai para cima ... -0,005 vira -0,01. Linha por linha, e depois soma.'"
+    fonte: "Slack Helena 21:13 (Q-H a, b): 'A gente não trunca. (a) Arredondamento comum para o centavo. Meio centavo vai para cima ... -0,005 vira -0,01. (b) Linha por linha, e depois soma.'"
     pergunta_ref: P12
   composicao_comissao:
     valor:
@@ -187,12 +187,13 @@ checkout:
       própria linha de ANTECIPACAO, truncado (44 linhas: 27 só truncamento, 17 ambos, 0 só arredondamento);
       as 6 reversões espelham bruto e taxa da antecipação referenciada. A linha de antecipação não tem
       vínculo com as vendas antecipadas: a base disponível é o valor_bruto da linha
+      fala (Q-D a): 'A antecipação entra na mesma nota'
     pergunta_ref: null
   estorno:
     valor: "abate a comissão no mês do estorno, pela taxa contratada vigente na data da venda original; agosto não reabre"
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 20:06"
+    fonte: "Slack Helena 20:06; fala (Q-B): 'Estorno devolve a taxa ao lojista e abate a comissão do mês' / 'Venda de agosto estornada em setembro entra em setembro'"
     pergunta_ref: P10
   alerta_antecipacao:       # D66; rever se a pergunta do Theo (11:16) sobre o critério for respondida
     valor:
@@ -225,7 +226,7 @@ notas:
       negativo: "não emite; vira pendência para a Helena"
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 20:47"
+    fonte: "Slack Helena 20:47; fala (Q-D a): 'uma nota por lojista por mês'"
     pergunta_ref: P03
   nota_com_transacao_pendente:   # D57
     valor: >-
@@ -254,7 +255,7 @@ notas:
       fechamento não conta (spreads negativos, duplicata), em contestação; não prevê desconto nem diferença
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 22:33 (Q-K): 'Não sei ainda como a Ponte vai pagar, porque a contestação nem foi aberta. Não conte que ela vai descontar nada do repasse. Conferir o TED quando ele cair é uma pendência boa. Fica comigo.' Texto da pendência: Lucca (~22h40)"
+    fonte: "Slack Helena 22:33 (Q-K): 'Não sei ainda como a Ponte vai pagar, porque a contestação nem foi aberta. Não conte que ela vai descontar nada do repasse. • Conferir o TED quando ele cair é uma pendência boa. Fica comigo.' Texto da pendência: Lucca (~22h40)"
     pergunta_ref: P15
 
 divergencias:
@@ -345,7 +346,7 @@ remessa:
     valor: "fora da comissão e da nota; vai para divergencias_taxa"
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 20:48 (casos: anexo Operações R96, R141, R205, R228)"
+    fonte: "Slack Helena 20:48 (casos: anexo Operações R96, R141, R205, R228); fala (Q-E b): 'Spread negativo: não aceito'"
     pergunta_ref: P01
   cnpj_fora_da_planilha:    # D69 (Q-P 2)
     valor: "operação da Ponte com CNPJ válido fora da planilha: calcula a metade do Spread R$ (entra na comissão e na nota da Ponte) e abre pendência CADASTRO_REMESSA para o comercial"
@@ -379,31 +380,31 @@ remessa:
     valor: {spread_pct: 0.015, base: "PTAX"}
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 20:48 (casos: 02_taxas R29 J='padrão'; R9 e R16 vazios; nota R32)"
+    fonte: "Slack Helena 20:48 (casos: 02_taxas R29 J='padrão'; R9 e R16 vazios; nota R32); fala (Q-E a): 'Célula em branco ou \"padrão\" é 1,5%'"
     pergunta_ref: P06
   divergencia_spread:
     valor: "spread aplicado ≠ contratado = divergência no valor cheio"
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 20:58"
+    fonte: "Slack Helena 20:58; fala (Q-G): 'É o valor cheio'"
     pergunta_ref: null
   status_aprovado_com_ressalva:
     valor: "não muda nada (tratada como APROVADO)"
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 20:48"
+    fonte: "Slack Helena 20:48; fala (Q-E b): 'o status de compliance não muda nada para a gente'"
     pergunta_ref: null
   liquidacao_no_mes_seguinte:
     valor: "competência pela data de contratação"
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 20:48 (caso: 6 operações contratadas em 30/09, liquidadas em 01/10)"
+    fonte: "Slack Helena 20:48 (caso: 6 operações contratadas em 30/09, liquidadas em 01/10); fala (Q-E b): 'Data: vale a data de contratação'"
     pergunta_ref: null
   operacao_duplicada:
     valor: "número da operação é único: conta uma vez"
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 20:48 (caso: anexo R76/R77 PC-0926-0162; 05b MRD2026090550 pagou uma vez)"
+    fonte: "Slack Helena 20:48 (caso: anexo R76/R77 PC-0926-0162; 05b MRD2026090550 pagou uma vez); fala (Q-E b, Q-L): 'o número da operação é único' / 'A duplicada vocês contam uma vez'"
     pergunta_ref: null
   arredondamento_participacao:  # substitui o HALF_EVEN da D19 (D27)
     valor: ROUND_HALF_UP_POR_LINHA   # 50% × Spread R$ arredondado por operação (meio para longe do zero), depois soma
@@ -428,7 +429,7 @@ remessa:
     valor: ROUND_HALF_UP_POR_LINHA
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 21:13 (Q-H a, d): mesmo arredondamento, por operação"
+    fonte: "Slack Helena 21:13 (Q-H a, d): mesmo arredondamento, por operação; fala (Q-H d): 'Por operação, com o mesmo arredondamento'"
     pergunta_ref: P12
   divergencia_spread_negativo:  # D21
     valor:
@@ -481,7 +482,7 @@ cadastro:
       "1038867654": "Kiwi Experience"
     status: CONFIRMADO
     aprovado_por: "comercial (registro: Helena)"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 20:24 (1043300981 e 1043396662 são empresas diferentes)"
+    fonte: "Slack Helena 20:24 (1043300981 e 1043396662 são empresas diferentes); fala (Q-C): 'o EC dessas três está faltando na planilha'"
     pergunta_ref: P05
   lojista_sem_contrato_vigente:
     valor: {"1076801732": "NAO_FATURAR_PENDENCIA"}   # Atlas Idiomas
@@ -522,7 +523,7 @@ cadastro:
     valor: "contrato não mudou: os +0,50 p.p. desde 12/09 são divergência"
     status: CONFIRMADO
     aprovado_por: "comercial (registro: Helena)"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 20:49 (caso: 01_orbe L1056 TX88428676 4,09% × 3,59%; 02_taxas R10)"
+    fonte: "Slack Helena 20:49 (caso: 01_orbe L1056 TX88428676 4,09% × 3,59%; 02_taxas R10); fala (Q-F 1): 'Não mudou nada no contrato da Rota este ano'"
     pergunta_ref: P08
 
 contabil:
@@ -538,7 +539,7 @@ contabil:
       de 04/09 é o spread de agosto, já registrado como comissão a receber
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 20:49"
+    fonte: "Slack Helena 20:49; fala (Q-F 3): 'A folha, o ISS, o INSS, o FGTS e os DARFs são de agosto e já estavam provisionados'"
     pergunta_ref: P02
   despesas_diretas:         # Q-I b; usado na E6b
     valor:
@@ -614,81 +615,81 @@ classificacao_extratos:
   aurora:
     orbe_recebivel:
       valor: {padrao: "^TED RECEBIDA .*ORBE ADQUIRENCIA", sinal: "+", conta: "1.1.03.001"}
-      status: CONFIRMADO
-      aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-      fonte: "Slack Helena 22:34 (Q-M): 'A Orbe deposita tudo no Aurora. ... Os créditos da Orbe vocês classificam, e o resto fica para quando tivermos a agenda de recebíveis.' Conta: plano 1.1.03.001 'Recebíveis de adquirente - Orbe'; caso: 05a L9. Conciliação por parcela fora de escopo"
+      status: ASSUMO   # era CONFIRMADO; D90 (auditoria independente, D40)
+      autor: Lucca
+      fonte: "Motivo do ASSUMO: 'Conta por conta eu não valido' (Q-Y); conta escolhida pelo critério do plano de contas que ela deu. Slack Helena 22:34 (Q-M): 'A Orbe deposita tudo no Aurora. ... Os créditos da Orbe vocês classificam, e o resto fica para quando tivermos a agenda de recebíveis.' Conta: plano 1.1.03.001 'Recebíveis de adquirente - Orbe'; caso: 05a L9. Conciliação por parcela fora de escopo"
       pergunta_ref: P17
     folha_mes_anterior:
       valor: {padrao: "^PAGTO SALARIOS - FOLHA (?P<mes>\\d{2}/\\d{4})", sinal: "-", conta: "2.1.04.001", mes_anterior: true}
       status: CONFIRMADO
       aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a): folha de agosto já provisionada → baixa; caso: 05a L15"
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a): folha de agosto já provisionada → baixa; caso: 05a L15; fala (Q-F 3): 'A folha, o ISS, o INSS, o FGTS e os DARFs são de agosto e já estavam provisionados'"
       pergunta_ref: P02
     iss:
       valor: {padrao: "^PAGTO ISS", sinal: "-", conta: "2.1.03.003"}
       status: CONFIRMADO
       aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a): tributos de agosto provisionados → baixa; caso: 05a L42"
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a): tributos de agosto provisionados → baixa; caso: 05a L42; fala (Q-F 3): 'A folha, o ISS, o INSS, o FGTS e os DARFs são de agosto e já estavam provisionados'"
       pergunta_ref: P02
     inss:
       valor: {padrao: "^GPS INSS", sinal: "-", conta: "2.1.04.002"}
       status: CONFIRMADO
       aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a); caso: 05a L54"
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a); caso: 05a L54; fala (Q-F 3): 'A folha, o ISS, o INSS, o FGTS e os DARFs são de agosto e já estavam provisionados'"
       pergunta_ref: P02
     fgts:
       valor: {padrao: "^GRF FGTS", sinal: "-", conta: "2.1.04.003"}
       status: CONFIRMADO
       aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a); caso: 05a L55"
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a); caso: 05a L55; fala (Q-F 3): 'A folha, o ISS, o INSS, o FGTS e os DARFs são de agosto e já estavam provisionados'"
       pergunta_ref: P02
     irrf:
       valor: {padrao: "DARF 0561", sinal: "-", conta: "2.1.03.004"}
       status: CONFIRMADO
       aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a); caso: 05a L57"
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a); caso: 05a L57; fala (Q-F 3): 'A folha, o ISS, o INSS, o FGTS e os DARFs são de agosto e já estavam provisionados'; fato: 05a L57 'DEBITO DARF 0561 IRRF'"
       pergunta_ref: P02
     pis:
       valor: {padrao: "DARF 8109", sinal: "-", conta: "2.1.03.001"}
       status: CONFIRMADO
       aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a); caso: 05a L86"
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a); caso: 05a L86; fala (Q-F 3): 'A folha, o ISS, o INSS, o FGTS e os DARFs são de agosto e já estavam provisionados'; fato: 05a L86 'DEBITO DARF 8109 PIS'"
       pergunta_ref: P02
     cofins:
       valor: {padrao: "DARF 2172", sinal: "-", conta: "2.1.03.002"}
       status: CONFIRMADO
       aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a); caso: 05a L87"
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a); caso: 05a L87; fala (Q-F 3): 'A folha, o ISS, o INSS, o FGTS e os DARFs são de agosto e já estavam provisionados'; fato: 05a L87 'DEBITO DARF 2172 COFINS'"
       pergunta_ref: P02
     tarifa:
       valor: {padrao: "^TAR |TARIFA", sinal: "-", conta: "4.2.01"}
       status: CONFIRMADO
       aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-      fonte: "Slack Helena 21:14 (Q-I b): tarifas = despesa direta do mês; casos: 05a L10, L90"
+      fonte: "Slack Helena 21:14 (Q-I b): tarifas = despesa direta do mês; casos: 05a L10, L90; fala (Q-I b): 'tarifas, aluguel, cloud, assinaturas e serviços entram direto na despesa do mês'"
       pergunta_ref: P14
     condominio:
       valor: {padrao: "BOLETO CONDOMINIO", sinal: "-", conta: "4.2.02"}
       status: CONFIRMADO
       aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-      fonte: "Slack Helena 21:14 (Q-I b): aluguel = despesa direta; caso: 05a L16"
+      fonte: "Slack Helena 21:14 (Q-I b): aluguel = despesa direta; caso: 05a L16; fala (Q-I b): 'tarifas, aluguel, cloud, assinaturas e serviços entram direto na despesa do mês'"
       pergunta_ref: P14
     cloud:
       valor: {padrao: "AMAZON WEB SERVICES", sinal: "-", conta: "4.2.03"}
       status: CONFIRMADO
       aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-      fonte: "Slack Helena 21:14 (Q-I b): cloud = despesa direta; caso: 05a L47"
+      fonte: "Slack Helena 21:14 (Q-I b): cloud = despesa direta; caso: 05a L47; fala (Q-I b): 'tarifas, aluguel, cloud, assinaturas e serviços entram direto na despesa do mês'"
       pergunta_ref: P14
     assinatura:
       valor: {padrao: "GOOGLE WORKSPACE", sinal: "-", conta: "4.2.04"}
       status: CONFIRMADO
       aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-      fonte: "Slack Helena 21:14 (Q-I b): assinaturas = despesa direta; caso: 05a L48"
+      fonte: "Slack Helena 21:14 (Q-I b): assinaturas = despesa direta; caso: 05a L48; fala (Q-I b): 'tarifas, aluguel, cloud, assinaturas e serviços entram direto na despesa do mês'"
       pergunta_ref: P14
     servicos_contabeis:
       valor: {padrao: "CONTABILIDADE", sinal: "-", conta: "4.2.06"}
       status: CONFIRMADO
       aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-      fonte: "Slack Helena 21:14 (Q-I b): serviços = despesa direta; caso: 05a L53"
+      fonte: "Slack Helena 21:14 (Q-I b): serviços = despesa direta; caso: 05a L53; fala (Q-I b): 'tarifas, aluguel, cloud, assinaturas e serviços entram direto na despesa do mês'"
       pergunta_ref: P14
     transferencia_meridiano:
       valor: {padrao: "^TRANSF ENTRE CONTAS P/ BCO MERIDIANO", sinal: "-", conta: "1.1.09.001"}
@@ -727,7 +728,7 @@ classificacao_extratos:
       valor: {padrao: "^TED RECEB PONTE CAMBIO .*REPASSE COMISSAO", sinal: "+", conta: "1.1.03.002"}
       status: CONFIRMADO
       aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a): o repasse de 04/09 é o spread de agosto, já registrado como comissão a receber; caso: 05b MRD2026090132"
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a): o repasse de 04/09 é o spread de agosto, já registrado como comissão a receber; caso: 05b MRD2026090132; fala (Q-F 3): 'O repasse da Ponte de 04/09 é o spread de agosto, que já estava como comissão a receber'"
       pergunta_ref: P02
     liquidacao_ponte:
       valor: {padrao: "^TED ENVIADA PONTE CAMBIO .*LIQ OPERACOES", sinal: "-", conta: "2.1.02.001"}
@@ -745,7 +746,7 @@ classificacao_extratos:
       valor: {padrao: "TARIFA", sinal: "-", conta: "4.2.01"}
       status: CONFIRMADO
       aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-      fonte: "Slack Helena 21:14 (Q-I b): tarifas = despesa direta; casos: 05b MRD2026090103, MRD2026090696"
+      fonte: "Slack Helena 21:14 (Q-I b): tarifas = despesa direta; casos: 05b MRD2026090103, MRD2026090696; fala (Q-I b): 'tarifas, aluguel, cloud, assinaturas e serviços entram direto na despesa do mês'"
       pergunta_ref: P14
     seguro:
       valor: {padrao: "SEGURO", sinal: "-", conta: "4.2.05"}
