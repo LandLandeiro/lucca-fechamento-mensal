@@ -29,13 +29,21 @@ def test_06_entra_no_fechamento(tmp_path):
     assert "estorno de TX88422829" in est["nota"]  # pela taxa da venda original (Q-B)
 
 
-def test_sem_o_06_segue_sem_aviso(tmp_path):
+def test_sem_o_06_segue_com_aviso_informativo(tmp_path):
+    """D89 (Turma 12:31): 'Prefiro que a solução avise a que quebre sem ninguém perceber.' Sem o 06, o fechamento
+    segue com o 01 e avisa; não vira erro nem pendência."""
     dados = tmp_path / "d"
     copiar_dados(dados)
     (dados / AJ).unlink()
     r = executar(dados, tmp_path / "s", RAIZ / "regras.yaml")
     assert r["erros_validacao"] == [] and r["transacoes_lidas"] == 1943
-    assert not any("06_orbe" in a.arquivo or "06_orbe" in a.mensagem for a in r["avisos"])
+    (aviso,) = [a for a in r["avisos"] if "06_orbe" in a.arquivo]
+    assert aviso.mensagem.startswith("sem arquivo de ajustes tardios da Orbe neste mês")
+
+
+def test_com_o_06_nao_avisa_falta(tmp_path):
+    r = executar(DADOS, tmp_path / "s", RAIZ / "regras.yaml")
+    assert not any("sem arquivo de ajustes tardios" in a.mensagem for a in r["avisos"])
 
 
 def test_id_repetido_entre_01_e_06_vira_pendencia(tmp_path):

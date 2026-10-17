@@ -23,7 +23,7 @@ orbe:
   ajustes_tardios:          # D75
     valor: >-
       06_orbe_ajustes_tardios_<mês>.csv, mesmo formato do 01, é parte do relatório da Orbe do mês: lido junto, com o
-      próprio arquivo no rastro; opcional (se faltar, segue sem aviso). Cada linha passa pelas mesmas regras (estorno,
+      próprio arquivo no rastro; opcional (se faltar, segue com aviso informativo, D89). Cada linha passa pelas mesmas regras (estorno,
       reversão, venda)
     status: SEI
     fonte: "mensagem da organização 17/10 13:10: 'A Orbe mandou os ajustes de setembro que ficaram fora do relatório ... no mesmo formato do arquivo 01 ... O fechamento entregue às 18h30 precisa considerar esse arquivo.' Opcional: decisão Lucca 17/10"

@@ -89,7 +89,7 @@ def achar_unico(pasta: Path, padrao: str) -> Path:
 
 
 def achar_opcional(pasta: Path, padrao: str) -> Path | None:
-    """Arquivo que pode faltar (D75): 0 → None, sem aviso; 1 → o arquivo; mais de um → erro de entrada."""
+    """Arquivo que pode faltar (D75): 0 → None (quem chama decide o aviso, D89); 1 → o arquivo; mais de um → erro de entrada."""
     achados = sorted(pasta.glob(padrao))
     if len(achados) > 1:
         raise ErroEntrada(f"esperado no máximo 1 arquivo {padrao!r} em {pasta}, achei {len(achados)}: {[p.name for p in achados]}")
@@ -146,6 +146,9 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         avisos_extra.append(Aviso(arq_ponte.name, "-", f"competência da Ponte {ponte.competencia} ≠ competência da Orbe {competencia}"))
     for p in sep.pendencias:
         avisos_extra.append(Aviso("relatório da Orbe", p.ref_origem, f"linha fora da competência {competencia}: vira pendência {p.id_saida}"))
+    if arq_ajustes is None:  # D89 (Turma 12:31: "Prefiro que a solução avise a que quebre sem ninguém perceber")
+        avisos_extra.append(Aviso(PADRAO_ORBE_AJUSTES, "-", "sem arquivo de ajustes tardios da Orbe neste mês "
+                                  "(informativo: o fechamento segue só com o relatório 01)"))
     avisos_extra += [Aviso(nome, "-", "arquivo que nenhum leitor reconhece: não foi lido (confira se é do pacote)")
                      for nome in arquivos_nao_reconhecidos(dados)]
     declarado_qtd = ponte.totais_declarados.get("Total de operações:")
