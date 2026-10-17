@@ -26,7 +26,7 @@ Todos os números abaixo saíram do fechamento de setembro (`saida/`), com a lin
 
 - **Um cadastro único de regras** (`regras.yaml`): cada regra tem valor, fonte (quem disse, quando) e, quando cabe, vigência. A condição da Casa vale de 01/09 a 31/12; o alias de um lojista vale a partir de 01/10. Quando o financeiro corrigiu o arredondamento, mudou uma linha, não o programa.
 - **A comparação automática todo mês:** cada transação é recalculada pela taxa contratada na data da venda, e toda diferença vira uma linha em `divergencias_taxa.csv`, com transação e valor, para a Helena decidir. Nada é devolvido ou cobrado sozinho.
-- **Pendência com responsável:** o que precisa de alguém vai para `pendencias.csv`, com motivo e quem decide (Helena, comercial, analista). Em setembro, 11 pendências.
+- **Pendência com responsável:** o que precisa de alguém vai para `pendencias.csv`, com motivo e quem decide (Helena, comercial, analista). As divergências de checkout entram como uma pendência por lojista (Casa com "Helena + comercial"). Em setembro, 14 pendências.
 
 ## O que a solução não resolve (precisa de processo)
 

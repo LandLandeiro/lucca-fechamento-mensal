@@ -1,9 +1,9 @@
 # Status
 
-> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 ~09h45 (prova de outubro).
+> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 ~13h10 (correções da avaliação simulada, D52–D62).
 
-**Nível atual:** **Alvo** (todos os 6 CSVs gerados e validados); lançamentos por REGRA e IA verificada, sobras recusadas em HUMANO
-**Próximo passo:** README (limitações) e pitch.
+**Nível atual:** **Alvo** (todos os 6 CSVs gerados e validados); os 184 lançamentos por REGRA (D52); IA só para nome que nenhuma regra reconhece
+**Próximo passo:** README (problema e limitações), números velhos do HIPOTESES (H02, H11, H19), pitch.
 
 ## Mínimo
 
@@ -24,21 +24,36 @@
 - [ ] Amostra de divergências conferida pelo Lucca
 - [x] `notas_a_emitir.csv` (E6a): 20 notas CHECKOUT (R$ 207.045,23) + 1 nota REMESSA para a Ponte (R$ 39.543,45)
 - [x] Leitores Aurora, Meridiano, plano de contas (com testes)
-- [x] `lancamentos_classificados.csv` parte 1 (REGRA): 184 lançamentos, 177 por regra, 7 HUMANO + pendência (só EduAbroad)
-- [x] `lancamentos_classificados.csv` parte 2 (IA nas sobras, D42): 7 sobras → 5 IA verificadas (aportes da EduAbroad), 2 por decisão humana (L28, L69 → 2.1.01.001 EduAbroad, D44)
-- [x] Extra `sugestoes_regra.csv`: SUG-001 (alias "EDU ABROAD CONSULTORIA" → EduAbroad) **APROVADA**, vira regra a partir de 2026-10-01 (`classificacao_extratos.aliases_lojista`)
+- [x] `lancamentos_classificados.csv` parte 1 (REGRA): 184 lançamentos, **todos por regra** desde a D52 (os 7 da EduAbroad casam pelo nome da Orbe ligado ao EC)
+- [x] `lancamentos_classificados.csv` parte 2 (IA nas sobras, D42): **0 sobras em setembro** (eram 7 da EduAbroad até a correção da D35, D52); testada com nome novo numa cópia de setembro (`tests/test_ia.py`) e no outubro sintético (aporte da Nórdica como "NEI EDUCACAO INTERNACIONAL" → IA mockada → aceita pela prova da soma)
+- [x] Extra `sugestoes_regra.csv`: vazio em setembro (nenhuma linha foi para a IA); no outubro sintético, 1 PROPOSTA (alias da Nórdica). O alias SUG-001 ("EDU ABROAD CONSULTORIA", a partir de 01/10) continua no `regras.yaml`, agora redundante com o nome da Orbe
 
 ## Extra
 
-- [x] `pendencias.csv` com motivo e quem decide: 11 pendências (checkout, remessa, notas, extratos)
+- [x] `pendencias.csv` com motivo e quem decide: **14 pendências** (checkout, divergências por lojista, remessa, notas, extratos); `ref_origem` só com ids, lista completa separada por `|` (D55)
 - [x] Extra `contestacao_ponte.csv` (Q-L): 28 operações em 3 pendências CONTESTACAO_PONTE, pronto para a Helena mandar à Ponte
 - [x] **Rastro de 100% dos números** (17/10 ~09h15, D45): o validador recusa número sem rastro ou com soma diferente, e linha do rastro de qualquer `id_saida` que não exista na fonte (id_transacao, Nº Operação + linha, L<n>, FITID + linha); auditoria independente com 0 violações (`docs/AUDITORIA.md`)
 - [x] Auditoria independente da saída (`scripts/auditar_saida.py`, sem importar o pacote): formato sem violação; coerência com 1 achado (o −0,03 acima); matriz de conformidade Q-A…Q-M em `docs/CONFORMIDADE.md`
-- [x] **Roda em outubro sem mudar código** (17/10, D48–D50): `tests/test_outubro.py` (12 testes, no CI) fecha um mês sintético gerado de setembro (`tests/fixtures/gerar_outubro.py`, datas +1 mês, EC novo, estorno da Bridge de venda de 05/09, TED de 300 mil em 01/10, PIX da EduAbroad). Resultado: exit 0, validador OK, auditoria 0 violações; competência 10/2026; Casa com taxa 0; EC novo vira pendência; estorno pela taxa antiga (2,59%); EduAbroad por REGRA (alias), 0 linhas para a IA; TED de 300 mil por REGRA; nenhuma pendência cita "setembro". Com `--pendencias-anteriores`, a L92 de setembro sai resolvida
+- [x] **Roda em outubro sem mudar código** (17/10, D48–D50): `tests/test_outubro.py` (12 testes, no CI) fecha um mês sintético gerado de setembro (`tests/fixtures/gerar_outubro.py`, datas +1 mês, EC novo, estorno da Bridge de venda de 05/09, TED de 300 mil em 01/10, PIX da EduAbroad). Resultado: exit 0, validador OK, auditoria 0 violações; competência 10/2026; Casa com taxa 0; EC novo vira pendência; estorno pela taxa antiga (2,59%); EduAbroad por REGRA (nome da Orbe); 1 aporte de nome novo vai para a IA mockada e é aceito pela prova da soma; TED de 300 mil por REGRA; nenhuma pendência cita "setembro". Com `--pendencias-anteriores`, a L92 de setembro sai resolvida
+
+## Correções da avaliação simulada (17/10, `docs/AVALIACAO_SIMULADA.md`)
+
+- [x] D52: correção da D35, regra primeiro: EduAbroad por REGRA; IA 0 linhas em setembro; L28/L69 como histórico
+- [x] D53: divergências de checkout viram pendência por lojista (Casa "Helena + comercial", Rota e Bridge "Helena")
+- [x] D54: `confianca` nunca vazia (REGRA e decisão humana 1.00; HUMANO sem decisão 0.00; IA a dela)
+- [x] D55: `ref_origem` das pendências só com ids puros, lista completa, `|`
+- [x] D56: bug da confiança da IA com 3 casas (quantizada antes do cache; cache antigo lido sem erro)
+- [x] D57: nota não sai com valor parcial (NOTA_BLOQUEADA), testado com "a confirmar" na taxa da Rota
+- [x] D58: prefixo de uma palavra não casa ("VELA TRANSPORTES", "CANGURU MUDANCAS")
+- [x] D59: feriados nacionais de 2026 no dia útil (09/10 → 13/10 casa)
+- [x] D60: spread negativo lê a Observação (só trava vencida vai para a contestação)
+- [x] D61: condições especiais em lista no `regras.yaml`
+- [x] D62: linha da Orbe fora da competência vira aviso + pendência, o resto roda
+- [ ] Ainda da avaliação (não pedido nesta rodada): README com placeholders, números velhos no HIPOTESES (H02, H11, H19), checkpoints sem registro, repositório privado
 
 ## Regras (`regras.yaml`)
 
-- 86 entradas: CONFIRMADO 44 · ASSUMO 30 · SEI 12 · PENDENTE 0 (`divergencias.data_referencia_vigencia` removida: coberta pela Q-B, D45). Novas: `classificacao.modelo_ia`, `classificacao.verificacao_ia`, `classificacao_extratos.aliases_lojista` e 2 `decisoes_humanas` (por linha, não são regras)
+- 90 entradas: CONFIRMADO 44 · ASSUMO 34 · SEI 12 · PENDENTE 0. Novas em 17/10 (D53–D61): `divergencias.pendencia_por_lojista`, `notas.nota_com_transacao_pendente`, `calendario.feriados_nacionais`, `remessa.spread_negativo_por_observacao`; `cadastro.condicao_especial_casa_do_estudante` virou a lista `cadastro.condicoes_especiais` (D61); `decisoes_humanas` L28/L69 marcadas `substituida` (D52)
 - **Q-K (22:33):** a conferência do repasse não prevê desconto (D38). **Q-L (22:34):** contestação com a Ponte por motivo (D39). **Q-M (22:34):** `orbe_recebivel` CONFIRMADO; saldo negativo do Aurora (conta garantida) e conciliação da Orbe por parcela ficam de fora
 - **Q-H (21:13) corrigiu o ASSUMO de truncar (D09):** arredondamento comum (meio para longe do zero) por linha na comissão, nas divergências e nos 50% da remessa (D27). Q-I (21:14): contas das obrigações de agosto e despesas diretas CONFIRMADO. Q-J (21:45): nota de remessa pelo realizado + pendência da nossa metade do excesso
 - HIPOTESES com os textos literais do financeiro (Q-A…Q-M → P01–P17), fonte `docs/FINANCEIRO_SLACK.md`
@@ -85,7 +100,8 @@ Todos conferidos no centavo contra a previsão independente do Lucca antes do co
 
 ### Pendências e validador
 
-- **Pendências de checkout, remessa e notas: 7**
+- **Pendências de checkout, remessa e notas: 10**
+  - **DIVERGENCIA_CHECKOUT (D53), uma por lojista:** Casa 116 transações, **15.397,42**, quem decide "Helena + comercial" (fala literal da Q-F 2); Rota 79, **1.546,28**, Helena; Bridge 5, **29,95**, Helena. Detalhe em `divergencias_taxa.csv`
   - Atlas Idiomas (EC 1076801732): 57 transações, R$ 7.876,05 cobrados pela Orbe (informativo); quem decide: comercial
   - **NF_NEGATIVA, Casa do Estudante −5,50:** não emite nota; linha não nula TX88445133 (L433), estorno de venda de 2026-08-21; quem decide: Helena
   - **CONFERENCIA_REPASSE, R$ 39.543,45 (faturado):** conferir o TED da Ponte quando cair (previsto 06/10); total do relatório 78.073,59, que inclui 4 spreads negativos (−1.834,05) e a duplicata PC-0926-0162 (821,88), ambos em contestação; sem prever desconto (Q-K, D38); quem decide: Helena
@@ -96,13 +112,11 @@ Todos conferidos no centavo contra a previsão independente do Lucca antes do co
 
 ### Lançamentos classificados (E6b parte 1: só REGRA)
 
-- **AURORA: 84 linhas, 82 por regra, 2 HUMANO por decisão explícita (L28, L69 → 2.1.01.001, D44).** Σ −2.532.423,41 = saldo final − saldo anterior ✓. Regras: repasse_lojista 42 (inclui a Atlas, D35), orbe_recebivel 21, transferencia_meridiano 4, tarifa 2 e 1 cada (folha, ISS, INSS, FGTS, IRRF, PIS, COFINS, condomínio, cloud, assinatura, contabilidade, PIX sem identificação, devolução)
-- **MERIDIANO: 100 linhas, 95 por regra, 5 por IA verificada, 0 HUMANO.** Sem saldo inicial no OFX (inicial implícito 204.118,03, D34). Regras: aporte_lojista 59, liquidacao_ponte 21, mesma_titularidade 3, aplicação 3, resgate 3, tarifa 2, repasse_comissao_ponte 1, seguro 1, IOF 1, rendimento_aplicacao 1 (H37)
-- **Sem regra (7, só EduAbroad) → IA (D42), resposta real em `cache_ia/` (7 chamadas a `claude-haiku-5-5`, 18.118 tokens de entrada + 2.379 de saída, ~US$ 0,003; reexecução: 0 chamadas, hashes iguais):**
-  - PIX RECEB EDU ABROAD (MRD…0036, 0180, 0340, 0484, 0636) → 2.1.02.001 EduAbroad, confiança 0,85–0,88; prova: Σ PIX RECEB 394.222,69 = Σ (Valor R$ + IOF) das operações da Ponte 394.222,69 → **IA**
-  - PIX ENVIADO EDU ABROAD (L28 −14.147,48; L69 −47.889,99) → a IA sugeriu 2.1.01.001 **sem lojista** ("CONSULTORIA LTD" não bate com o cadastro; pode ser fornecedor), confiança 0,5 e 0,4 → (b) e (d) falham → o código barrou → **decisão do Lucca** (D44): 2.1.01.001 EduAbroad, metodo HUMANO, confiança vazia, com a evidência da soma e das vendas na Orbe
+- **AURORA: 84 linhas, todas por regra.** Σ −2.532.423,41 = saldo final − saldo anterior ✓. Regras: repasse_lojista 44 (inclui a Atlas, D35, e a EduAbroad, D52), orbe_recebivel 21, transferencia_meridiano 4, tarifa 2 e 1 cada (folha, ISS, INSS, FGTS, IRRF, PIS, COFINS, condomínio, cloud, assinatura, contabilidade, PIX sem identificação, devolução)
+- **MERIDIANO: 100 linhas, todas por regra.** Sem saldo inicial no OFX (inicial implícito 204.118,03, D34). Regras: aporte_lojista 64 (inclui os 5 da EduAbroad, D52), liquidacao_ponte 21, mesma_titularidade 3, aplicação 3, resgate 3, tarifa 2, repasse_comissao_ponte 1, seguro 1, IOF 1, rendimento_aplicacao 1 (H37)
+- **Sem regra: 0.** Histórico: até a D52, os 7 da EduAbroad iam para a IA (resposta real em `cache_ia/`: 5 aceitos pela prova da soma, 394.222,69; 2 barrados e decididos pelo Lucca, D44). A D52 mostrou que a regra resolvia: `cache_ia/` fica como registro dessa execução
 - **Transferências:** L12 → MRD2026090107, L44 → MRD2026090274, L58 → MRD2026090454 (mesmo dia); **L92 (−300.000,00) sem par → pendência em trânsito (cai em 01/10)**
-- **Aportes × Ponte:** 14 lojistas; Ponte Aérea com +18.240,00 = PIX MRD2026090425 sem operação → pendência; EduAbroad conferida: aportes pela IA verificada = operações (394.222,69); Bagagem fecha (duplicata conta uma vez)
+- **Aportes × Ponte:** 14 lojistas; Ponte Aérea com +18.240,00 = PIX MRD2026090425 sem operação → pendência; EduAbroad conferida por regra: aportes = operações (394.222,69); Bagagem fecha (duplicata conta uma vez)
 - **Aplicação × resgate (FIFO):** resgate MRD2026090254 (09/09, 162.128,00) excede em **392,00** a aplicação de 05/09 → saldo aplicado anterior a 01/09, linha inteira em 1.1.02.001, sem pendência (D36); os outros dois resgates cabem no saldo aplicado
-- **Pendências dos extratos: 4** ( PIX sem identificação 7.350,00, devolução Mundo Aberto 12.400,00, transferência em trânsito −300.000,00, aporte sem operação 18.240,00). **Total no `pendencias.csv`: 11** (+ Atlas sem contrato, nota negativa da Casa, conferência do TED, excesso da Mundo Aberto, 3 contestações com a Ponte). Saldo negativo do Aurora: conta garantida, não é pendência (Q-M)
+- **Pendências dos extratos: 4** ( PIX sem identificação 7.350,00, devolução Mundo Aberto 12.400,00, transferência em trânsito −300.000,00, aporte sem operação 18.240,00). **Total no `pendencias.csv`: 14** (+ 3 divergências de checkout por lojista, D53, Atlas sem contrato, nota negativa da Casa, conferência do TED, excesso da Mundo Aberto, 3 contestações com a Ponte). Saldo negativo do Aurora: conta garantida, não é pendência (Q-M)
 

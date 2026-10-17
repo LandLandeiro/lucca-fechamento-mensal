@@ -11,6 +11,7 @@ Os 4 mais fortes, no formato do case: o que pedi, o que a IA devolveu e o que fi
 
 - **Pedi** que a IA classificasse os 7 lançamentos de extrato que nenhuma regra cobria, com lista fechada de contas e lojistas. **A IA devolveu** o vínculo certo nos 5 PIX recebidos, mas nos 2 PIX enviados achou que "EDU ABROAD CONSULTORIA LTD" podia ser um fornecedor (confiança 0,4 e 0,5). O código aceitou os 5, porque somam 394.222,69, exatamente as operações da EduAbroad na Ponte, e barrou os 2.
 - **O que fiz:** não reescrevi o prompt para forçar o acerto. Decidi as 2 linhas com a evidência da soma e das vendas da EduAbroad na Orbe, como decisão humana explícita, e aprovei a sugestão da IA como regra a partir de outubro (D42, D44, commits `eda5423` e `b651260`).
+- **Depois, a correção:** uma avaliação simulada da banca, feita numa sessão nova sem o contexto da construção (`docs/AVALIACAO_SIMULADA.md`), apontou que a regra resolvia: "EDU ABROAD CONSULTORIA" é o nome que o relatório da Orbe usa para o EC da EduAbroad, e nós tínhamos restringido essa regra (D35) para a IA ter trabalho. Foi um erro nosso. Na D52 voltei a regra: as 7 linhas são REGRA, a IA fica com 0 linhas em setembro e só recebe nome que nenhuma regra reconhece (o teste de outubro tem um). As decisões L28/L69 ficaram no `regras.yaml` como histórico.
 
 ## 3. O rascunho do checkpoint dizia mais do que tinha sido verificado
 

@@ -57,6 +57,8 @@ Lê os arquivos de `data/` exatamente como chegam e gera, em `saida/`:
 | `pendencias.csv` | o que precisa de uma pessoa, com motivo e quem decide |
 | `rastro.csv` | cada número de saída ligado às linhas de origem |
 
+Convenções: em `pendencias.csv`, `ref_origem` traz só os ids das linhas de origem (id_transacao, Nº Operação, `L<n>`, FITID) separados por `|`, e a explicação fica em `motivo`. Em `lancamentos_classificados.csv`, `confianca` nunca é vazia: REGRA = 1.00, decisão humana registrada = 1.00, IA = a confiança dela, HUMANO ainda sem decisão = 0.00.
+
 Arquivos **extras** (além dos 6 do case):
 
 | Arquivo | O que é |
@@ -100,13 +102,14 @@ Não muda nada no programa. A Helena (ou quem fecha o mês) faz três coisas:
 2. **Roda o fechamento apontando para essa pasta e para as pendências de setembro**:
    `.\.venv\Scripts\python.exe -m tarvo --dados <pasta de outubro> --saida <pasta de saída> --pendencias-anteriores saida\pendencias.csv`
    O que setembro deixou em aberto e outubro resolveu (por exemplo, a transferência de 300 mil que estava em trânsito) aparece como resolvido, e não como pendência nova.
-3. **Abre o `pendencias.csv`** e decide o que é dela (devoluções, contestações, nota negativa, lojista sem contrato). O resto (comissões, divergências, notas a emitir e lançamentos) já vem pronto, cada número com a linha de origem no `rastro.csv`.
+3. **Abre o `pendencias.csv`** e decide o que é dela (divergências de taxa por lojista, devoluções, contestações, nota negativa ou bloqueada, lojista sem contrato). O resto (comissões, divergências, notas a emitir e lançamentos) já vem pronto, cada número com a linha de origem no `rastro.csv`.
 
-Se uma regra mudar (taxa nova, condição especial, nome novo de lojista no extrato), a mudança é uma linha no `regras.yaml`, com a fonte. O programa não muda.
+Se uma regra mudar (taxa nova, nome novo de lojista no extrato, feriado do ano seguinte), a mudança é uma linha no `regras.yaml`, com a fonte; uma condição especial nova do comercial é um item a mais na lista `cadastro.condicoes_especiais` (CNPJ, linhas de negócio, taxa, vigência, fonte). O programa não muda.
 
 ## Onde a IA atua e onde não atua
 
-- **Atua só** nos lançamentos de extrato que nenhuma regra do `regras.yaml` cobre (em setembro: 7 de 184). Ela sugere conta, lojista, justificativa e confiança, a partir de listas fechadas.
+- **Regra primeiro, sempre.** Em setembro a IA não recebe nenhuma linha: os 184 lançamentos casam por regra, inclusive os 7 da EduAbroad, pelo nome que o relatório da Orbe usa para o EC dela (D52). Uma versão anterior restringiu essa regra para a IA ter trabalho; um revisor independente apontou, e foi corrigido.
+- **Atua só** nos lançamentos de extrato que nenhuma regra do `regras.yaml` cobre, como um nome novo no extrato que não está na planilha nem na Orbe (o teste de outubro tem um). Ela sugere conta, lojista, justificativa e confiança, a partir de listas fechadas.
 - **O código prova antes de aceitar:** conta lançável; CNPJ no cadastro; prova em outra fonte (Meridiano: soma dos PIX do lojista = operações dele na Ponte; Aurora: o lojista tem vendas na Orbe no mês); confiança ≥ 0,8. Falhou qualquer item → vai para uma pessoa, com o motivo.
 - **Não atua** em comissão, divergência, nota, remessa ou cadastro: tudo isso é regra determinística. A IA também não cria regra: o que ela acertou vira proposta em `saida/sugestoes_regra.csv` para alguém aprovar no mês seguinte.
 
