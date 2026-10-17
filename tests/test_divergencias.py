@@ -4,6 +4,7 @@ diferenca = round(valor_bruto × (taxa aplicada − contratada)), só quando as 
 (Helena 21:13, Q-H c); o centavo de truncamento da Orbe é resíduo, não divergência.
 """
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -242,3 +243,23 @@ def test_validador_recusa_natureza_vazia_ou_fora_da_lista(tmp_path, valor):
     with open(caminho, "w", encoding="utf-8", newline="") as f:
         _csv.writer(f, delimiter=";", lineterminator="\n").writerows(linhas)
     assert any("natureza" in e and linhas[1][0] in e for e in validar_saida(pasta))
+
+
+def test_orbe_cobrando_abaixo_do_contrato_vira_pendencia(regras):
+    """Q-N 7 (Helena 09:44): 'Também é divergência e eu decido caso a caso.' Diferença negativa → pendência."""
+    from datetime import date
+    from tarvo.calculos.divergencias import ResultadoDivergencias, _pendencias_por_lojista
+    res = ResultadoDivergencias()
+    res.linhas = [{"id_saida": "DIV-TXN1", "cnpj": "95927868000148", "ref_origem": "TXN1", "diferenca_brl": Decimal("-12.34"),
+                   "natureza": "contrato_orbe", "lojista": "Rota", "data": date(2026, 10, 5)}]
+    res.rastro = [{"id_saida": "DIV-TXN1", "ref_origem": "TXN1", "valor": Decimal("-12.34")}]
+    _pendencias_por_lojista(res, {}, regras)
+    (p,) = res.pendencias
+    assert p.valor_brl == Decimal("-12.34") and "12.34 a menos" in p.motivo and p.quem_decide == "Helena"
+
+
+def test_estorno_da_casa_usa_a_taxa_de_21_08_sem_isencao(checkout):
+    """Q-N 4: 'Vale a taxa da data da venda original ... Em 21/08 a isenção ainda não valia.'"""
+    c = checkout.por_transacao["TX88445133"]
+    assert c.transacao.data_venda_original == date(2026, 8, 21) and c.condicao is None
+    assert c.taxa_contratada > 0 and c.fonte_taxa.startswith("planilha R13")

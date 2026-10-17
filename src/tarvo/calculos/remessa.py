@@ -43,6 +43,7 @@ class ClassificacaoRemessa:
     negativos: list[tuple[OperacaoPonte, str]] = field(default_factory=list)
     excluidas: list[tuple[OperacaoPonte, str, str]] = field(default_factory=list)  # (op, motivo, nota)
     pendentes: list[tuple[OperacaoPonte, str, str]] = field(default_factory=list)  # (op, tipo, motivo)
+    sem_cadastro: dict[str, str] = field(default_factory=dict)  # CNPJ válido fora da planilha → nome do cliente (D69)
 
 
 @dataclass
@@ -122,9 +123,9 @@ def classificar_remessa(
         if cnpj is None or not cnpj_valido(cnpj):
             cls.pendentes.append((op, "REMESSA_CNPJ_INVALIDO", f"CNPJ Cliente ilegível ou com DV inválido: {op.cnpj_cliente_bruto!r}"))
             continue
-        if cnpj not in cadastro.lojistas:
-            cls.pendentes.append((op, "REMESSA_SEM_CADASTRO", f"CNPJ {cnpj} ({op.cliente}) não está na planilha de taxas"))
-            continue
+        if cnpj not in cadastro.lojistas:  # D69 (Q-P 2): calcula a metade do spread e abre pendência de cadastro
+            valor_da_regra(regras, "remessa.cnpj_fora_da_planilha")
+            cls.sem_cadastro.setdefault(cnpj, op.cliente)
         if op.spread_brl < 0:
             if _normalizar(op.observacao) in travas:  # trava vencida: fora da comissão, divergência e contestação
                 cls.negativos.append((op, cnpj))
@@ -169,7 +170,7 @@ def comissao_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: dict
         res.comissoes.append({
             "id_saida": id_comissao(cnpj, LINHA),
             "cnpj": cnpj,
-            "lojista": cadastro.lojistas[cnpj].nome,
+            "lojista": cadastro.lojistas[cnpj].nome if cnpj in cadastro.lojistas else cls.sem_cadastro[cnpj],
             "linha_negocio": LINHA,
             "comissao_brl": totais[cnpj],
             "qtd_transacoes": qtd[cnpj],
@@ -179,6 +180,20 @@ def comissao_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: dict
             "cnpj": cnpj, "por_operacao": totais[cnpj], "total_uma_vez": uma_vez, "diferenca": totais[cnpj] - uma_vez,
         })
     res.comissoes.sort(key=ordem_comissao)
+
+    for cnpj, cliente in sorted(cls.sem_cadastro.items()):  # D69: derivada, reaponta as linhas da comissão
+        if cnpj not in totais:
+            continue
+        pid = f"PEN-CADASTRO_REMESSA-{cnpj}"
+        linhas = [l for l in res.rastro if l["id_saida"] == id_comissao(cnpj, LINHA)]
+        res.pendencias.append(Pendencia(
+            pid, "CADASTRO_REMESSA", cnpj, totais[cnpj],
+            f"{cliente} (CNPJ {cnpj}) tem {qtd[cnpj]} operações na Ponte e não está na planilha de taxas. A comissão "
+            f"(50% do Spread R$) foi calculada e entra na nota da Ponte; cadastrar o lojista e o spread contratado "
+            f"(Q-P 2: 'o tratamento que vocês propuseram é razoável'). valor_brl = comissão, informativo",
+            "comercial",
+        ))
+        res.rastro.extend({**l, "id_saida": pid} for l in linhas)
 
     for op, motivo, nota in cls.excluidas:
         res.rastro.append(_linha_rastro(id_exclusao(motivo), op, op.spread_brl, f"exclusão anotada (valor = Spread R$): {nota}"))
