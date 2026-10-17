@@ -62,3 +62,9 @@ def test_venda_e_estorno_se_anulam_confirmado(regras):
     """Q-N 3 (Helena 09:44) confirma a D10."""
     r = regras["divergencias.estorno_de_venda_divergente"]
     assert r["status"] == "CONFIRMADO" and "Q-N 3" in r["fonte"]
+
+
+def test_valor_a_devolver_confirmado(regras):
+    """D79 (Q-AH, Helena 12:50): 'Devolvo o que saiu do bolso do lojista, o que foi descontado de fato.'"""
+    r = regras["divergencias.valor_a_devolver"]
+    assert r["status"] == "CONFIRMADO" and r["aprovado_por"] == "Helena" and "Q-AH" in r["fonte"]

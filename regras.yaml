@@ -290,15 +290,16 @@ divergencias:
       e as transações no rastro (detalhe em divergencias_taxa.csv). Base: Slack Helena 20:05 ('Isso eu decido, não
       vai automático. Preciso ver cada caso com transação e valor') e 20:49 (Q-F 2, Casa: 'junto com o comercial')
     pergunta_ref: P03
-  valor_a_devolver:         # D71: separado do valor da divergência (Q-H c), que não muda
+  valor_a_devolver:         # D71, CONFIRMADO (D79): separado do valor da divergência (Q-H c), que não muda
     valor: >-
       checkout: valor_a_devolver_brl = Σ por grupo (venda + estornos/reversões dela) de (valor_taxa cobrado pela Orbe −
       comissão contratada, bruto × taxa contratada arredondado meio para cima, Q-H a), só nas transações divergentes.
       É o que as pendências, os rascunhos e os totais de devolver/recuperar usam; diferenca_brl segue a Q-H c
-    status: ASSUMO
-    autor: Lucca
+    status: CONFIRMADO
+    aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
     fonte: >-
-      decisão Lucca 17/10 (D71). Q-U 4 (Helena 10:44): 'A Orbe já liquida o líquido ... quando a Orbe cobra a mais, o
+      Slack Helena 12:50 (Q-AH): 'Devolvo o que saiu do bolso do lojista, o que foi descontado de fato. A diferença para a
+      fórmula é centavo: segue como você fez.' Proposta Lucca 17/10 (D71, CONFIRMADO na D79). Q-U 4 (Helena 10:44): 'A Orbe já liquida o líquido ... quando a Orbe cobra a mais, o
       lojista já recebeu a menos e eu preciso devolver' → não se devolve nem se cobra mais do que foi descontado.
       Q-H c (21:13) continua valendo para diferenca_brl: 'O valor da divergência eu quero como valor bruto × (taxa
       aplicada − contratada)'. Diferença em setembro: o centavo de truncamento da Orbe (Casa −0,65, Rota −0,42, Bridge −0,01)
