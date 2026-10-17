@@ -178,7 +178,7 @@
 
 ● Li o case, o CLAUDE.md, os 6 arquivos do data pack e o .xlsx anexado ao .eml.
   Não escrevi nada no repositório. Os scripts de leitura (Node, porque não há
-  Python na máquina) estão em C:\Users\julia\AppData\Local\Temp\claude\C--Lucca-
+  Python na máquina) estão em C:\Users\<usuario>\AppData\Local\Temp\claude\C--Lucca-
   tarvo-fechamento\8b4437a7-55c3-4136-96ae-da63065f9d86\scratchpad\scripts.
 
   0. Formato real de cada arquivo
@@ -10969,14 +10969,14 @@
 
 ※ recap: Estamos fechando setembro da Tarvo, e o nível Alvo está entregue com os 6 CSVs validados e 7 lançamentos da EduAbroad ainda sem regra. Falta você decidir se a EduAbroad usa o vínculo pelo EC da Orbe ou fica para a IA, e conferir as 15 pendências contra as 16 que esperava.
   ⎿  Read 
-     ..\..\Users\julia\AppData\Local\Temp\claude\C--Lucca-tarvo-fechamento\8b443
+     ..\..\Users\<usuario>\AppData\Local\Temp\claude\C--Lucca-tarvo-fechamento\8b443
      7a7-55c3-4136-96ae-da63065f9d86\scratchpad\scripts\docs_e6b_decisoes.py (65
      lines)
   ⎿  Referenced file tests\test_extratos.py
   ⎿  Referenced file regras.yaml
   ⎿  Referenced file src\tarvo\cadastro.py
   ⎿  Referenced file 
-     ..\..\Users\julia\AppData\Local\Temp\claude\C--Lucca-tarvo-fechamento\8b443
+     ..\..\Users\<usuario>\AppData\Local\Temp\claude\C--Lucca-tarvo-fechamento\8b443
      7a7-55c3-4136-96ae-da63065f9d86\scratchpad\scripts\docs_e6b.py
 
 ● Compacted while idle, before the prompt cache expired · turn off with 
