@@ -10,7 +10,9 @@ cada arquivo como chega (encoding, separador, fim de linha), e acrescenta quatro
   (iv)  PIX recebidos "EDU ABROAD CONSULTORIA" no Meridiano (os 5 de setembro, deslocados): casam por
         regra pelo nome da Orbe ligado ao EC (D52);
   (v)   um PIX com nome NOVO: o primeiro aporte da Nórdica chega como "PIX RECEB NEI EDUCACAO
-        INTERNACIONAL", que não está na planilha nem na Orbe; vai para a IA (mockada no teste).
+        INTERNACIONAL", que não está na planilha nem na Orbe; vai para a IA (mockada no teste);
+  (vi)  a Atlas com contrato confirmado na planilha (vigência a partir de 10/09/2026, taxas SINTÉTICAS iguais
+        às que a Orbe aplicava): com --orbe-anterior, as linhas de setembro dela entram na nota de outubro (Q-Q).
 Os identificadores que carregam o mês são renumerados para não colidir com setembro (TX88… → TX89…,
 TX87… → TX88…, AN88… → AN89…, PC-0926 → PC-1026, MRD202609 → MRD202610). Determinístico: o .xlsx e
 o .eml saem com datas internas fixas.
@@ -169,24 +171,45 @@ def ponte(origem: Path, destino: Path) -> None:
 
 
 def copiar_sem_mes(origem: Path, destino: Path) -> None:
-    for padrao in ("02_tabela_taxas_contratadas*.xlsx", "04_plano_de_contas*.csv"):
-        src = next(origem.glob(padrao))
-        (destino / src.name).write_bytes(src.read_bytes())
+    src = next(origem.glob("04_plano_de_contas*.csv"))
+    (destino / src.name).write_bytes(src.read_bytes())
+
+
+# (vi) o comercial confirmou a Atlas: linha nova na aba vigente, valendo desde 10/09 (Q-Q). Taxas SINTÉTICAS,
+# iguais às que a Orbe já aplicava à Atlas em setembro (para o teste não misturar divergência com faturamento)
+LINHA_ATLAS = ("Atlas Idiomas Ltda", "39566044000119", "1076801732", 0.0199, 0.0349, 0.0399, 0.0449, 0.0099, 0.021, None,
+               "a partir de 10/09/2026", "DADO SINTÉTICO: contrato confirmado pelo comercial em outubro")
+
+
+def taxas(origem: Path, destino: Path) -> None:
+    src = next(origem.glob("02_tabela_taxas_contratadas*.xlsx"))
+    wb = openpyxl.load_workbook(src)
+    ws = wb["Taxas vigentes"]
+    cab = next(r[0].row for r in ws.iter_rows() if r[0].value == "Lojista")
+    vazia = next(r for r in range(cab + 1, ws.max_row + 2) if all(c.value is None for c in ws[r]))
+    ws.insert_rows(vazia)
+    for col, valor in enumerate(LINHA_ATLAS, start=1):
+        ws.cell(vazia, col).value = valor
+    wb.properties.created = wb.properties.modified = datetime(2026, 11, 2, 7, 12)
+    buf = io.BytesIO()
+    wb.save(buf)
+    (destino / src.name).write_bytes(_zip_deterministico(buf.getvalue(), (2026, 11, 2, 7, 12, 0)))
 
 
 LEIA_ME = """# DADO SINTÉTICO DE TESTE: não é dado real da Tarvo
 
 Gerado por `tests/fixtures/gerar_outubro.py` a partir do data pack de setembro (`data/`), só para provar
 que o fechamento roda em outubro sem mudar código (`tests/test_outubro.py`). As datas foram deslocadas
-um mês (set → out), os identificadores com o mês foram renumerados, e há cinco novidades:
+um mês (set → out), os identificadores com o mês foram renumerados, e há seis novidades:
 
 1. um EC novo (1099000001, "ESCOLA NOVA INTERCAMBIO"), sem cadastro na planilha;
 2. um estorno em 08/10 da venda TX88415459 da Bridge, de 05/09 (antes da taxa nova de 15/09);
 3. no Meridiano, em 01/10, a TED de 300.000,00 de mesma titularidade (a transferência que estava em trânsito);
 4. PIX recebidos "EDU ABROAD CONSULTORIA" (casam pelo nome da Orbe ligado ao EC);
-5. um aporte da Nórdica com nome novo ("PIX RECEB NEI EDUCACAO INTERNACIONAL"), que vai para a IA.
+5. um aporte da Nórdica com nome novo ("PIX RECEB NEI EDUCACAO INTERNACIONAL"), que vai para a IA;
+6. a Atlas com contrato na planilha (linha nova, vigência a partir de 10/09/2026, taxas sintéticas).
 
-Os valores, a planilha de taxas e o plano de contas são os de setembro. Não use estes números para nada além de teste.
+Os valores e o plano de contas são os de setembro; a planilha de taxas é a de setembro mais a linha da Atlas. Não use estes números para nada além de teste.
 """
 
 
@@ -200,6 +223,7 @@ def gerar(origem: Path, destino: Path) -> Path:
     meridiano(origem, destino)
     ponte(origem, destino)
     copiar_sem_mes(origem, destino)
+    taxas(origem, destino)
     (destino / "README.md").write_bytes(LEIA_ME.encode("utf-8"))
     return destino
 

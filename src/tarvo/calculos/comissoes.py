@@ -11,7 +11,8 @@ CHECKOUT (regras usadas, todas de `regras.yaml`):
   REVERSAO ANTECIPACAO só anula a antecipação referenciada (id_referencia);
 - checkout.estorno (CONFIRMADO 20:06): estorno pela taxa contratada vigente na data da
   venda original;
-- cadastro.lojista_sem_contrato_vigente (CONFIRMADO 20:24): não fatura → pendência;
+- cadastro.lojista_sem_contrato_vigente (CONFIRMADO 20:24): não fatura → pendência, até a aba vigente trazer
+  contrato para o EC (o comercial confirmou, Q-Q/Q-S): aí vale a planilha, com aviso (D67);
 - cadastro.condicoes_especiais (CONFIRMADO 20:49, Casa; lista, D61): via cadastro.taxa_contratada.
 
 Toda linha da Orbe termina em exatamente um lugar: no rastro de uma comissão (COM-…) ou
@@ -26,7 +27,7 @@ from decimal import Decimal
 
 from tarvo.cadastro import Cadastro, coluna_do_produto, taxa_contratada
 from tarvo.formatos import centavos, modo_arredondamento
-from tarvo.modelo import ItemRastro, Pendencia, TransacaoOrbe
+from tarvo.modelo import Aviso, ItemRastro, Pendencia, TransacaoOrbe
 from tarvo.regras import valor_da_regra
 
 LINHA = "CHECKOUT"
@@ -55,6 +56,7 @@ class ResultadoCheckout:
     em_pendencia: dict[str, str] = field(default_factory=dict)  # id_transacao → id_saida da pendência
     # CNPJ → pendências de transações dele (taxa indefinida etc.): a nota do mês não sai com valor parcial (D57)
     pendencias_por_cnpj: dict[str, list[str]] = field(default_factory=dict)
+    avisos: list = field(default_factory=list)
 
 
 def id_comissao(cnpj: str, linha: str = LINHA) -> str:
@@ -108,10 +110,16 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
     valor_da_regra(regras, "checkout.estorno")
     modo = modo_arredondamento(valor_da_regra(regras, "checkout.arredondamento_comissao_contratada"))
     tipos = set(valor_da_regra(regras, "checkout.composicao_comissao"))
-    sem_contrato = {str(k): v for k, v in valor_da_regra(regras, "cadastro.lojista_sem_contrato_vigente").items()}
+    sem_contrato = {str(k): v for k, v in valor_da_regra(regras, "cadastro.lojista_sem_contrato_vigente").items()
+                    if str(k) not in cadastro.por_ec}  # D67: com contrato na aba vigente, vale a planilha
     mapa_colunas = valor_da_regra(regras, "taxas.coluna_por_produto")
 
     res = ResultadoCheckout()
+    for ec in sorted(str(k) for k in valor_da_regra(regras, "cadastro.lojista_sem_contrato_vigente")):
+        if ec in cadastro.por_ec:
+            res.avisos.append(Aviso("regras.yaml", "cadastro.lojista_sem_contrato_vigente",
+                                    f"EC {ec} tem contrato na aba vigente ({cadastro.lojistas[cadastro.por_ec[ec]].nome}): "
+                                    f"vale a planilha; tire o EC da regra (D67)"))
     grupos: dict[str, dict] = {}  # pendências agrupadas por lojista/EC
 
     def pendente_grupo(t: TransacaoOrbe, tipo: str, ref: str, motivo: str, quem: str) -> None:

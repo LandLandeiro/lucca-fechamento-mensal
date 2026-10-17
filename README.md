@@ -100,8 +100,8 @@ Não muda nada no programa. A Helena (ou quem fecha o mês) faz três coisas:
 
 1. **Coloca os arquivos de outubro numa pasta**, do jeito que chegam: o relatório da Orbe, a planilha de taxas, o e-mail da Ponte com o anexo, o plano de contas e os dois extratos. Os nomes podem trazer o mês (`..._out2026...`); o programa acha cada arquivo pelo começo do nome.
 2. **Roda o fechamento apontando para essa pasta e para as pendências de setembro**:
-   `.\.venv\Scripts\python.exe -m tarvo --dados <pasta de outubro> --saida <pasta de saída> --pendencias-anteriores saida\pendencias.csv`
-   O que setembro deixou em aberto e outubro resolveu (por exemplo, a transferência de 300 mil que estava em trânsito) aparece como resolvido, e não como pendência nova.
+   `.\.venv\Scripts\python.exe -m tarvo --dados <pasta de outubro> --saida <pasta de saída> --pendencias-anteriores saida\pendencias.csv --orbe-anterior data_orbe_relatorio_comissoes_set2026.csv`
+   O que setembro deixou em aberto e outubro resolveu (por exemplo, a transferência de 300 mil que estava em trânsito) aparece como resolvido, e não como pendência nova. Com `--orbe-anterior` (o relatório da Orbe de setembro), um lojista que aguardava contrato e agora tem contrato na planilha (a Atlas, quando o comercial confirmar) tem as linhas de setembro faturadas na nota de outubro, pela taxa confirmada (Q-Q).
 3. **Abre o `pendencias.csv`** e decide o que é dela (divergências de taxa por lojista, devoluções, contestações, nota negativa ou bloqueada, lojista sem contrato). O resto (comissões, divergências, notas a emitir e lançamentos) já vem pronto, cada número com a linha de origem no `rastro.csv`.
 
 Se uma regra mudar (taxa nova, nome novo de lojista no extrato, feriado do ano seguinte), a mudança é uma linha no `regras.yaml`, com a fonte; uma condição especial nova do comercial é um item a mais na lista `cadastro.condicoes_especiais` (CNPJ, linhas de negócio, taxa, vigência, fonte). O programa não muda.

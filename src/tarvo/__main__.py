@@ -17,6 +17,7 @@ from pathlib import Path
 from tarvo.cadastro import adicionar_nomes_orbe, montar_cadastro, normalizar_nome
 from tarvo.calculos.comissoes import CompetenciaAmbigua, comissao_checkout, ordem_comissao, separar_competencia
 from tarvo.calculos.alertas import alerta_antecipacao
+from tarvo.calculos.retomada import complementar_discriminacao, marcar_retomadas, resolvidas_sem_contrato, retomar_sem_contrato
 from tarvo.calculos.contestacao import contestacao_ponte
 from tarvo.calculos.divergencias import divergencias_checkout, divergencias_remessa
 from tarvo.calculos.notas import conferencia_repasse, notas_a_emitir
@@ -68,6 +69,9 @@ def criar_parser() -> argparse.ArgumentParser:
                         help="arquivo de regras (padrão: regras.yaml da raiz do repositório)")
     parser.add_argument("--pendencias-anteriores", type=Path, default=None,
                         help="pendencias.csv do mês anterior: o que foi resolvido neste mês sai como resolvido, não como pendência nova")
+    parser.add_argument("--orbe-anterior", type=Path, default=None,
+                        help="relatório da Orbe do mês anterior: com --pendencias-anteriores, linhas de lojista que aguardavam "
+                             "contrato e agora têm contrato entram na comissão e na nota deste mês")
     parser.add_argument("--sem-ia", action="store_true",
                         help="não usa IA nem o cache dela: lançamentos sem regra ficam para uma pessoa")
     return parser
@@ -81,7 +85,8 @@ def achar_unico(pasta: Path, padrao: str) -> Path:
 
 
 def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, cliente_ia=_PADRAO,
-             cache_ia: Path = CACHE_IA_PADRAO, pendencias_anteriores: Path | None = None) -> dict:
+             cache_ia: Path = CACHE_IA_PADRAO, pendencias_anteriores: Path | None = None,
+             orbe_anterior: Path | None = None) -> dict:
     """Roda o fechamento e devolve o resumo. Levanta exceção em erro de entrada."""
     regras = carregar_regras(regras_path)
     arq_orbe = achar_unico(dados, PADRAO_ORBE)
@@ -98,7 +103,11 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     except CompetenciaAmbigua as e:
         raise ErroEntrada(str(e)) from e
     competencia = sep.competencia
-    checkout = comissao_checkout(sep.dentro, cadastro, regras)
+    pend_ant = ler_pendencias_anteriores(pendencias_anteriores) if pendencias_anteriores else None
+    orbe_ant = ler_orbe(orbe_anterior) if orbe_anterior else None
+    retomadas, avisos_retomada = retomar_sem_contrato(pend_ant, orbe_ant, cadastro)  # D67 (Q-Q)
+    checkout = comissao_checkout(sep.dentro + [t for _, ts in retomadas for t in ts], cadastro, regras)
+    marcar_retomadas(checkout.rastro, retomadas, competencia)
     divergencias = divergencias_checkout(checkout, cadastro, regras)
     alertas = alerta_antecipacao(sep.dentro, cadastro, competencia, regras)  # D66: só avisa, não muda número
 
@@ -136,6 +145,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     comissoes = sorted(checkout.comissoes + remessa.comissoes, key=ordem_comissao)
     notas = notas_a_emitir(comissoes, checkout.rastro + remessa.rastro, regras, competencia, ponte.competencia,
                            checkout.pendencias_por_cnpj)
+    complementar_discriminacao(notas.linhas, retomadas, cadastro, regras)
     nf_remessa = sum((n["valor_brl"] for n in notas.linhas if n["linha_negocio"] == "REMESSA"), ZERO)
     pend_repasse, rastro_repasse = conferencia_repasse(
         nf_remessa, [l for l in notas.rastro if l["id_saida"].endswith("-REMESSA")],
@@ -199,10 +209,11 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         {cnpj: lj.nome for cnpj, lj in cadastro.lojistas.items()},
         [lan for c in classif for lan, _ in c.sem_regra if normalizar_nome(lan.descricao).startswith("PIX RECEB ")],
         valor_da_regra(regras, "classificacao_extratos.conferencias")["resgate_acima_do_aplicado"],
-        ler_pendencias_anteriores(pendencias_anteriores) if pendencias_anteriores else None,
+        pend_ant,
         feriados,
     )
     lancamentos = [l for c in classif for l in c.linhas]
+    conf.resolvidas.extend(resolvidas_sem_contrato(retomadas, cadastro, competencia))
 
     pendencias = consolidar_pendencias(
         checkout.pendencias, sep.pendencias, divergencias.pendencias, alertas.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura,
@@ -233,6 +244,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     )
     refs_esperadas = {
         orbe.arquivo: {(t.ref_origem, t.linha_arquivo) for t in orbe.transacoes},
+        **({orbe_ant.arquivo: {(t.ref_origem, t.linha_arquivo) for _, ts in retomadas for t in ts}} if retomadas else {}),
         ponte.arquivo: {(o.ref_origem, o.linha_planilha) for o in ponte.operacoes},
     }
     refs_extratos = {ext.arquivo: {(l.ref_origem, ext.linhas_arquivo[l.ref_origem]) for l in ext.lancamentos}
@@ -241,7 +253,9 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     erros = validar_saida(
         saida,
         refs_esperadas=refs_esperadas,
-        fonte_orbe={orbe.arquivo: {t.ref_origem: (t.valor_taxa, t.valor_bruto, t.taxa_aplicada_pct / 100) for t in orbe.transacoes}},
+        fonte_orbe={arq: {t.ref_origem: (t.valor_taxa, t.valor_bruto, t.taxa_aplicada_pct / 100) for t in ts}
+                    for arq, ts in [(orbe.arquivo, orbe.transacoes)]
+                    + ([(orbe_ant.arquivo, [t for _, x in retomadas for t in x])] if retomadas else [])},
         modo_checkout=modo_arredondamento(valor_da_regra(regras, "checkout.arredondamento_comissao_contratada")),
         spread_ponte={ponte.arquivo: {(o.ref_origem, o.linha_planilha): o.spread_brl for o in ponte.operacoes}},
         spread_declarado=ponte.totais_declarados.get("Spread total R$:"),
@@ -255,7 +269,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         excl.setdefault(motivo, []).append(op)
     return {
         "arquivos": [arq_orbe.name, arq_taxas.name, f"{arq_ponte.name} (anexo {mail.nome_anexo})"],
-        "avisos": orbe.avisos + taxas.avisos + cadastro.avisos + ponte.avisos + aurora.avisos + meridiano.avisos + avisos_extra,
+        "avisos": orbe.avisos + taxas.avisos + cadastro.avisos + checkout.avisos + avisos_retomada + ponte.avisos + aurora.avisos + meridiano.avisos + avisos_extra,
         "extratos": {
             "leituras": (aurora, meridiano),
             "classif": classif,
@@ -434,7 +448,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"erro: --saida não é uma pasta: {args.saida}", file=sys.stderr)
         return 2
     try:
-        r = executar(args.dados, args.saida, args.regras, sem_ia=args.sem_ia, pendencias_anteriores=args.pendencias_anteriores)
+        r = executar(args.dados, args.saida, args.regras, sem_ia=args.sem_ia, pendencias_anteriores=args.pendencias_anteriores,
+                     orbe_anterior=args.orbe_anterior)
     except (ErroEntrada, ErroLeitura, RegraInvalida, RegraPendente, FileNotFoundError) as e:
         print(f"erro: {e}", file=sys.stderr)
         return 2

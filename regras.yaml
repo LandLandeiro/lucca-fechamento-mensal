@@ -215,6 +215,7 @@ notas:
     valor:
       CHECKOUT: "Serviço de intermediação de pagamentos (checkout) - competência {competencia}"
       REMESSA: "Intermediação de operações de câmbio - participação de 50% do spread realizado - competência {competencia}"
+      CHECKOUT_COMPLEMENTO_ANTERIOR: " (inclui {n} transações de {competencia} que aguardavam contrato)"   # D67, Q-Q
     status: ASSUMO
     autor: Lucca
     fonte: "redação Lucca (~22h20); Slack Helena 20:47 (d): 'Não temos texto padrão. Algo simples com o serviço e a competência resolve.'"
