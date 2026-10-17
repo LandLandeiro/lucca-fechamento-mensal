@@ -353,6 +353,16 @@ remessa:
     aceite: "Slack Helena 09:45 (Q-P 2): 'Não aconteceu em setembro. Se acontecer, o tratamento que vocês propuseram é razoável. Registrem como premissa.'"
     fonte: "proposta dos Desbravadores (Q-P 2), aceita pela Helena como premissa; cadastro e contrato quem decide é o comercial (Q-X 1). Não acontece em setembro"
     pergunta_ref: null
+  ajuste_contestacao:       # D83 (Q-Z): regra registrada; o abatimento ainda não é calculado (vira pendência AJUSTE_PONTE)
+    valor:
+      identificacao: "linha nova do relatório, Nº de Operação próprio, Spread R$ negativo, observação 'AJUSTE REF PC-…' com a operação original"
+      tratamento: "entra no mês em que aparece; abate a nossa participação daquele mês dentro da nota única da Ponte; rastro para a operação original; sem nota complementar; mês zerado ou negativo: não emite e vira pendência para a Helena"
+      em_aberto: "se o Spread R$ do ajuste é o spread inteiro (a participação cai pela metade) ou já é a participação: pergunta dos Desbravadores 12:04, sem resposta"
+      hoje: "a linha vira pendência AJUSTE_PONTE para a Helena, fora da comissão (não é tratada como spread negativo)"
+    status: CONFIRMADO
+    aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
+    fonte: "Slack Helena 11:33 (Q-Z): 'A Ponte manda o ajuste como uma linha nova, com Nº de Operação próprio e o Spread R$ negativo. A observação traz o número da operação original (“AJUSTE REF PC-…”). Ele entra no mês em que aparece. Abate a nossa participação daquele mês, dentro da nota única para a Ponte, e o rastro aponta para a operação original. Nota complementar não fazemos.' Setembro não tem ajuste"
+    pergunta_ref: null
   spread_negativo_por_observacao:   # D60: a coluna Observação do anexo decide
     valor:
       trava_vencida: ["Taxa travada no pedido (D-1)"]   # comparação sem diferença de maiúsculas/espaços

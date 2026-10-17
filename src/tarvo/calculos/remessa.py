@@ -21,6 +21,7 @@ PEN-… (pendência). O spread negativo também gera DIV-<Nº Operação> (diver
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from decimal import Decimal
 
@@ -126,6 +127,15 @@ def classificar_remessa(
         if cnpj not in cadastro.lojistas:  # D69 (Q-P 2): calcula a metade do spread e abre pendência de cadastro
             valor_da_regra(regras, "remessa.cnpj_fora_da_planilha")
             cls.sem_cadastro.setdefault(cnpj, op.cliente)
+        ajuste = _RE_AJUSTE.search(op.observacao or "")
+        if ajuste:  # D83: a regra do ajuste da Ponte está registrada (Q-Z), o abatimento ainda não é calculado
+            valor_da_regra(regras, "remessa.ajuste_contestacao")
+            cls.pendentes.append((op, "AJUSTE_PONTE",
+                                  f"ajuste da Ponte da operação {ajuste.group(1)} (observação {op.observacao!r}, Spread R$ "
+                                  f"{op.spread_brl}): pela Q-Z ele abate a nossa participação deste mês, com rastro para a "
+                                  f"operação original; o abatimento ainda não é calculado pelo programa, então fica fora da "
+                                  f"comissão até a Helena conferir"))
+            continue
         if op.spread_brl < 0:
             if _normalizar(op.observacao) in travas:  # trava vencida: fora da comissão, divergência e contestação
                 cls.negativos.append((op, cnpj))
@@ -138,6 +148,9 @@ def classificar_remessa(
             continue
         cls.elegiveis.append((op, cnpj))
     return cls
+
+
+_RE_AJUSTE = re.compile(r"AJUSTE\s+REF\s+(PC-[\w-]+)", re.IGNORECASE)
 
 
 def _normalizar(texto: str | None) -> str:
