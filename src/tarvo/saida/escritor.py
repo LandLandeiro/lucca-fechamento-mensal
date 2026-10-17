@@ -38,6 +38,7 @@ COLUNAS = {
 # extras (fora dos 6 do case): só colunas próprias, sem obrigatórias do case
 EXTRAS = {
     "contestacao_ponte.csv": ["id_pendencia", "motivo", "ref_origem", "linha_anexo", "valor_contestado_brl"],
+    "sugestoes_regra.csv": ["id_sugestao", "tipo", "banco", "padrao_ou_nome", "conta_codigo", "status"],
 }
 
 

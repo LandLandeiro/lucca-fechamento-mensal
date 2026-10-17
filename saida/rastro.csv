@@ -4806,6 +4806,8 @@ PEN-EXCESSO_REMESSA-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;P
 PEN-EXCESSO_REMESSA-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0492;18.07;206;REMESSA;;;nossa metade da divergência da operação;180.75
 PEN-EXCESSO_REMESSA-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0516;11.64;217;REMESSA;;;nossa metade da divergência da operação;116.38
 PEN-EXCESSO_REMESSA-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0566;38.38;236;REMESSA;;;nossa metade da divergência da operação;383.68
+PEN-IA_REPROVADA-AURORA-L28;05a_extrato_banco_aurora_cc4471_set2026.csv;L28;-14147.48;28;EXTRATO AURORA;;;lançamento sem regra e sugestão da IA recusada;
+PEN-IA_REPROVADA-AURORA-L69;05a_extrato_banco_aurora_cc4471_set2026.csv;L69;-47889.99;69;EXTRATO AURORA;;;lançamento sem regra e sugestão da IA recusada;
 PEN-NF_NEGATIVA-00520815000100;01_orbe_relatorio_comissoes_set2026.csv;TX88410932;0.00;2;VENDA;608.88;0;regras.yaml cadastro.condicao_especial_casa_do_estudante (MDR, 2026-09-01–2026-12-31);
 PEN-NF_NEGATIVA-00520815000100;01_orbe_relatorio_comissoes_set2026.csv;TX88410975;0.00;3;VENDA;614.86;0;regras.yaml cadastro.condicao_especial_casa_do_estudante (MDR, 2026-09-01–2026-12-31);
 PEN-NF_NEGATIVA-00520815000100;01_orbe_relatorio_comissoes_set2026.csv;TX88410128;0.00;5;VENDA;5773.57;0;regras.yaml cadastro.condicao_especial_casa_do_estudante (MDR, 2026-09-01–2026-12-31);
@@ -4983,11 +4985,4 @@ PEN-SEM_CONTRATO_VIGENTE-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;TX
 PEN-SEM_CONTRATO_VIGENTE-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;TX88444426;2.43;1913;VENDA;246.20;;taxa cobrada pela Orbe (valor_taxa);
 PEN-SEM_CONTRATO_VIGENTE-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;TX88444140;30.56;1928;VENDA;875.69;;taxa cobrada pela Orbe (valor_taxa);
 PEN-SEM_CONTRATO_VIGENTE-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;TX88413380;60.07;1944;VENDA;1721.25;;taxa cobrada pela Orbe (valor_taxa);
-PEN-SEM_REGRA-AURORA-L28;05a_extrato_banco_aurora_cc4471_set2026.csv;L28;-14147.48;28;EXTRATO AURORA;;;lançamento sem regra;
-PEN-SEM_REGRA-AURORA-L69;05a_extrato_banco_aurora_cc4471_set2026.csv;L69;-47889.99;69;EXTRATO AURORA;;;lançamento sem regra;
-PEN-SEM_REGRA-MERIDIANO-MRD2026090036;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090036;170670.73;80;EXTRATO MERIDIANO;;;lançamento sem regra;
-PEN-SEM_REGRA-MERIDIANO-MRD2026090180;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090180;52359.01;240;EXTRATO MERIDIANO;;;lançamento sem regra;
-PEN-SEM_REGRA-MERIDIANO-MRD2026090340;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090340;110194.48;424;EXTRATO MERIDIANO;;;lançamento sem regra;
-PEN-SEM_REGRA-MERIDIANO-MRD2026090484;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090484;21752.32;592;EXTRATO MERIDIANO;;;lançamento sem regra;
-PEN-SEM_REGRA-MERIDIANO-MRD2026090636;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090636;39246.15;760;EXTRATO MERIDIANO;;;lançamento sem regra;
 PEN-TRANSFERENCIA_EM_TRANSITO-AURORA-L92;05a_extrato_banco_aurora_cc4471_set2026.csv;L92;-300000.00;92;EXTRATO AURORA;;;transferência sem par no Meridiano;

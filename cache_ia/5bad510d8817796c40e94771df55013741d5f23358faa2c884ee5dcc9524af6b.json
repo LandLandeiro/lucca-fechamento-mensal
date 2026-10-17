@@ -1,0 +1,23 @@
+{
+  "gerado_em": "2026-10-17",
+  "linha": {
+    "banco": "MERIDIANO",
+    "data": "2026-09-29",
+    "descricao": "PIX RECEB EDU ABROAD CONSULTORIA L",
+    "sinal": "+",
+    "valor": "39246.15"
+  },
+  "modelo": "claude-haiku-5-5",
+  "prompt_sha256": "5c91c54fcba343ab41ea3c96b0a8cfd8ab145122a5d61464930ba278900e7db6",
+  "prompt_versao": "1",
+  "resposta": {
+    "confianca": 0.85,
+    "conta_codigo": "2.1.02.001",
+    "justificativa": "Descrição 'PIX RECEB EDU ABROAD CONSULTORIA' identifica o lojista EduAbroad; crédito na conta de câmbio Meridiano destinado a remessas internacionais a liquidar.",
+    "lojista_cnpj": "16181276000153"
+  },
+  "uso": {
+    "input_tokens": 2588,
+    "output_tokens": 128
+  }
+}

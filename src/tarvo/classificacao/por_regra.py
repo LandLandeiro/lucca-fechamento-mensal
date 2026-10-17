@@ -8,7 +8,7 @@ Nenhuma regra cita número de linha: o mesmo arquivo de regras serve para outubr
 
 O lado do lançamento vem do sinal do movimento (D12): saída → crédito no banco e débito na
 contrapartida; entrada → o inverso. Linha sem regra → metodo HUMANO, conta vazia, pendência
-SEM_REGRA (vai para a IA na parte 2). Nada some.
+SEM_REGRA (a IA tenta depois, em por_ia). Nada some.
 """
 
 from __future__ import annotations
@@ -93,7 +93,7 @@ def classificar_por_regra(
             pid = f"PEN-SEM_REGRA-{banco}-{lan.ref_origem}"
             res.pendencias.append(Pendencia(pid, "SEM_REGRA", lan.ref_origem, lan.valor,
                                             f"{banco} {lan.data.isoformat()} {lan.descricao!r}: sem regra ({motivo}); "
-                                            f"vai para a IA na parte 2", "analista (Lucca)"))
+                                            f"vai para a IA (por_ia)", "analista (Lucca)"))
             res.rastro_pendencias.append(_rastro(pid, lan, lan.valor, linha_n, "lançamento sem regra"))
         else:
             chave, regra, v, cnpj = achou

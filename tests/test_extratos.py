@@ -146,18 +146,25 @@ def test_lado_pelo_sinal(saida):
     assert _lan(saida[0], "LAN-MERIDIANO-MRD2026090003")["contrapartida_banco"] == "1.1.01.002"
 
 
-def test_sem_regra_vai_para_humano_e_pendencia(saida):
-    pasta, _ = saida
-    humanos = sorted(l["id_saida"] for l in _csv(pasta, "lancamentos_classificados.csv") if l["metodo"] == "HUMANO")
-    assert humanos == sorted([  # só EduAbroad: vai para a IA na parte 2 (D37)
-        "LAN-AURORA-L28", "LAN-AURORA-L69",
-        "LAN-MERIDIANO-MRD2026090036", "LAN-MERIDIANO-MRD2026090180", "LAN-MERIDIANO-MRD2026090340",
-        "LAN-MERIDIANO-MRD2026090484", "LAN-MERIDIANO-MRD2026090636",
-    ])
-    l = _lan(pasta, "LAN-AURORA-L28")
-    assert (l["conta_codigo"], l["confianca"]) == ("", "")
-    pend = {p["id_saida"] for p in _csv(pasta, "pendencias.csv")}
-    assert {f"PEN-SEM_REGRA-{h[4:]}" for h in humanos} <= pend
+def test_sobras_com_o_cache_commitado_da_ia(saida):
+    """E6b parte 2 (D42), resposta real em cache_ia/: os 5 aportes da EduAbroad passam na prova (Σ = Ponte) e
+    viram IA; os 2 PIX ENVIADO ficam HUMANO porque a própria IA não indicou lojista (b) e deu confiança baixa (d)."""
+    pasta, r = saida
+    lan = {l["id_saida"]: l for l in _csv(pasta, "lancamentos_classificados.csv")}
+    humanos = sorted(k for k, l in lan.items() if l["metodo"] == "HUMANO")
+    assert humanos == ["LAN-AURORA-L28", "LAN-AURORA-L69"]
+    assert (lan["LAN-AURORA-L28"]["conta_codigo"], lan["LAN-AURORA-L28"]["confianca"]) == ("", "")
+    ia = sorted(k for k, l in lan.items() if l["metodo"] == "IA")
+    assert ia == ["LAN-MERIDIANO-MRD2026090036", "LAN-MERIDIANO-MRD2026090180", "LAN-MERIDIANO-MRD2026090340",
+                  "LAN-MERIDIANO-MRD2026090484", "LAN-MERIDIANO-MRD2026090636"]
+    assert all(lan[k]["conta_codigo"] == "2.1.02.001" and Decimal(lan[k]["confianca"]) >= Decimal("0.8") for k in ia)
+    pend = {p["id_saida"]: p for p in _csv(pasta, "pendencias.csv")}
+    for h in humanos:
+        m = pend[f"PEN-IA_REPROVADA-{h[4:]}"]["motivo"]
+        assert "(b) conta 2.1.01.001 exige lojista" in m and "(d) confiança" in m
+    assert r["extratos"]["ia"].chamadas_api == 0  # testes: só cache
+    edu = next(a for a in r["extratos"]["conf"].aportes if a["cnpj"] == "16181276000153")
+    assert edu["sobra"] == 0 and not edu["nao_conferido"]
 
 
 def _lanc(desc, valor, ref="X1", data=date(2026, 9, 10)):
@@ -198,7 +205,7 @@ def test_aporte_sem_operacao_ponte_aerea(saida):
     assert (p["ref_origem"], p["valor_brl"]) == ("MRD2026090425", "18240.00")
     # Bagagem (duplicata PC-0926-0162) não acusa: a duplicata conta uma vez nas operações
     assert not any("50900987000179" in x["id_saida"] for x in _csv(saida[0], "pendencias.csv"))
-    # EduAbroad: aportes não identificados (sem regra) → não conferido, sem alarme falso
+    # EduAbroad: aportes identificados pela IA e provados (D42) → soma fecha, sem pendência
     assert not any(x["tipo"] == "APORTE_DIVERGENTE" for x in _csv(saida[0], "pendencias.csv"))
 
 
@@ -265,4 +272,5 @@ def test_nomes_da_orbe_so_para_ec_sem_vinculo(cadastro, orbe, regras):
 
 def test_total_de_pendencias(saida):
     tipos = sorted(p["tipo"] for p in _csv(saida[0], "pendencias.csv"))
-    assert len(tipos) == 18 and tipos.count("SEM_REGRA") == 7 and tipos.count("CONTESTACAO_PONTE") == 3
+    assert len(tipos) == 13 and tipos.count("IA_REPROVADA") == 2 and "SEM_REGRA" not in tipos
+    assert tipos.count("CONTESTACAO_PONTE") == 3

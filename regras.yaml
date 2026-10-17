@@ -359,24 +359,51 @@ contabil:
 classificacao:
   uso_ia:
     valor:
-      escopo: "só lançamentos que nenhuma regra de texto (contabil.padroes_de_descricao) cobre"
+      escopo: "só lançamentos que nenhuma regra de classificacao_extratos cobre (as sobras)"
       contas_permitidas: "lista fechada das contas lançáveis (plano_contas.contas_lancaveis)"
-      saida: "JSON validado por pydantic"
-      conferencia_no_codigo: ["conta existe", "TIPO = ANALITICA", "ACEITA_LANCTO = S"]
+      entrada: "por linha: banco, data, descrição, valor, sinal; contas lançáveis (código + descrição); lojistas da planilha (nome + CNPJ)"
+      prompt: "src/tarvo/prompts/classificar_lancamento.md (versionado: cabeçalho 'versao')"
+      saida: "JSON validado por pydantic (conta_codigo, lojista_cnpj opcional, justificativa, confianca 0–1)"
+      conferencia_no_codigo: "classificacao.verificacao_ia"
       lado_do_lancamento: >-
         vem do sinal do movimento bancário: saída = crédito no banco e débito na contrapartida;
         entrada = o inverso. A natureza (D/C) da conta NÃO é critério de rejeição
         (pagar IRRF debita uma conta de natureza C)
-      cache: "respostas em cache por hash da linha"
+      cache: >-
+        cache_ia/<sha256(versão + hash do prompt, modelo, linha)>.json, commitado; reexecução usa o cache.
+        Sem chave e com cache → cache; sem chave e sem cache, --sem-ia ou erro da API → HUMANO + pendência, aviso, exit 0
+      aprendizado: "sugestões aprovadas → saida/sugestoes_regra.csv (status PROPOSTA); nenhum alias aplicado no mês"
     status: ASSUMO
     autor: Lucca
-    fonte: "decisão Lucca 16/10 ~20h55 (D11), corrigida ~21h (D12)"
+    fonte: "decisão Lucca 16/10 ~20h55 (D11), corrigida ~21h (D12); detalhada 17/10 (E6b parte 2, D42)"
     pergunta_ref: null
   limiar_confianca_ia:      # abaixo → pendência (metodo HUMANO)
     valor: 0.8
     status: ASSUMO
     autor: Lucca
     fonte: "decisão Lucca 16/10 ~20h55 (D11): confiança ≥ 0,8, senão pendência"
+    pergunta_ref: null
+  modelo_ia:                # único lugar com o ID do modelo
+    valor:
+      id: claude-haiku-5-5
+      max_tokens: 4096
+      effort: medium
+      preco_usd_por_milhao: {entrada: 0.10, saida: 0.50}
+    status: ASSUMO
+    autor: Lucca
+    fonte: "pedido Lucca 17/10 (E6b parte 2); preço: tabela de modelos da Anthropic (Claude Haiku 5.5, até 100K tokens de entrada)"
+    pergunta_ref: null
+  verificacao_ia:           # D42: a IA sugere, o código prova, o humano aprova a regra
+    valor:
+      a: "conta existe, TIPO = ANALITICA e ACEITA_LANCTO = S (lista de contas lançáveis)"
+      b: "CNPJ indicado existe no cadastro; conta de regra com lojista (repasse_lojista, aporte_lojista) exige lojista"
+      c_meridiano: "Σ PIX RECEB atribuídos ao lojista (regra + IA) = Σ (Valor R$ + IOF) das operações dele no relatório da Ponte"
+      c_aurora: "o lojista tem EC no relatório da Orbe com VENDA no mês"
+      d: "confiança ≥ classificacao.limiar_confianca_ia"
+      falhou: "HUMANO + pendência IA_REPROVADA com o motivo exato"
+    status: ASSUMO
+    autor: Lucca
+    fonte: "pedido Lucca 17/10 (E6b parte 2); D11/D12; o item b (conta que exige lojista) deriva das regras com lojista: true (D42)"
     pergunta_ref: null
 
 # ---------------------------------------------------------------------------
@@ -564,12 +591,12 @@ classificacao_extratos:
       à planilha não ganham nomes extras (senão 'EDU ABROAD CONSULTORIA' da Orbe resolveria a EduAbroad, que fica
       para o fluxo da IA, D37)
     pergunta_ref: P04
-  vinculo_bancario_por_ia:  # D37 (plano para a parte 2)
+  vinculo_bancario_por_ia:  # D37, executado na E6b parte 2 (D42)
     valor: >-
       nome do extrato sem lojista (ex.: 'EDU ABROAD CONSULTORIA'): a IA sugere o vínculo nome → CNPJ; o código confere
-      Σ PIX RECEB desse nome × Σ (Valor R$ + IOF) das operações da Ponte do CNPJ; o Lucca aprova; o vínculo vira alias
-      explícito no regras.yaml (como cadastro.mapeamento_ec_confirmado)
+      (classificacao.verificacao_ia); aceito, vale no mês como metodo=IA e vira linha ALIAS_LOJISTA em
+      sugestoes_regra.csv (PROPOSTA); o Lucca aprova e o alias vira regra no mês seguinte. Nenhum alias aplicado no mês
     status: ASSUMO
     autor: Lucca
-    fonte: "decisão Lucca ~23h30 (H36): não criar alias agora"
+    fonte: "decisão Lucca ~23h30 (H36): não criar alias agora; pedido Lucca 17/10 (E6b parte 2): sugestões para outubro"
     pergunta_ref: null

@@ -26,3 +26,8 @@ De 2 a 4 momentos. Para cada um: o que pedi, o que a IA devolveu, o que fiz com 
 - **Como foi percebido:** a resposta pública no canal contradizia uma premissa marcada como ASSUMO, que eu tinha escrito justamente para poder ser contestada.
 - **O que mudou:** a regra virou CONFIRMADO no `regras.yaml` (`TRUNCAR` → `ROUND_HALF_UP`); o modo de arredondamento está num só lugar, então o cálculo não foi reescrito. O centavo de diferença com a Orbe passou a ser resíduo explícito (−9,07), não divergência. Os números novos (207.039,73 · 16.973,65 · 39.543,45 · 506,65) bateram no centavo com a minha previsão independente antes do commit.
 
+## 5. IA sugere, código prova, humano aprova
+
+- **O que aconteceu:** 7 lançamentos da EduAbroad não casavam com nenhuma regra ("EDU ABROAD CONSULTORIA" no banco × "EduAbroad" na planilha). Em vez de criar um alias na mão, pedi a classificação ao `claude-haiku-5-5` com a lista fechada de contas e de lojistas, e o código só aceitou o que conseguiu provar com outra fonte: os 5 PIX recebidos no Meridiano somam 394.222,69, exatamente o Valor R$ + IOF das operações da EduAbroad no relatório da Ponte.
+- **Como foi percebido:** nos 2 PIX enviados pelo Aurora a própria IA recusou o vínculo ("consultoria LTD" pode ser um fornecedor) e deu confiança 0,5 e 0,4; o código mandou os dois para uma pessoa com o motivo exato. Não reescrevi o prompt até a resposta "passar": a dúvida da IA é informação.
+- **O que mudou:** 5 lançamentos por IA verificada, 2 em pendência para o Lucca, e uma proposta de alias em `sugestoes_regra.csv` para virar regra em outubro, só depois de aprovada. A resposta fica em `cache_ia/`: a banca reexecuta sem chave, sem custo e com o mesmo resultado.

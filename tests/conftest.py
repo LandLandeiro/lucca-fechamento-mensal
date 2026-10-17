@@ -1,5 +1,6 @@
 """Fixtures compartilhadas: o pipeline do nível mínimo rodado uma vez sobre o data pack real."""
 
+import os
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,9 @@ RAIZ = Path(__file__).resolve().parents[1]
 DADOS = RAIZ / "data"
 ORBE = DADOS / "01_orbe_relatorio_comissoes_set2026.csv"
 TAXAS = DADOS / "02_tabela_taxas_contratadas.xlsx"
+
+# testes nunca usam rede: a IA só responde pelo cache commitado ou por um cliente mockado
+os.environ["TARVO_SEM_REDE"] = "1"
 
 
 @pytest.fixture(scope="session")

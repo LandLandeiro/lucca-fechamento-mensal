@@ -1,0 +1,23 @@
+{
+  "gerado_em": "2026-10-17",
+  "linha": {
+    "banco": "AURORA",
+    "data": "2026-09-09",
+    "descricao": "PIX ENVIADO EDU ABROAD CONSULTORIA LTD",
+    "sinal": "-",
+    "valor": "14147.48"
+  },
+  "modelo": "claude-haiku-5-5",
+  "prompt_sha256": "5c91c54fcba343ab41ea3c96b0a8cfd8ab145122a5d61464930ba278900e7db6",
+  "prompt_versao": "1",
+  "resposta": {
+    "confianca": 0.5,
+    "conta_codigo": "2.1.01.001",
+    "justificativa": "PIX de saída da conta Aurora para 'EDU ABROAD CONSULTORIA LTD', que parece corresponder ao lojista EduAbroad, mas a razão social com 'consultoria' não bate com o cadastro e pode ser um fornecedor, então o lojista ficou nulo e a classificação exige revisão.",
+    "lojista_cnpj": null
+  },
+  "uso": {
+    "input_tokens": 2589,
+    "output_tokens": 681
+  }
+}

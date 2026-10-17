@@ -20,6 +20,7 @@ from tarvo.calculos.divergencias import divergencias_checkout, divergencias_reme
 from tarvo.calculos.notas import conferencia_repasse, notas_a_emitir
 from tarvo.calculos.remessa import classificar_remessa, comissao_remessa
 from tarvo.classificacao.conferencias import conferir
+from tarvo.classificacao import por_ia
 from tarvo.classificacao.por_regra import classificar_por_regra
 from tarvo.formatos import fmt_dinheiro, modo_arredondamento
 from tarvo.leitores.extrato_aurora import ler_extrato_aurora
@@ -42,7 +43,11 @@ PADRAO_AURORA = "05a_extrato_banco_aurora_*.csv"
 PADRAO_MERIDIANO = "05b_extrato_banco_meridiano_*.ofx"
 ZERO = Decimal("0")
 # regras.yaml da raiz do repositório (src/tarvo/__main__.py → raiz), não da pasta atual (D41)
-REGRAS_PADRAO = Path(__file__).resolve().parents[2] / "regras.yaml"
+RAIZ_REPO = Path(__file__).resolve().parents[2]
+REGRAS_PADRAO = RAIZ_REPO / "regras.yaml"
+CACHE_IA_PADRAO = RAIZ_REPO / "cache_ia"  # respostas da IA, commitadas (reexecução sem custo)
+ENV_LOCAL = RAIZ_REPO / ".env.local"  # ANTHROPIC_API_KEY (fora do git)
+_PADRAO = object()
 
 
 class ErroEntrada(RuntimeError):
@@ -58,6 +63,8 @@ def criar_parser() -> argparse.ArgumentParser:
     parser.add_argument("--saida", type=Path, default=Path("saida"), help="pasta dos CSVs gerados (padrão: saida)")
     parser.add_argument("--regras", type=Path, default=REGRAS_PADRAO,
                         help="arquivo de regras (padrão: regras.yaml da raiz do repositório)")
+    parser.add_argument("--sem-ia", action="store_true",
+                        help="não usa IA nem o cache dela: lançamentos sem regra ficam para uma pessoa")
     return parser
 
 
@@ -68,7 +75,8 @@ def achar_unico(pasta: Path, padrao: str) -> Path:
     return achados[0]
 
 
-def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
+def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, cliente_ia=_PADRAO,
+             cache_ia: Path = CACHE_IA_PADRAO) -> dict:
     """Roda o fechamento e devolve o resumo. Levanta exceção em erro de entrada."""
     regras = carregar_regras(regras_path)
     arq_orbe = achar_unico(dados, PADRAO_ORBE)
@@ -139,7 +147,33 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
     adicionar_nomes_orbe(cadastro, orbe.transacoes, regras)  # D35: ex.: Atlas
     classif = [classificar_por_regra(ext.lancamentos, ext.linhas_arquivo, plano, regras, cadastro, competencia)
                for ext in (aurora, meridiano)]
-    regra_por_lanc = {(l["banco"], l["ref_origem"]): l["regra_aplicada"] for c in classif for l in c.linhas}
+    # E6b parte 2: IA só nas sobras; o código verifica antes de aceitar (D42)
+    aporte = valor_da_regra(regras, "classificacao_extratos.meridiano.aporte_lojista")
+    aportes_por_regra: dict[str, Decimal] = {}
+    for c in classif:
+        for l in c.linhas:
+            cnpj = c.lojista_por_lancamento.get((l["banco"], l["ref_origem"]))
+            if l["regra_aplicada"] == "meridiano.aporte_lojista" and cnpj:
+                aportes_por_regra[cnpj] = aportes_por_regra.get(cnpj, ZERO) + l["valor"]
+    linhas_ext = {(ext.banco, ref): n for ext in (aurora, meridiano) for ref, n in ext.linhas_arquivo.items()}
+    if cliente_ia is _PADRAO:
+        cliente_ia = None if sem_ia else por_ia.cliente_padrao(ENV_LOCAL, regras)
+    prompt_ia = por_ia.carregar_prompt()
+    ia = por_ia.classificar_sobras(
+        [(lan, motivo, linhas_ext[(lan.banco, lan.ref_origem)]) for c in classif for lan, motivo in c.sem_regra],
+        plano, cadastro, regras, competencia, orbe.transacoes, cls_remessa.elegiveis + cls_remessa.negativos,
+        aportes_por_regra, cache_ia, cliente_ia, sem_ia=sem_ia, prompt=prompt_ia,
+    )
+    por_ia.aplicar(ia, classif, prompt_ia.versao)
+    avisos_extra += [Aviso("IA", "-", a) for a in ia.avisos]
+    regra_por_lanc = {}
+    for c in classif:
+        for l in c.linhas:
+            chave = (l["banco"], l["ref_origem"])
+            regra_por_lanc[chave] = l["regra_aplicada"]
+            # aporte verificado pela IA entra na conferência de aportes como aporte (D42)
+            if l["metodo"] == "IA" and l["banco"] == "MERIDIANO" and l["conta_codigo"] == aporte["conta"]                     and chave in c.lojista_por_lancamento:
+                regra_por_lanc[chave] = "meridiano.aporte_lojista"
     linhas_por_lanc = {(ext.banco, ref): n for ext in (aurora, meridiano) for ref, n in ext.linhas_arquivo.items()}
     conf = conferir(
         regra_por_lanc, aurora.lancamentos + meridiano.lancamentos, linhas_por_lanc,
@@ -171,6 +205,7 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
             "pendencias.csv": [pendencia_para_linha(p) for p in pendencias],
             "rastro.csv": rastro,
             "contestacao_ponte.csv": contestacao.linhas,  # extra (Q-L): o que a Helena manda para a Ponte
+            "sugestoes_regra.csv": ia.sugestoes_regra,  # extra (E6b parte 2): propostas de regra para o mês seguinte
         },
         saida,
     )
@@ -199,6 +234,7 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
             "leituras": (aurora, meridiano),
             "classif": classif,
             "conf": conf,
+            "ia": ia,
             "pendencias": [p for c in classif for p in c.pendencias] + conf.pendencias,
         },
         "remessa": {
@@ -330,6 +366,25 @@ def _imprimir_extratos(r: dict) -> None:
         print(f"    {a['cnpj']} {a['lojista'][:30]:<30} aportes {fmt_dinheiro(a['aportes'])} × operações "
               f"{fmt_dinheiro(a['operacoes'])} → sobra {fmt_dinheiro(a['sobra'])}"
               + ("  (NÃO CONFERIDO: nenhum aporte identificado; há PIX RECEB sem regra)" if a["nao_conferido"] else ""))
+    ia = e["ia"]
+    if ia.decisoes:
+        do_cache = sum(1 for d in ia.decisoes if d.resposta and d.resposta.origem == "CACHE")
+        print(f"  IA nas sobras ({len(ia.decisoes)} lançamentos: {ia.chamadas_api} chamadas à API, {do_cache} do cache, "
+              f"{sum(1 for d in ia.decisoes if d.resposta is None)} sem resposta):")
+        for d in ia.decisoes:
+            s = d.resposta.sugestao if d.resposta else None
+            print(f"    {d.lan.banco} {d.lan.ref_origem} {fmt_dinheiro(d.lan.valor):>12} {d.lan.descricao!r}")
+            if s is None:
+                print(f"      sem resposta: {d.erro} → HUMANO")
+                continue
+            print(f"      IA ({d.resposta.origem}): conta {s.conta_codigo}, lojista {s.lojista_cnpj or '-'}, "
+                  f"confiança {s.confianca} — {s.justificativa}")
+            for item, ok, det in d.checagens:
+                print(f"      ({item}) {'OK  ' if ok else 'FALHA'} {det}")
+            print(f"      → {'IA (aceita)' if d.aceita else 'HUMANO (pendência IA_REPROVADA)'}")
+        print(f"    tokens (chamadas originais): entrada {ia.uso_total['input_tokens']}, saída {ia.uso_total['output_tokens']};"
+              f" custo aproximado US$ {ia.custo_usd:.4f}")
+        print(f"    sugestões de regra para o mês seguinte (PROPOSTA): {len(ia.sugestoes_regra)}")
     print(f"  pendências novas dos extratos: {len(e['pendencias'])}")
     for p in e["pendencias"]:
         print(f"    {p.id_saida} ({fmt_dinheiro(p.valor_brl) if p.valor_brl is not None else '-'}) → {p.quem_decide}")
@@ -347,7 +402,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"erro: --saida não é uma pasta: {args.saida}", file=sys.stderr)
         return 2
     try:
-        r = executar(args.dados, args.saida, args.regras)
+        r = executar(args.dados, args.saida, args.regras, sem_ia=args.sem_ia)
     except (ErroEntrada, ErroLeitura, RegraInvalida, RegraPendente, FileNotFoundError) as e:
         print(f"erro: {e}", file=sys.stderr)
         return 2

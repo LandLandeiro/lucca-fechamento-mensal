@@ -359,6 +359,8 @@ def _extratos(
         conta, metodo = l.get("conta_codigo", ""), l.get("metodo", "")
         if metodo in ("REGRA", "IA") and not conta:
             erros.append(f"{l['id_saida']}: método {metodo} sem conta")
+        if metodo == "IA" and not _RE_DINHEIRO.match(l.get("confianca") or ""):
+            erros.append(f"{l['id_saida']}: método IA sem confiança")
         if metodo == "HUMANO" and conta:
             erros.append(f"{l['id_saida']}: método HUMANO com conta {conta} (conta humana vem da decisão, não do código)")
         if conta and contas is not None and conta not in contas:

@@ -45,7 +45,7 @@ cd tarvo-fechamento
 - Os comandos usam `.\.venv\Scripts\python.exe` direto, sem `Activate.ps1`: num Windows limpo a política de execução do PowerShell costuma bloquear o script de ativação.
 - Saída esperada: lista de comissões, divergências, notas, lançamentos e pendências, terminando em `VALIDADOR: OK`, código de saída 0 (1 = saída inválida; 2 = erro de entrada). Os CSVs vão para `--saida`; o resultado é determinístico (mesmo hash a cada execução, em qualquer pasta).
 
-Chaves necessárias: **nenhuma para rodar hoje.** A classificação por IA (sobras dos extratos) ainda não está ligada; quando estiver, ela vai ler `ANTHROPIC_API_KEY` de `.env.local` (modelo em `.env.example`).
+Chaves necessárias: **nenhuma para reproduzir setembro.** As respostas da IA estão em `cache_ia/` (commitado): sem chave, o fechamento usa o cache e dá o mesmo resultado, sem custo. Com arquivos novos (outubro), a IA lê `ANTHROPIC_API_KEY` de `.env.local` (modelo em `.env.example`); sem chave e sem cache, as linhas sem regra ficam para uma pessoa (HUMANO + pendência), com aviso, e o programa termina normalmente. `--sem-ia` desliga a IA.
 
 ## Como a analista usa em outubro
 
@@ -53,7 +53,9 @@ Chaves necessárias: **nenhuma para rodar hoje.** A classificação por IA (sobr
 
 ## Onde a IA atua e onde não atua
 
-[preencher]
+- **Atua só** nos lançamentos de extrato que nenhuma regra do `regras.yaml` cobre (em setembro: 7 de 184). Ela sugere conta, lojista, justificativa e confiança, a partir de listas fechadas.
+- **O código prova antes de aceitar:** conta lançável; CNPJ no cadastro; prova em outra fonte (Meridiano: soma dos PIX do lojista = operações dele na Ponte; Aurora: o lojista tem vendas na Orbe no mês); confiança ≥ 0,8. Falhou qualquer item → vai para uma pessoa, com o motivo.
+- **Não atua** em comissão, divergência, nota, remessa ou cadastro: tudo isso é regra determinística. A IA também não cria regra: o que ela acertou vira proposta em `saida/sugestoes_regra.csv` para alguém aprovar no mês seguinte.
 
 ## Limitações conhecidas
 
