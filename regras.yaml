@@ -269,9 +269,9 @@ divergencias:
     pergunta_ref: P03
   estorno_de_venda_divergente:
     valor: >-
-      divergência calculada por transação e líquida com os estornos dela (id_referencia) no mesmo mês;
-      só vai para divergencias_taxa.csv se o líquido ≠ 0; venda e estorno continuam no rastro com a nota
-      "estornada em <data> por <id>"; estorno parcial ou estorno em mês seguinte: a divergência é listada
+      divergencias_taxa.csv lista transação por transação: a venda e o estorno dela (id_referencia) no mesmo mês
+      entram as duas, o estorno com valor negativo (D77, Q-AB 3); pendências, devolução e cobrança da Orbe seguem
+      pelo líquido do grupo (Q-N 3), então um par que se anula não cobra nem devolve nada
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
     fonte: "Slack Helena 09:44 (Q-N 3): 'A venda e o estorno se anulam. Cobro da Orbe só o que sobrou de diferença líquida.' Era decisão Lucca 16/10 ~20h55 (D10). Caso real: 4 estornos da Rota Global, −R$ 98,44"

@@ -62,7 +62,7 @@ def test_resumo_para_o_financeiro(tmp_path, capsys):
     out = capsys.readouterr().out
     resumo = out[out.index("RESUMO DO FECHAMENTO"):]
     for trecho in ("RESUMO DO FECHAMENTO - setembro de 2026", "R$ 203.735,34", "R$ 39.543,45", "R$ 243.284,29  (21 notas)",
-                   "checkout, devolver aos lojistas:          R$ 16.972,57  (200 transações)",
+                   "checkout, devolver aos lojistas:          R$ 16.972,57  (210 transações)",
                    "recuperar da Orbe (contrato):            R$ 1.575,80",
                    "custo para a Tarvo (condição especial):    R$ 15.396,77", "por regra 184, por IA conferida 0, por decisão de uma pessoa 0",
                    "Pendências: 16", "os 6 do fechamento: comissoes_por_lojista.csv"):

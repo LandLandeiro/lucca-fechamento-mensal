@@ -231,7 +231,7 @@ def test_rascunhos_de_contestacao(saida):
                       "ponte_duplicata": "821.88"}
     for nome, total in totais.items():
         assert sum(Decimal(l["valor_brl"]) for l in _csv(pasta, f"{nome}.csv")) == Decimal(total)
-    assert len(_csv(pasta, "orbe_rota_global.csv")) == 79
+    assert len(_csv(pasta, "orbe_rota_global.csv")) == 87  # D77: os 4 pares venda/estorno entram, com sinal
     assert "RASCUNHO para a Helena revisar" in (pasta / "orbe_rota_global.md").read_text(encoding="utf-8")
 
 

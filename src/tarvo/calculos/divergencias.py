@@ -37,7 +37,7 @@ from tarvo.cadastro import Cadastro, condicao_especial, linha_vigente
 from tarvo.calculos.comissoes import ComissaoTransacao, ResultadoCheckout
 from tarvo.calculos.remessa import ClassificacaoRemessa, modo_participacao, participacao
 from tarvo.formatos import centavos, fmt_dinheiro, fmt_pct, modo_arredondamento, nome_mes
-from tarvo.modelo import ItemRastro, OperacaoPonte, Pendencia
+from tarvo.modelo import OperacaoPonte, Pendencia
 from tarvo.regras import valor_da_regra
 
 LINHA = "CHECKOUT"
@@ -98,57 +98,58 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
             raise AssertionError(f"grupo de divergência {cabeca_id} sem a transação de origem")
         difs = [diferenca(c, modo) for c in itens]
         liquido = sum(difs, ZERO)
-        if liquido == 0:
-            if any(d != 0 for d in difs):
-                res.grupos_zerados += 1
-            continue
-
-        t = cabeca.transacao
-        aplicada = t.taxa_aplicada_pct / 100
-        outros = [c.transacao.ref_origem for c in itens[1:]]
-        motivo = f"Orbe aplicou {fmt_pct(aplicada)}%; contratada {fmt_pct(cabeca.taxa_contratada)}% ({cabeca.fonte_taxa})"
-        if t.tipo_lancamento == "ESTORNO":
-            motivo += f"; estorno de venda de {t.data_venda_original.isoformat()} que não está no arquivo"
-        if outros:
-            motivo += f"; líquida com {', '.join(outros)} (parcial)"
-        condicoes[id_divergencia(cabeca_id)] = cabeca.condicao
-        natureza = _natureza_checkout(cabeca, aplicada, cadastro)
-        res.linhas.append({
-            "id_saida": id_divergencia(cabeca_id),
-            "cnpj": cabeca.cnpj,
-            "linha_negocio": LINHA,
-            "ref_origem": cabeca_id,
-            "taxa_contratada_pct": cabeca.taxa_contratada,
-            "taxa_aplicada_pct": aplicada,
-            "diferenca_brl": liquido,
-            "lojista": cadastro.lojistas[cabeca.cnpj].nome,
-            "data": t.data_movimento,
-            "tipo_lancamento": t.tipo_lancamento,
-            "valor_bruto": sum((c.transacao.valor_bruto for c in itens), ZERO),
-            "comissao_contratada": sum((c.comissao for c in itens), ZERO),
-            "valor_taxa_orbe": sum((c.transacao.valor_taxa for c in itens), ZERO),
-            # D71: o que o lojista perdeu de fato (a Orbe liquida o líquido, Q-U 4): valor cobrado − comissão contratada
-            "valor_a_devolver_brl": sum((c.transacao.valor_taxa - c.comissao for c in itens), ZERO),
-            "direcao": "COBROU_A_MAIS" if liquido > 0 else "COBROU_A_MENOS",
-            "liquida_com": ", ".join(outros),
-            "natureza": natureza,
-            "motivo": motivo,
-            "decisao": decisao,
-        })
-        res.itens_por_div[id_divergencia(cabeca_id)] = itens
+        if liquido == 0 and any(d != 0 for d in difs):
+            res.grupos_zerados += 1  # D77: listadas mesmo assim, cada uma com o seu sinal; o líquido é 0
+        # D77 (Q-AB 3): transação por transação; o estorno de uma venda com taxa errada entra com valor negativo
         for c, d in zip(itens, difs):
-            item = ItemRastro(id_divergencia(cabeca_id), c.transacao.arquivo_origem, c.transacao.ref_origem, d)
-            res.rastro.append({
-                "id_saida": item.id_saida,
-                "arquivo_origem": item.arquivo_origem,
-                "ref_origem": item.ref_origem,
-                "valor": item.valor,
-                "linha_arquivo": c.transacao.linha_arquivo,
-                "tipo_lancamento": c.transacao.tipo_lancamento,
-                "valor_bruto": c.transacao.valor_bruto,
+            if d == 0:
+                continue
+            t = c.transacao
+            aplicada = t.taxa_aplicada_pct / 100
+            outros = [x.transacao.ref_origem for x in itens if x is not c]
+            motivo = f"Orbe aplicou {fmt_pct(aplicada)}%; contratada {fmt_pct(c.taxa_contratada)}% ({c.fonte_taxa})"
+            if t.tipo_lancamento in ("ESTORNO", "REVERSAO ANTECIPACAO") and c is not cabeca:
+                motivo += f"; {t.tipo_lancamento.lower()} de {cabeca_id}"
+            elif t.tipo_lancamento == "ESTORNO":
+                motivo += f"; estorno de venda de {t.data_venda_original.isoformat()} que não está no arquivo"
+            if outros:
+                motivo += (f"; com {', '.join(outros)} o líquido é 0: não entra em cobrança nem devolução (Q-N 3)"
+                           if liquido == 0 else f"; líquida com {', '.join(outros)} (parcial)")
+            ida = id_divergencia(t.ref_origem)
+            condicoes[ida] = c.condicao
+            res.linhas.append({
+                "id_saida": ida,
+                "cnpj": c.cnpj,
+                "linha_negocio": LINHA,
+                "ref_origem": t.ref_origem,
                 "taxa_contratada_pct": c.taxa_contratada,
-                "nota": f"round({c.transacao.valor_bruto} × ({fmt_pct(c.transacao.taxa_aplicada_pct / 100)}% − "
-                        f"{fmt_pct(c.taxa_contratada)}%))",
+                "taxa_aplicada_pct": aplicada,
+                "diferenca_brl": d,
+                "lojista": cadastro.lojistas[c.cnpj].nome,
+                "data": t.data_movimento,
+                "tipo_lancamento": t.tipo_lancamento,
+                "valor_bruto": t.valor_bruto,
+                "comissao_contratada": c.comissao,
+                "valor_taxa_orbe": t.valor_taxa,
+                # D71: o que o lojista perdeu de fato (a Orbe liquida o líquido, Q-U 4): valor cobrado − comissão contratada
+                "valor_a_devolver_brl": t.valor_taxa - c.comissao,
+                "direcao": "COBROU_A_MAIS" if d > 0 else "COBROU_A_MENOS",
+                "liquida_com": ", ".join(outros),
+                "natureza": _natureza_checkout(c, aplicada, cadastro),
+                "motivo": motivo,
+                "decisao": decisao,
+            })
+            res.itens_por_div[ida] = [c]
+            res.rastro.append({
+                "id_saida": ida,
+                "arquivo_origem": t.arquivo_origem,
+                "ref_origem": t.ref_origem,
+                "valor": d,
+                "linha_arquivo": t.linha_arquivo,
+                "tipo_lancamento": t.tipo_lancamento,
+                "valor_bruto": t.valor_bruto,
+                "taxa_contratada_pct": c.taxa_contratada,
+                "nota": f"round({t.valor_bruto} × ({fmt_pct(aplicada)}% − {fmt_pct(c.taxa_contratada)}%))",
             })
 
     res.linhas.sort(key=lambda l: (-l["diferenca_brl"], l["cnpj"], l["ref_origem"]))
