@@ -66,6 +66,7 @@ def test_numeros_sem_ruido_de_float(ponte):
 
 # --- elegibilidade ----------------------------------------------------------
 
+@pytest.mark.caso_ouro
 def test_pc_0926_0002_liquidada_em_outubro_entra(cls, rem):
     # R6: contratada 30/09, liquidada 01/10 → competência pela contratação
     op = next(o for o, _ in cls.elegiveis if o.ref_origem == "PC-0926-0002")
@@ -76,6 +77,7 @@ def test_pc_0926_0002_liquidada_em_outubro_entra(cls, rem):
     assert "liquidada em 2026-10-01" in linha["nota"]
 
 
+@pytest.mark.caso_ouro
 def test_pc_0926_0162_conta_uma_vez(rem):
     linhas = _rastro(rem, "PC-0926-0162")
     assert {(l["id_saida"], l["linha_arquivo"]) for l in linhas} == {
@@ -86,6 +88,7 @@ def test_pc_0926_0162_conta_uma_vez(rem):
     assert exc["valor"] == Decimal("821.88") and "reprocessada" in exc["nota"]
 
 
+@pytest.mark.caso_ouro
 def test_pc_0926_0210_spread_negativo_fora_da_comissao(cls, rem, divr):
     # R96: Ponte Aérea, spread −687,52, "Taxa travada no pedido (D-1)"
     assert all(o.ref_origem != "PC-0926-0210" for o, _ in cls.elegiveis)
@@ -142,6 +145,7 @@ def test_mundo_aberto_comissao_sobre_o_spread_realizado(rem):
 
 # --- divergência ------------------------------------------------------------
 
+@pytest.mark.caso_ouro
 def test_pc_0926_0011_mundo_aberto(divr):
     # R10 (D28): round((1,5007% − 1,20%) × 4,0315 × 2.438,46) = round(29,5605) = 29,56
     d = next(x for x in divr.linhas if x["ref_origem"] == "PC-0926-0011")

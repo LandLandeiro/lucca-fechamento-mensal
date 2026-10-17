@@ -26,6 +26,7 @@ def _rastro(divs, ref):
     return [r for r in divs.rastro if r["id_saida"] == f"DIV-{ref}"]
 
 
+@pytest.mark.caso_ouro
 def test_venda_divergente_estornada_no_mes_lista_as_duas_com_sinal(divs):
     """D77 (Q-AB 3): transação por transação; o estorno de uma venda com taxa errada entra com valor negativo.
     L1056 TX88428676: round(10.420,13 × (4,09% − 3,59%)) = 52,10; L1471 TX88446419 (estorno): −52,10 → líquido 0."""
@@ -196,9 +197,10 @@ def test_item_sem_campo_obrigatorio_e_erro(cadastro, regras):
         taxa_contratada(cadastro, ROTA, "Débito", date(2026, 9, 20), r)
 
 
+@pytest.mark.caso_ouro
 def test_natureza_de_cada_divergencia(divs):
-    """D63 (Q-N 1, Q-V, Q-T 1): Casa (condição especial) e Bridge (a Orbe aplicou a taxa da linha anterior da
-    planilha) são condição não informada à Orbe: devolução ao lojista, sem cobrar a Orbe. Rota: contrato."""
+    """D63 corrigida pela D76: Casa (condição especial, Q-N 1) é condição não informada: devolução ao lojista, sem
+    cobrar a Orbe. Bridge e Rota são contrato (Q-AA 1, Helena 11:37: 'O que decide é o contrato, não o aviso')."""
     por_lojista = {}
     for d in divs.linhas:
         por_lojista.setdefault(d["cnpj"], set()).add(d["natureza"])

@@ -7,6 +7,8 @@ arredondamento comum no centavo (meio para longe do zero), linha por linha (Hele
 from datetime import date
 from decimal import Decimal
 
+import pytest
+
 from tarvo.cadastro import interpretar_vigencia, taxa_contratada
 
 
@@ -58,6 +60,7 @@ def test_rota_tx88428676_e_estorno(checkout):
     assert _com(checkout, "TX88446419").comissao == Decimal("-374.08")
 
 
+@pytest.mark.caso_ouro
 def test_oxford_estorno_de_venda_de_agosto(checkout):
     # L39: −2.193,16 × 3,79% (Oxford R20, 7–12x, vigente em 22/08) = −83,1207… → −83,12
     e = _com(checkout, "TX88444848")
@@ -98,6 +101,7 @@ def test_casa_do_estudante_setembro_zerado(checkout):
     assert all(c.taxa_contratada == 0 and c.comissao == 0 for c in de_setembro)
 
 
+@pytest.mark.caso_ouro
 def test_casa_do_estudante_total_e_o_estorno_de_agosto(checkout):
     # L433 TX88445133: estorno de venda de 21/08 (fora da condição especial, que começa em 01/09);
     # pela regra 20:06 usa a taxa de 21/08: débito 1,49% × 369,39 = 5,5039… → −5,50

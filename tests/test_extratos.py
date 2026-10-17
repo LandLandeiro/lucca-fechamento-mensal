@@ -541,6 +541,7 @@ def test_aurora_avisa_layout_mudado(tmp_path):
     assert any("cabeçalho de colunas diferente do esperado" in a.mensagem for a in lido.avisos)
 
 
+@pytest.mark.caso_ouro
 def test_pix_de_18240_e_acompanhamento_da_remessa_de_outubro(saida):
     """D87 (Q-N 5, Helena 09:44): 'É a Ponte Aérea mandando dinheiro de uma remessa que ainda não foi feita. A operação
     sai em outubro.' A pendência vira acompanhamento, com a fala e o próximo passo."""

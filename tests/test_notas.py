@@ -272,6 +272,7 @@ def test_rascunhos_deterministicos(tmp_path):
         assert p.read_bytes() == (b / "rascunhos" / p.name).read_bytes(), p.name
 
 
+@pytest.mark.caso_ouro
 def test_spread_negativo_com_os_dois_valores_rotulados(saida):
     """D80 (Q-AA 3): 'o spread negativo do relatório, que é o que aconteceu, e a diferença até o spread do contrato,
     que é o que eu vou pedir à Ponte'."""
