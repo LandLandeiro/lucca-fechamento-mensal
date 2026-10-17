@@ -1,0 +1,88 @@
+"""Validador: a saída real passa; total que não fecha, linha perdida e formato errado falham."""
+
+import csv
+from pathlib import Path
+
+import pytest
+
+from tarvo.__main__ import executar
+from conftest import DADOS, RAIZ
+
+
+@pytest.fixture(scope="module")
+def saida(tmp_path_factory):
+    pasta = tmp_path_factory.mktemp("saida")
+    resumo = executar(DADOS, pasta, RAIZ / "regras.yaml")
+    return pasta, resumo
+
+
+def _reescrever(caminho: Path, transformar):
+    with open(caminho, encoding="utf-8", newline="") as f:
+        linhas = list(csv.reader(f, delimiter=";"))
+    linhas = transformar(linhas)
+    with open(caminho, "w", encoding="utf-8", newline="") as f:
+        csv.writer(f, delimiter=";", lineterminator="\n").writerows(linhas)
+
+
+def _copia(saida, tmp_path):
+    pasta, _ = saida
+    for p in pasta.iterdir():
+        (tmp_path / p.name).write_bytes(p.read_bytes())
+    return tmp_path
+
+
+def test_saida_real_valida(saida):
+    _, resumo = saida
+    assert resumo["erros_validacao"] == []
+
+
+def test_formato_dos_csvs(saida):
+    pasta, _ = saida
+    texto = (pasta / "comissoes_por_lojista.csv").read_text(encoding="utf-8")
+    cab = texto.splitlines()[0]
+    assert cab.startswith("id_saida;cnpj;lojista;linha_negocio;comissao_brl")
+    assert "COM-95927868000148-CHECKOUT;95927868000148;" in texto
+    assert ";15620.55;" in texto
+    rastro = (pasta / "rastro.csv").read_text(encoding="utf-8")
+    assert rastro.splitlines()[0].startswith("id_saida;arquivo_origem;ref_origem;valor")
+    assert "COM-95927868000148-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88428676;374.08;1056;" in rastro
+
+
+def test_total_que_nao_fecha_e_erro(saida, tmp_path):
+    from tarvo.saida.validador import validar_saida
+
+    pasta = _copia(saida, tmp_path)
+
+    def adulterar(linhas):
+        for l in linhas[1:]:
+            if l[0] == "COM-95927868000148-CHECKOUT":
+                l[4] = "15620.56"
+        return linhas
+
+    _reescrever(pasta / "comissoes_por_lojista.csv", adulterar)
+    erros = validar_saida(pasta)
+    assert any("COM-95927868000148-CHECKOUT" in e and "soma do rastro" in e for e in erros)
+
+
+def test_linha_da_orbe_sumida_e_erro(saida, tmp_path, orbe):
+    from tarvo.saida.validador import validar_saida
+
+    pasta = _copia(saida, tmp_path)
+    _reescrever(pasta / "rastro.csv", lambda ls: [l for l in ls if l[2] != "TX88444848"])
+    erros = validar_saida(pasta, {orbe.arquivo: {t.ref_origem for t in orbe.transacoes}})
+    assert any("sem rastro nem pendência" in e for e in erros)
+
+
+def test_cnpj_e_decimal_fora_do_formato_sao_erro(saida, tmp_path):
+    from tarvo.saida.validador import validar_saida
+
+    pasta = _copia(saida, tmp_path)
+
+    def adulterar(linhas):
+        linhas[1][1] = "3229837000103"  # CNPJ com 13 dígitos
+        linhas[1][4] = linhas[1][4].replace(".", ",")  # vírgula decimal
+        return linhas
+
+    _reescrever(pasta / "comissoes_por_lojista.csv", adulterar)
+    erros = validar_saida(pasta)
+    assert any("CNPJ" in e for e in erros) and any("fora do formato 0.00" in e for e in erros)

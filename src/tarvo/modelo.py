@@ -40,12 +40,22 @@ class TaxaContratada:
 
     linha_planilha: int
     lojista: str
-    cnpj_bruto: str | None
+    cnpj_bruto: str | None  # como veio (repr da célula)
+    cnpj: str | None  # 14 dígitos, ou None se não deu para normalizar
     ec_orbe: str | None
-    taxas: dict[str, Decimal | str | None]  # coluna -> valor como veio (número ou texto)
+    taxas: dict[str, Decimal | str | None]  # coluna -> fração exata, texto não interpretado, ou None
     vigencia_texto: str | None
     obs: str | None
     comentario: str | None = None
+
+
+@dataclass(frozen=True)
+class Aviso:
+    """Leitura estranha encontrada por um leitor ou pelo cadastro. Nunca é resolvida por chute."""
+
+    arquivo: str
+    local: str  # ex.: "L39", "R14"
+    mensagem: str
 
 
 @dataclass(frozen=True)

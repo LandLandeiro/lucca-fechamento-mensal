@@ -3,13 +3,21 @@
 Formato fixo (docs/case.md): separador `;`, ponto decimal, datas AAAA-MM-DD, CNPJ só
 números (14 dígitos), `linha_negocio` CHECKOUT|REMESSA, `banco` AURORA|MERIDIANO,
 `metodo` REGRA|IA|HUMANO. A formatação acontece só aqui; as contas chegam em Decimal.
+
+Colunas obrigatórias primeiro, na ordem do case; colunas extras (bem-vindas pelo case)
+depois. Colunas terminadas em `_pct` saem como percentual (3.59); outros Decimal como
+dinheiro com 2 casas. Só escreve os arquivos pedidos: entregável ainda não implementado
+não vira CSV vazio (que pareceria "nada a reportar").
 """
 
 from __future__ import annotations
 
+import csv
+from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
-from tarvo.modelo import ResultadoFechamento
+from tarvo.formatos import fmt_dinheiro, fmt_pct
 
 COLUNAS = {
     "comissoes_por_lojista.csv": ["id_saida", "cnpj", "lojista", "linha_negocio", "comissao_brl"],
@@ -29,6 +37,40 @@ COLUNAS = {
 }
 
 
-def escrever_saida(resultado: ResultadoFechamento, pasta: Path) -> list[Path]:
-    """Escreve os 6 CSVs e devolve os caminhos."""
-    raise NotImplementedError
+def formatar(coluna: str, valor: object) -> str:
+    if valor is None:
+        return ""
+    if isinstance(valor, Decimal):
+        return fmt_pct(valor) if coluna.endswith("_pct") else fmt_dinheiro(valor)
+    if isinstance(valor, date):
+        return valor.isoformat()
+    if isinstance(valor, float):
+        raise TypeError(f"float na saída (coluna {coluna}): use Decimal")
+    return str(valor)
+
+
+def escrever_csv(caminho: Path, linhas: list[dict]) -> Path:
+    """Escreve um CSV do case: obrigatórias na ordem do case + extras na ordem em que aparecem."""
+    obrigatorias = COLUNAS[caminho.name]
+    extras: list[str] = []
+    for linha in linhas:
+        faltando = [c for c in obrigatorias if c not in linha]
+        if faltando:
+            raise ValueError(f"{caminho.name}: linha sem colunas obrigatórias {faltando}: {linha}")
+        extras.extend(c for c in linha if c not in obrigatorias and c not in extras)
+    colunas = obrigatorias + extras
+    caminho.parent.mkdir(parents=True, exist_ok=True)
+    with open(caminho, "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f, delimiter=";", lineterminator="\n")
+        w.writerow(colunas)
+        for linha in linhas:
+            w.writerow([formatar(c, linha.get(c)) for c in colunas])
+    return caminho
+
+
+def escrever_saida(arquivos: dict[str, list[dict]], pasta: Path) -> list[Path]:
+    """Escreve os CSVs pedidos ({nome_arquivo: linhas}) e devolve os caminhos."""
+    desconhecidos = set(arquivos) - set(COLUNAS)
+    if desconhecidos:
+        raise ValueError(f"arquivos de saída fora do case: {sorted(desconhecidos)}")
+    return [escrever_csv(pasta / nome, linhas) for nome, linhas in arquivos.items()]

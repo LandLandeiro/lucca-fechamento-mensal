@@ -1,0 +1,2 @@
+id_saida;tipo;ref_origem;valor_brl;motivo;quem_decide
+PEN-SEM_CONTRATO_VIGENTE-EC1076801732;SEM_CONTRATO_VIGENTE;EC1076801732;7876.05;"EC 1076801732 sem contrato na aba vigente; 'Não fatura a Atlas até o comercial confirmar' (Helena 20:24). valor_brl = taxa cobrada pela Orbe, informativo (57 transações)";comercial
