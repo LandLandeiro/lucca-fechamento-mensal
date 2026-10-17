@@ -21,6 +21,7 @@ no rastro de uma pendência (PEN-…). O validador confere isso.
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
+from datetime import date
 from decimal import Decimal
 
 from tarvo.cadastro import Cadastro, coluna_do_produto, taxa_contratada
@@ -41,6 +42,8 @@ class ComissaoTransacao:
     nota: str
     fonte_taxa: str = ""  # de onde veio a taxa contratada (linha da planilha ou regra)
     condicao: dict | None = None  # condição especial (regras.yaml) que deu a taxa contratada, se houver
+    coluna: str = ""  # coluna da planilha da transação (taxas.coluna_por_produto)
+    data_ref: date | None = None  # data em que a taxa contratada foi procurada (a da venda original, no estorno)
 
 
 @dataclass
@@ -172,7 +175,8 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
             continue
         com = centavos(t.valor_bruto * enc.taxa, modo)
         nota = "; ".join(x for x in (nota, enc.fonte) if x)
-        res.por_transacao[t.ref_origem] = ComissaoTransacao(t, cnpj, enc.taxa, com, nota, enc.fonte, enc.condicao)
+        res.por_transacao[t.ref_origem] = ComissaoTransacao(t, cnpj, enc.taxa, com, nota, enc.fonte, enc.condicao,
+                                                            coluna, data_ref)
 
     por_id = {t.ref_origem: t for t in transacoes}
     for t in reversoes:

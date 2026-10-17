@@ -244,6 +244,30 @@ divergencias:
       e as transações no rastro (detalhe em divergencias_taxa.csv). Base: Slack Helena 20:05 ('Isso eu decido, não
       vai automático. Preciso ver cada caso com transação e valor') e 20:49 (Q-F 2, Casa: 'junto com o comercial')
     pergunta_ref: P03
+  natureza:                 # D63: coluna `natureza` de divergencias_taxa.csv (lista fechada)
+    valor:
+      contrato_orbe: "checkout: a Orbe aplicou taxa diferente do contrato que ela conhecia; a Helena cobra a Orbe e devolve ao lojista (Helena 20:05)"
+      condicao_nao_informada:
+        definicao: >-
+          checkout: a taxa contratada vem de uma condição que a Orbe não recebeu: condição especial do regras.yaml,
+          ou a Orbe aplicou exatamente a taxa da linha anterior da planilha (vigência já encerrada na data).
+          Devolver ao lojista; nunca cobrar da Orbe; sem rascunho para a Orbe
+        quem_decide: "Helena + comercial"
+        citacao: "A Orbe cobrou certo pela planilha, porque ninguém avisou da isenção. Não há o que cobrar da Orbe: é devolução ao lojista, pendência minha com o comercial."
+        citacao_fonte: "Helena 09:44, Q-N 1"
+        avisos_conhecidos:   # por CNPJ: o que se sabe do aviso à Orbe
+          "22224579000109": "Helena 09:53, Q-T 1: 'A Bridge foi avisada alguns dias depois de 15/09'"
+      spread_acima_contrato: "remessa: o lojista pagou spread acima do contratado; a Helena contesta com a Ponte (Helena 20:48, 20:58)"
+      spread_abaixo_contrato: "remessa: o lojista pagou spread abaixo do contratado (não aconteceu em setembro)"
+      spread_negativo: "remessa: spread negativo; o lojista não pagou a mais, o prejuízo é da Tarvo com a Ponte (Helena 09:44, Q-O); contestação"
+    status: ASSUMO
+    autor: Lucca
+    fonte: >-
+      decisão Lucca 17/10 (D63) sobre Q-N 1 e Q-V (Casa: separada das divergências de contrato, fora da cobrança da
+      Orbe), Q-O (spread negativo é de outra natureza; pode ficar listado se estiver claro) e Q-T 1 (a Bridge foi
+      avisada dias depois de 15/09; nos dados, a Orbe aplica 2,59% à vista até 18/09 e 2,19% a partir de 23/09).
+      A Bridge como condicao_nao_informada é leitura nossa: a data do aviso está em aberto (pergunta do Theo, 11:16)
+    pergunta_ref: null
   criterio_checkout:        # substitui a tolerância 0 (D09), removida (D27)
     valor: >-
       divergência só quando a taxa aplicada ≠ contratada; valor = round(valor_bruto × (taxa aplicada − contratada))

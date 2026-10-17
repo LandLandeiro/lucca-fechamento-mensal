@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from tarvo.calculos.divergencias import divergencias_checkout
+from tarvo.calculos.divergencias import divergencias_checkout, divergencias_remessa
 from tarvo.formatos import fmt_dinheiro
 
 
@@ -126,7 +126,7 @@ def test_uma_pendencia_por_lojista_para_decidir(divs):
     assert {(k, p.valor_brl, p.quem_decide) for k, p in pend.items()} == {
         ("PEN-DIVERGENCIA_CHECKOUT-00520815000100", Decimal("15397.42"), "Helena + comercial"),
         ("PEN-DIVERGENCIA_CHECKOUT-95927868000148", Decimal("1546.28"), "Helena"),
-        ("PEN-DIVERGENCIA_CHECKOUT-22224579000109", Decimal("29.95"), "Helena"),
+        ("PEN-DIVERGENCIA_CHECKOUT-22224579000109", Decimal("29.95"), "Helena + comercial"),  # D63: condição não informada
     }
     casa = pend["PEN-DIVERGENCIA_CHECKOUT-00520815000100"]
     assert "O que foi cobrado eu devolvo ao lojista, junto com o comercial." in casa.motivo
@@ -190,3 +190,55 @@ def test_item_sem_campo_obrigatorio_e_erro(cadastro, regras):
     r = _com_condicoes(regras, {k: v for k, v in ITEM_ROTA.items() if k != "fonte"})
     with pytest.raises(RegraInvalida, match="faltam campos"):
         taxa_contratada(cadastro, ROTA, "Débito", date(2026, 9, 20), r)
+
+
+def test_natureza_de_cada_divergencia(divs):
+    """D63 (Q-N 1, Q-V, Q-T 1): Casa (condição especial) e Bridge (a Orbe aplicou a taxa da linha anterior da
+    planilha) são condição não informada à Orbe: devolução ao lojista, sem cobrar a Orbe. Rota: contrato."""
+    por_lojista = {}
+    for d in divs.linhas:
+        por_lojista.setdefault(d["cnpj"], set()).add(d["natureza"])
+    assert por_lojista == {"00520815000100": {"condicao_nao_informada"}, "22224579000109": {"condicao_nao_informada"},
+                           "95927868000148": {"contrato_orbe"}}
+    bridge = {p.id_saida: p for p in divs.pendencias}["PEN-DIVERGENCIA_CHECKOUT-22224579000109"]
+    assert "A Bridge foi avisada alguns dias depois de 15/09" in bridge.motivo and "Não há o que cobrar da Orbe" in bridge.motivo
+    assert "Devolver 29.95 ao lojista" in bridge.motivo and "data do aviso em aberto" in bridge.motivo.lower()
+
+
+def test_natureza_da_remessa(divr_saida):
+    nat = {}
+    for d in divr_saida:
+        nat.setdefault(d["natureza"], []).append(d)
+    assert {k: len(v) for k, v in nat.items()} == {"spread_acima_contrato": 23, "spread_negativo": 4}
+    assert all(d["diferenca_brl"] < 0 for d in nat["spread_negativo"])
+
+
+@pytest.fixture(scope="module")
+def divr_saida(cadastro, regras):
+    from tarvo.calculos.remessa import classificar_remessa
+    from tarvo.leitores.ponte_email import ler_email, ler_operacoes
+    from tarvo.regras import valor_da_regra
+    from conftest import DADOS
+    eml = next(DADOS.glob("03_*.eml"))
+    mail = ler_email(eml)
+    ponte = ler_operacoes(mail.anexo_xlsx, eml.name, mail.nome_anexo, valor_da_regra(regras, "ponte.linhas_que_nao_sao_dados"))
+    return divergencias_remessa(classificar_remessa(ponte.operacoes, ponte.competencia, cadastro, regras), cadastro, regras).linhas
+
+
+@pytest.mark.parametrize("valor", ["", "isencao_nao_informada", "spread_negativo"])
+def test_validador_recusa_natureza_vazia_ou_fora_da_lista(tmp_path, valor):
+    """Vazia, nome antigo, ou natureza de remessa numa linha de checkout: erro."""
+    import csv as _csv
+    from tarvo.__main__ import executar
+    from tarvo.saida.validador import validar_saida
+    from conftest import DADOS, RAIZ
+    pasta = tmp_path / "s"
+    executar(DADOS, pasta, RAIZ / "regras.yaml")
+    caminho = pasta / "divergencias_taxa.csv"
+    with open(caminho, encoding="utf-8", newline="") as f:
+        linhas = list(_csv.reader(f, delimiter=";"))
+    i = linhas[0].index("natureza")
+    linhas[1][i] = valor  # a primeira é de checkout (ordenadas por diferença)
+    with open(caminho, "w", encoding="utf-8", newline="") as f:
+        _csv.writer(f, delimiter=";", lineterminator="\n").writerows(linhas)
+    assert any("natureza" in e and linhas[1][0] in e for e in validar_saida(pasta))

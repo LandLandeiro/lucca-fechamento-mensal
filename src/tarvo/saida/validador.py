@@ -168,6 +168,11 @@ def validar_saida(
 
     if "pendencias.csv" in dados:
         erros.extend(_refs_pendencias(dados))
+    for i, l in enumerate(dados.get("divergencias_taxa.csv", []), start=2):  # D63
+        nat = l.get("natureza") or ""
+        if nat not in _NATUREZA_POR_LINHA.get(l.get("linha_negocio"), ()):
+            erros.append(f"divergencias_taxa.csv:{i} {l['id_saida']}: natureza {nat!r} fora de "
+                         f"{list(_NATUREZA_POR_LINHA.get(l.get('linha_negocio'), ()))}")
     if "notas_a_emitir.csv" in dados:
         erros.extend(_notas(dados))
     if (pasta / "contestacao_ponte.csv").exists():
@@ -200,6 +205,11 @@ def validar_saida(
     return erros
 
 
+# D63: natureza da divergência, lista fechada por linha de negócio
+_NATUREZA_POR_LINHA = {
+    "CHECKOUT": ("contrato_orbe", "condicao_nao_informada"),
+    "REMESSA": ("spread_acima_contrato", "spread_abaixo_contrato", "spread_negativo"),
+}
 _RE_ID_PURO = re.compile(r"^[^\s,;()|]+$")
 
 

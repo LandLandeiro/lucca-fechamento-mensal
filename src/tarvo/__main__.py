@@ -474,10 +474,6 @@ def _imprimir_resumo(r: dict, saida: Path) -> None:
     for p in r["pendencias"]:
         por_resp[p.quem_decide] = por_resp.get(p.quem_decide, 0) + 1
 
-    def parte(divs, direcao):
-        sel = [d["diferenca_brl"] for d in divs if d["direcao"] == direcao]
-        return len(sel), fmt_brl(abs(sum(sel, ZERO)))
-
     obrig = ["comissoes_por_lojista.csv", "divergencias_taxa.csv", "notas_a_emitir.csv",
              "lancamentos_classificados.csv", "pendencias.csv", "rastro.csv"]
     extras = [a for a in r["arquivos_saida"] if a not in obrig]
@@ -487,12 +483,17 @@ def _imprimir_resumo(r: dict, saida: Path) -> None:
     print(f"Comissão de remessa (50% do spread):    {fmt_brl(r['remessa']['total']):>16}  ({len(r['remessa']['comissoes'])} lojistas)")
     print(f"Notas fiscais a emitir:                 {fmt_brl(sum((n['valor_brl'] for n in notas), ZERO)):>16}  ({len(notas)} notas)")
     print("Taxa cobrada diferente do contrato (a Helena decide cada caso):")
-    for nome, divs, unidade in (("checkout", div_c, "transações"), ("remessa", div_r, "operações")):
-        for direcao, texto in (("COBROU_A_MAIS", "a mais"), ("COBROU_A_MENOS", "a menos")):
-            n, v = parte(divs, direcao)
-            if n:
-                rotulo = f"  {nome}, cobrado {texto}:"
-                print(f"{rotulo:<40}{v:>16}  ({n} {unidade})")
+    rotulos = {  # D63: a natureza separa o que se cobra da Orbe do que só se devolve ao lojista
+        "contrato_orbe": ("checkout, a cobrar da Orbe:", "transações"),
+        "condicao_nao_informada": ("checkout, devolver sem cobrar a Orbe:", "transações"),
+        "spread_acima_contrato": ("remessa, contestar com a Ponte:", "operações"),
+        "spread_abaixo_contrato": ("remessa, cobrado a menos:", "operações"),
+        "spread_negativo": ("remessa, spread negativo (vs. contrato):", "operações"),
+    }
+    for natureza, (rotulo, unidade) in rotulos.items():
+        sel = [d["diferenca_brl"] for d in div_c + div_r if d["natureza"] == natureza]
+        if sel:
+            print(f"  {rotulo:<38}{fmt_brl(sum(sel, ZERO)):>16}  ({len(sel)} {unidade})")
     print(f"Lançamentos dos extratos: {len(r['lancamentos'])} (por regra {metodos['REGRA']}, por IA conferida "
           f"{metodos['IA']}, por decisão de uma pessoa {metodos['HUMANO']})")
     print(f"Pendências: {len(r['pendencias'])}, com motivo e valor em pendencias.csv")
