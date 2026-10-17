@@ -186,15 +186,15 @@ def test_contratado_bate_com_comissoes_divergencias_e_orbe(painel):
     assert {l["id_saida"] for l in sem_contrato} == {i for i, a in linhas.items() if a["data-situacao"] == "sem_contrato"}
     # resíduo de truncamento = Σ valor_taxa da Orbe (linhas das comissões) − Σ comissão − Σ divergência
     rastro = _ler(pasta / "rastro.csv")
-    refs = [r["ref_origem"] for r in rastro if r["id_saida"].startswith("COM-") and r["id_saida"].endswith("-CHECKOUT")]
-    arquivo = next(r["arquivo_origem"] for r in rastro if r["id_saida"].startswith("COM-") and r["id_saida"].endswith("-CHECKOUT"))
-    vt = {t.ref_origem: t.valor_taxa for t in ler_orbe(DADOS / arquivo).transacoes}
+    refs = [(r["arquivo_origem"], r["ref_origem"]) for r in rastro if r["id_saida"].startswith("COM-") and r["id_saida"].endswith("-CHECKOUT")]
+    arquivos = {r["arquivo_origem"] for r in rastro if r["id_saida"].startswith("COM-") and r["id_saida"].endswith("-CHECKOUT")}
+    vt = {(a, t.ref_origem): t.valor_taxa for a in arquivos for t in ler_orbe(DADOS / a).transacoes}
     residuo = sum(vt[r] for r in refs) - sum(Decimal(c["comissao_brl"]) for c in coms) - sum(div_cnpj.values())
     (nota,) = p.com("data-residuo")
     assert Decimal(nota["data-residuo"]) == residuo
     for a in linhas.values():  # a linha "pela taxa aplicada" é Σ valor_taxa da Orbe
         if a["data-situacao"] != "sem_contrato":
-            ids = [r["ref_origem"] for r in rastro if r["id_saida"] == a["data-id"]]
+            ids = [(r["arquivo_origem"], r["ref_origem"]) for r in rastro if r["id_saida"] == a["data-id"]]
             assert Decimal(a["data-aplicada"]) == sum(vt[i] for i in ids)
 
 
@@ -203,11 +203,12 @@ def test_aba_remessa_bate_com_comissoes_e_divergencias(painel):
     linhas = {a["data-remessa"]: a for a in p.com("data-remessa")}
     coms = [c for c in _ler(pasta / "comissoes_por_lojista.csv") if c["linha_negocio"] == "REMESSA"]
     assert set(linhas) == {c["id_saida"] for c in coms}
-    div_cnpj, negativo = defaultdict(Decimal), defaultdict(Decimal)
+    div_cnpj, negativo, ate_contrato = defaultdict(Decimal), defaultdict(Decimal), defaultdict(Decimal)
     for d in _ler(pasta / "divergencias_taxa.csv"):
         if d["linha_negocio"] == "REMESSA":
             if Decimal(d["spread_brl"]) < 0:  # spread negativo: outra natureza (Q-O), não é "com diferença"
                 negativo[d["cnpj"]] += Decimal(d["spread_brl"])
+                ate_contrato[d["cnpj"]] += Decimal(d["diferenca_brl"])
             else:
                 div_cnpj[d["cnpj"]] += Decimal(d["diferenca_brl"])
     for c in coms:
@@ -216,6 +217,12 @@ def test_aba_remessa_bate_com_comissoes_e_divergencias(painel):
         assert Decimal(a["data-divergencia"]) == div_cnpj[c["cnpj"]]
         esperado = "com_diferenca" if div_cnpj[c["cnpj"]] else ("spread_negativo" if negativo[c["cnpj"]] else "confere")
         assert a["data-situacao"] == esperado
+        assert Decimal(a["data-negativo"]) == negativo[c["cnpj"]]
+        assert Decimal(a["data-negativo-contrato"]) == ate_contrato[c["cnpj"]]
+    # os dois valores do spread negativo (Q-AA 3): a pendência leva a diferença até o contrato
+    pend = [l for l in _ler(pasta / "pendencias.csv") if l["id_saida"].endswith("SPREAD_NEGATIVO")]
+    if pend:
+        assert Decimal(pend[0]["valor_brl"]) == sum(ate_contrato.values())
 
 
 def test_quebra_de_linha_do_checkout_nao_muda_os_bytes(tmp_path, monkeypatch):
@@ -371,3 +378,37 @@ def test_nenhum_caminho_local_no_html(painel):
     _, caminho, _, _ = painel
     texto = caminho.read_text(encoding="utf-8")
     assert not re.search(r"[A-Za-z]:[\\/]+Users", texto)
+
+
+def test_python_m_tarvo_gera_o_painel_e_a_saida_continua_deterministica(tmp_path):
+    """`python -m tarvo` gera saida/painel.html no fim; duas execuções dão os mesmos bytes, iguais aos da saída entregue."""
+    from tarvo.__main__ import main as main_tarvo
+
+    pastas = [tmp_path / "a", tmp_path / "outra pasta"]
+    for pasta in pastas:
+        assert main_tarvo(["--dados", str(DADOS), "--saida", str(pasta)]) == 0
+    a, b = pastas
+    arquivos = sorted(c.relative_to(a).as_posix() for c in a.rglob("*") if c.is_file())
+    assert "painel.html" in arquivos
+    assert arquivos == sorted(c.relative_to(b).as_posix() for c in b.rglob("*") if c.is_file())
+    for nome in arquivos:
+        assert (a / nome).read_bytes() == (b / nome).read_bytes(), nome
+    # o CI (git diff --exit-code saida/) cobre também o painel: o versionado é o que a execução gera
+    assert (a / "painel.html").read_bytes() == (SAIDA / "painel.html").read_bytes()
+
+
+def test_fim_de_linha_do_regras_e_do_hipoteses_nao_muda_o_painel(painel, tmp_path):
+    """autocrlf no Windows converte regras.yaml e HIPOTESES.md para CRLF no checkout: o hash dos insumos ignora isso."""
+    pasta, caminho, _, _ = painel
+    gerados = []
+    for fim in ("\n", "\r\n"):
+        raiz = tmp_path / ("crlf" if fim == "\r\n" else "lf")
+        raiz.mkdir()
+        for nome in ("regras.yaml", "HIPOTESES.md"):
+            texto = (RAIZ / nome).read_text(encoding="utf-8")
+            (raiz / nome).write_bytes(texto.replace("\r\n", "\n").replace("\n", fim).encode("utf-8"))
+        saida = _copiar_saida(raiz / "saida")
+        destino, _ = gerar_painel(saida, DADOS, raiz / "regras.yaml")
+        gerados.append(destino.read_bytes())
+    assert gerados[0] == gerados[1]
+    assert gerados[0] == caminho.read_bytes()

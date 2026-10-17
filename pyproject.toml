@@ -20,7 +20,7 @@ dependencies = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-tarvo = ["prompts/*.md"]
+tarvo = ["prompts/*.md", "painel/*.css", "painel/*.js"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

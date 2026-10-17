@@ -32,6 +32,8 @@ python -m tarvo --dados data --saida saida
 
 A saída gerada é idêntica à pasta `saida/` entregue; o CI confere isso a cada commit. Não precisa de chave de API (ver [Chave de API](#chave-de-api)). Para outro mês, troque `--dados data` pela pasta do mês: nada é fixo para setembro. No fim, a tela mostra um resumo do fechamento (comissões, notas, divergências, lançamentos, pendências e onde estão os arquivos).
 
+**Painel:** a mesma execução gera `saida/painel.html`, um arquivo só, sem servidor: abra com duplo clique no navegador. Mostra para onde vai o dinheiro, o que a Helena decide, o contratado × cobrado e a busca no rastro, tudo lido dos CSVs (detalhes em [`docs/PAINEL.md`](docs/PAINEL.md)).
+
 ## Para a banca: onde ver cada critério
 
 A tabela é a porta de entrada; os arquivos detalhados são a evidência.

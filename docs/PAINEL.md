@@ -1,10 +1,11 @@
 # Painel do fechamento (`saida/painel.html`)
 
 ```powershell
-python -m tarvo.painel --saida saida            # padrões: --dados data --regras regras.yaml --hipoteses HIPOTESES.md
+python -m tarvo --dados data --saida saida      # o fechamento gera o painel no fim, depois do validador
+python -m tarvo.painel --saida saida            # só o painel, sobre uma saída já gerada (padrões: --dados data --regras regras.yaml --hipoteses HIPOTESES.md)
 ```
 
-O resultado é um arquivo único, `saida/painel.html`, com HTML, CSS e JS puro inline, sem framework e sem build. Abre com duplo clique, sem servidor. Ele lê só o que o fechamento já gerou: `saida/*.csv`, `rastro.csv` e `regras.yaml`. Do `data/` lê duas coisas: o sha256 de cada arquivo, que identifica a versão, e o `valor_taxa` da Orbe, para a coluna "pela taxa aplicada". O painel não calcula regra nova: cada número exibido é uma soma de linhas da saída, feita em `Decimal`.
+O resultado é um arquivo único, `saida/painel.html`, com HTML, CSS e JS puro inline, sem framework e sem build. Abre com duplo clique, sem servidor. Ele lê só o que o fechamento já gerou: `saida/*.csv`, `rastro.csv` e `regras.yaml`. Do `data/` lê duas coisas: o sha256 de cada arquivo, que identifica a versão, e o `valor_taxa` da Orbe (de todo arquivo da Orbe que o rastro cita: o relatório do mês e os ajustes tardios do 06), para a coluna "pela taxa aplicada". O painel não calcula regra nova: cada número exibido é uma soma de linhas da saída, feita em `Decimal`.
 
 Código: `src/tarvo/painel/` (`__init__.py` monta tudo, `estilo.css` e `app.js` entram inline, `__main__.py` é a CLI). Testes: `tests/test_painel.py`.
 
@@ -14,7 +15,7 @@ Código: `src/tarvo/painel/` (`__init__.py` monta tudo, `estilo.css` e `app.js` 
 |---|---|---|---|
 | Visão geral | `#visao` | "Quanto eu faturo, e o que está parado esperando por mim?" | "R$ X a faturar em N notas" (de `notas_a_emitir.csv`); o dinheiro que depende de uma decisão, agrupado pelo destino; alertas `ALERTA_*`, se houver; premissas ASSUMO do `regras.yaml` com fonte e motivo, mais a contagem por status; links para cada CSV e para `saida/rascunhos/`; rodapé com o sha256 dos insumos e o número de linhas de rastro |
 | Decisões | `#decisoes` | "O que está com quem, e o que o sistema decidiu sozinho?" | Kanban somente leitura (sem arrastar, sem botão de mover). Cada pendência aparece uma vez. Cada coluna tem o total em jogo, e a última traz as decisões tomadas por regra, com a regra e a fonte à vista |
-| Contratado × cobrado | `#contratado` | "A Orbe e a Ponte cobraram o que foi contratado?" | Por lojista: vendas, volume bruto, comissão pela planilha, valor pela taxa aplicada, diferença, divergência listada e situação. Abas que filtram de verdade (Todos, Com diferença, Sem contrato, Conferem). Alternância Checkout (Orbe) / Remessa (Ponte). Nota com o resíduo de truncamento da Orbe calculado da saída |
+| Contratado × cobrado | `#contratado` | "A Orbe e a Ponte cobraram o que foi contratado?" | Por lojista: vendas, volume bruto, comissão pela planilha, valor pela taxa aplicada, diferença, divergência listada e situação. Abas que filtram de verdade (Todos, Com diferença, Sem contrato, Conferem). Alternância Checkout (Orbe) / Remessa (Ponte); na remessa, o spread negativo tem as duas colunas que a Helena pediu (Q-AA 3: "deixando claro qual é qual"): o do relatório (o que aconteceu) e a diferença até o contrato (o que pedir à Ponte, o valor da pendência). Nota com o resíduo de truncamento da Orbe calculado da saída |
 | Notas e rastro | `#notas` | "De onde sai este número?" | As notas a emitir (tomador, valor, discriminação) e a busca por qualquer ID (TX, AN, PC-, L<n>, FITID, NF-, COM-, DIV-, LAN-, PEN-, EXC-, ou uma chave do `regras.yaml`). O resultado é a cadeia em quatro passos: arquivo:linha de origem → regra (status e fonte) → cálculo → destino, com a soma das linhas conferida contra o número reportado |
 
 Os links "Rastro" usam `#notas?id=<ID>`, que abre a tela 4 já com a busca feita.
@@ -34,13 +35,13 @@ O grupo sai do `tipo` da pendência e, em `DIVERGENCIA_CHECKOUT`, da `natureza`.
 | Em trânsito | `TRANSFERENCIA_EM_TRANSITO` · `APORTE_SEM_OPERACAO` · `CONFERENCIA_REPASSE` | não |
 | Outras pendências | qualquer tipo novo (outubro não quebra) | sim |
 | (Alertas, à parte) | `ALERTA_*` | não, é informativo |
-| (fora dos grupos) | pendência sem valor (ex.: `PROVISAO_DO_MES`) | aparece só no kanban |
+| (fora dos grupos) | pendência sem valor (em setembro não há; a `PROVISAO_DO_MES` saiu das pendências) | aparece só no kanban |
 
-**Custo para a Tarvo**, no topo da visão geral: devolver ao lojista − recuperar da Orbe, só com as divergências de checkout, com o link de rastro de cada pendência que compõe cada parcela. Setembro: 16.972,57 − 1.545,86 = **15.426,71**. É a mesma conta do resumo do `python -m tarvo` e da D71 (`divergencias.valor_a_devolver`).
+**Custo para a Tarvo**, no topo da visão geral: devolver ao lojista − recuperar da Orbe, só com as divergências de checkout, com o link de rastro de cada pendência que compõe cada parcela. Setembro, com a Bridge como `contrato_orbe` e os ajustes tardios do 06: 16.972,57 − 1.575,80 (Rota Global 1.545,86 + Bridge 29,94) = **15.396,77**, que é a Casa do Estudante (condição especial: custo da Tarvo). É a mesma conta do resumo do `python -m tarvo` e da D71 (`divergencias.valor_a_devolver`).
 
 Aprovado pelo Lucca (17/10):
 
-- **Total em jogo = Σ |valor|.** Somar com sinal deixaria o spread negativo (−1.834,05, prejuízo da Tarvo) abater o spread cobrado a mais (+1.418,85, dinheiro do lojista): "Contestar com a Ponte" daria R$ 406,68. Cada linha mostra o valor com o sinal do CSV.
+- **Total em jogo = Σ |valor|.** Somar com sinal deixaria o spread negativo (−3.565,98 até o contrato, prejuízo da Tarvo) abater o spread cobrado a mais (+1.418,85, dinheiro do lojista) e a duplicata (821,88): "Contestar com a Ponte" daria −R$ 1.325,25 em vez de R$ 5.806,71. Cada linha mostra o valor com o sinal do CSV.
 - **Toda divergência de checkout é "devolver ao lojista"** (Q-A: "a diferença volta para o lojista e eu cobro a Orbe"; Q-U 4: o lojista já recebeu a menos). "Recuperar da Orbe" é a parte `contrato_orbe` e não soma. Sem a coluna `natureza`, o grupo "recuperar" não aparece: nada se afirma sobre a Orbe.
 - **Não somam (`NAO_SOMA`):** em trânsito e aportes; `CONFERENCIA_REPASSE`, porque o valor é a própria nota de remessa e já está no "a faturar"; e `EXCESSO_REMESSA`, porque os 709,46 são a metade da Tarvo dentro dos 1.418,85 contestados.
 
@@ -53,7 +54,7 @@ A validar:
 ## Premissas: de onde vem cada contagem (tela 1)
 
 - **"Premissas do HIPOTESES.md"**: linhas `H..` da tabela Premissas, contadas pela 1ª palavra da coluna Status ("ASSUMO com aceite" conta como ASSUMO). Ao lado, a frase do Resumo de lá, literal. A tabela do Histórico conta como substituída. O teste confere que tabela e Resumo dizem o mesmo (setembro: 28 CONFIRMADO, 25 ASSUMO, 1 SEI, 1 substituída = 55). A lista que espera aprovação são as **25 ASSUMO do HIPOTESES**, com premissa, status, base e impacto.
-- **"Regras no regras.yaml"**: cada regra do YAML (chave com `status`), sem as decisões marcadas `substituida`. Uma premissa vira várias regras (ex.: a H35 são várias regras de `classificacao_extratos`), por isso os números não coincidem. Setembro, depois do merge: 46 CONFIRMADO, 12 SEI, 35 ASSUMO, 0 PENDENTE, 2 decisões substituídas.
+- **"Regras no regras.yaml"**: cada regra do YAML (chave com `status`), sem as decisões marcadas `substituida`. Uma premissa vira várias regras (ex.: a H35 são várias regras de `classificacao_extratos`), por isso os números não coincidem. Setembro, com a main em 3fc4a53: 49 CONFIRMADO, 13 SEI, 35 ASSUMO, 0 PENDENTE, 2 decisões substituídas. No `HIPOTESES.md`: 31 CONFIRMADO, 23 ASSUMO, 2 SEI e 1 substituída (57 no Resumo).
 - Sem `HIPOTESES.md` (`--hipoteses` aponta para outro caminho), a seção cai na lista ASSUMO do `regras.yaml`.
 
 ## Mapeamento: pendência → coluna do kanban (tela 2)
@@ -78,13 +79,15 @@ O total de cada coluna é Σ |valor| das pendências que somam. O que não soma 
 - **Abre sem servidor** (duplo clique, `file://`). A única URL externa é a fonte Inter do Google Fonts; offline, cai em `system-ui` e continua legível.
 - **A banca vê no navegador o mesmo número do arquivo.** Os totais estão em `data-*` e no JSON embutido, e o teste confere esses valores contra os CSVs.
 
-## Para o merge na main
+## Integração ao `python -m tarvo` (feita na `relatorio`)
 
-1. **`pyproject.toml`:** incluir `painel/*.css` e `painel/*.js` em `[tool.setuptools.package-data]` (hoje só há `prompts/*.md`). Com `pip install -e .` funciona sem isso; um wheel normal não levaria os dois arquivos.
-2. **Gerar na mesma execução:** chamar `tarvo.painel.gerar_painel(saida, dados, regras)` no fim do `__main__.py`, depois do validador, para que `python -m tarvo` já entregue o painel e o CI (`git diff --exit-code saida/`) cubra também o `painel.html`. Enquanto isso não for feito, o `painel.html` versionado só é atualizado quando alguém roda `python -m tarvo.painel`.
-3. **README:** uma linha com o comando e o que o painel é.
-4. **`natureza`, `valor_a_devolver_brl`, `ALERTA_*` e `saida/rascunhos/`** são lidos quando existem e, sem eles, a seção some (testes `test_campos_opcionais_aparecem_quando_existem` e `test_sem_campos_opcionais_as_secoes_somem`). Se a main gravar `natureza` também em `pendencias.csv`, ela tem prioridade sobre a de `divergencias_taxa.csv`. Natureza nova entra em "devolver ao lojista" e só vira "recuperar" se for `NATUREZA_RECUPERAR`.
-5. **Ambiente:** o `.venv` tem install editável apontando para o `src` da main. No worktree, rode com `PYTHONPATH=src`, senão `python -m tarvo` (inclusive o subprocesso de `test_cli.py`) importa o código da main.
+1. **`pyproject.toml`:** `painel/*.css` e `painel/*.js` em `[tool.setuptools.package-data]`, ao lado de `prompts/*.md`. Com `pip install -e .` já funcionava; um wheel normal não levaria os dois arquivos.
+2. **Mesma execução:** `__main__.py` chama `gerar_painel(saida, dados, regras)` depois do `VALIDADOR: OK`, só sobre saída validada (com erro de validação, o `painel.html` de uma execução anterior é apagado, para não ficar ao lado de CSVs inválidos), e o resumo final diz onde está o painel. O CI (`git diff --exit-code saida/`) passa a cobrir também o `painel.html`.
+3. **Mesmos bytes no Linux e no Windows:** o CI roda nos dois e compara byte a byte. `.gitattributes` ganhou `saida/painel.html text eol=lf`, e o sha256 do `regras.yaml` e do `HIPOTESES.md` é calculado com CRLF trocado por LF, porque o autocrlf do Windows muda esses dois no checkout (o `data/` é `-text` e fica como chegou). Testes: `test_python_m_tarvo_gera_o_painel_e_a_saida_continua_deterministica` (duas execuções em pastas diferentes dão os mesmos bytes em todos os arquivos, e o painel é igual ao versionado) e `test_fim_de_linha_do_regras_e_do_hipoteses_nao_muda_o_painel`.
+4. **README:** uma linha dizendo que a execução gera `saida/painel.html` e que ele abre com duplo clique.
+5. **`test_cli.py`:** a lista de arquivos da saída inclui `painel.html`.
+6. **`natureza`, `valor_a_devolver_brl`, `ALERTA_*` e `saida/rascunhos/`** são lidos quando existem e, sem eles, a seção some (testes `test_campos_opcionais_aparecem_quando_existem` e `test_sem_campos_opcionais_as_secoes_somem`). Se a main gravar `natureza` também em `pendencias.csv`, ela tem prioridade sobre a de `divergencias_taxa.csv`. Natureza nova entra em "devolver ao lojista" e só vira "recuperar" se for `NATUREZA_RECUPERAR`.
+7. **Ambiente:** o `.venv` tem install editável apontando para o `src` da main. No worktree, rode com `PYTHONPATH=src`, senão `python -m tarvo` (inclusive o subprocesso de `test_cli.py`) importa o código da main.
 
 ## Com mais tempo
 

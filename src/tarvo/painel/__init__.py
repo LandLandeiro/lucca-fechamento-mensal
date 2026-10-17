@@ -168,8 +168,11 @@ def _dec(texto: str | None) -> Decimal | None:
         return None
 
 
-def _sha256(caminho: Path) -> str:
-    return hashlib.sha256(caminho.read_bytes()).hexdigest()
+def _sha256(caminho: Path, texto: bool = False) -> str:
+    """`texto=True` (regras.yaml, HIPOTESES.md): CRLF vira LF antes do hash, porque o autocrlf do Windows muda os bytes
+    no checkout e o painel tem que sair idêntico no Linux e no Windows. O data pack é `-text`: hash dos bytes como chegaram."""
+    conteudo = caminho.read_bytes()
+    return hashlib.sha256(conteudo.replace(b"\r\n", b"\n") if texto else conteudo).hexdigest()
 
 
 @dataclass
@@ -376,7 +379,7 @@ def carregar(saida: Path, dados: Path, regras_path: Path, hipoteses_path: Path |
         pn.insumos = [(c.name, _sha256(c)[:12], c.stat().st_size) for c in sorted(dados.iterdir()) if c.is_file()]
     for extra in (regras_path, hipoteses_path or regras_path.parent / "HIPOTESES.md"):
         if extra.exists():
-            pn.insumos.append((extra.name, _sha256(extra)[:12], extra.stat().st_size))
+            pn.insumos.append((extra.name, _sha256(extra, texto=True)[:12], extra.stat().st_size))
 
     pn.rastro_cab, pn.rastro = _ler_csv(saida / "rastro.csv")
     _montar_saidas(pn, saida)
@@ -490,15 +493,19 @@ def _montar_lojistas(pn: Painel, dados: Path, divs: list[dict]) -> None:
     por_saida: dict[str, list[dict]] = defaultdict(list)
     for r in pn.rastro:
         por_saida[r["id_saida"]].append(r)
-    arquivo_orbe = next((r["arquivo_origem"] for i, rs in por_saida.items() if i.startswith("COM-") and i.endswith("-CHECKOUT") for r in rs), "")
-    taxa_orbe: dict[str, Decimal] = {}
+    # todos os arquivos da Orbe que o rastro cita no checkout (o relatório do mês e, se houver, os ajustes tardios)
+    ids_checkout = {i for i in por_saida if i.startswith("COM-") and i.endswith("-CHECKOUT")}
+    ids_checkout |= {p.id for p in pn.pendencias if p.tipo.upper() == "SEM_CONTRATO_VIGENTE"}
+    arquivos_orbe = sorted({r["arquivo_origem"] for i in ids_checkout for r in por_saida.get(i, []) if r.get("arquivo_origem")})
+    taxa_orbe: dict[tuple[str, str], Decimal] = {}  # (arquivo, ref_origem): o mesmo id pode voltar num ajuste
     nome_orbe: dict[str, Counter] = defaultdict(Counter)
-    if arquivo_orbe and (dados / arquivo_orbe).exists():
+    if arquivos_orbe and all((dados / a).exists() for a in arquivos_orbe):
         from tarvo.leitores.orbe import ler_orbe
 
-        for t in ler_orbe(dados / arquivo_orbe).transacoes:
-            taxa_orbe[t.ref_origem] = t.valor_taxa
-            nome_orbe[t.cod_estabelecimento][t.nome_estabelecimento] += 1
+        for arquivo in arquivos_orbe:
+            for t in ler_orbe(dados / arquivo).transacoes:
+                taxa_orbe[(arquivo, t.ref_origem)] = t.valor_taxa
+                nome_orbe[t.cod_estabelecimento][t.nome_estabelecimento] += 1
     div_cnpj: dict[str, Decimal] = defaultdict(lambda: ZERO)
     for d in divs:
         if d.get("linha_negocio") == "CHECKOUT":
@@ -507,7 +514,7 @@ def _montar_lojistas(pn: Painel, dados: Path, divs: list[dict]) -> None:
     def linha(ident: str, cnpj: str, nome: str, planilha: Decimal | None, situacao: str | None) -> dict:
         rs = por_saida.get(ident, [])
         vendas = [r for r in rs if r.get("tipo_lancamento") == "VENDA"]
-        aplicada = sum((taxa_orbe[r["ref_origem"]] for r in rs if r["ref_origem"] in taxa_orbe), ZERO) if taxa_orbe else None
+        aplicada = sum((taxa_orbe[(r["arquivo_origem"], r["ref_origem"])] for r in rs), ZERO) if taxa_orbe else None
         diferenca = aplicada - planilha if (aplicada is not None and planilha is not None) else None
         div = div_cnpj.get(cnpj, ZERO)
         if situacao is None:
@@ -531,12 +538,14 @@ def _montar_lojistas(pn: Painel, dados: Path, divs: list[dict]) -> None:
     # remessa (Ponte): spread realizado e comissão pela saída; divergência = lojista pagou spread ≠ contratado
     # spread negativo é outra natureza (Helena 09:44, Q-O: "o lojista não pagou a mais"): coluna à parte, nunca "com diferença"
     div_rem: dict[str, Decimal] = defaultdict(lambda: ZERO)
-    negativo: dict[str, Decimal] = defaultdict(lambda: ZERO)
+    negativo: dict[str, Decimal] = defaultdict(lambda: ZERO)  # Spread R$ do relatório (o que aconteceu)
+    negativo_contrato: dict[str, Decimal] = defaultdict(lambda: ZERO)  # diferença até o contratado (o que pedir à Ponte)
     for d in divs:
         if d.get("linha_negocio") == "REMESSA" and d.get("cnpj"):
             e_negativo = d.get("natureza") == "spread_negativo" or (not d.get("natureza") and (_dec(d.get("spread_brl")) or ZERO) < 0)
             if e_negativo:
                 negativo[d["cnpj"]] += _dec(d.get("spread_brl")) or ZERO
+                negativo_contrato[d["cnpj"]] += _dec(d.get("diferenca_brl")) or ZERO
             else:
                 div_rem[d["cnpj"]] += _dec(d.get("diferenca_brl")) or ZERO
     for ident, s in pn.saidas.items():
@@ -547,11 +556,12 @@ def _montar_lojistas(pn: Painel, dados: Path, divs: list[dict]) -> None:
             pn.remessa.append({"id": ident, "cnpj": cnpj, "nome": pn.nomes.get(cnpj, cnpj), "operacoes": len(rs),
                                "spread": sum((_dec(r.get("spread_brl")) or ZERO for r in rs), ZERO),
                                "comissao": _dec(s["reportado"]), "divergencia": div, "negativo": negativo.get(cnpj, ZERO),
+                               "negativo_contrato": negativo_contrato.get(cnpj, ZERO),
                                "situacao": "com_diferenca" if div != 0 else ("spread_negativo" if negativo.get(cnpj) else "confere")})
     pn.remessa.sort(key=lambda l: (-(abs(l["divergencia"])), l["negativo"], l["nome"]))
     if taxa_orbe:
         com_ids = [i for i in pn.saidas if i.startswith("COM-") and i.endswith("-CHECKOUT")]
-        soma_vt = sum((taxa_orbe.get(r["ref_origem"], ZERO) for i in com_ids for r in por_saida[i]), ZERO)
+        soma_vt = sum((taxa_orbe[(r["arquivo_origem"], r["ref_origem"])] for i in com_ids for r in por_saida[i]), ZERO)
         soma_com = sum((_dec(r.get("valor")) or ZERO for i in com_ids for r in por_saida[i]), ZERO)
         soma_div = sum(div_cnpj.values(), ZERO)
         pn.residuo = soma_vt - soma_com - soma_div
@@ -882,20 +892,25 @@ def _tela_contratado(pn: Painel) -> str:
         h.append('<div class="tabela-caixa" id="tabela-remessa" role="tabpanel" hidden><table class="tabela"><thead><tr>'
                  '<th scope="col">Lojista</th><th scope="col" class="n">Operações</th><th scope="col" class="n">Spread realizado (Ponte)</th>'
                  '<th scope="col" class="n">Comissão Tarvo</th><th scope="col" class="n">Divergência listada</th>'
-                 '<th scope="col" class="n" title="Spread R$ do relatório, fora da comissão">Spread negativo</th><th scope="col">Situação</th>'
+                 '<th scope="col" class="n" title="Spread R$ do relatório: o que aconteceu, fora da comissão">Spread negativo (relatório)</th>'
+                 '<th scope="col" class="n" title="Diferença até o spread do contrato: o que pedir à Ponte">Até o contrato (pedir à Ponte)</th>'
+                 '<th scope="col">Situação</th>'
                  '<th scope="col"><span class="sr">Rastro</span></th></tr></thead><tbody>')
         for l in pn.remessa:
             rot, cls = SITUACAO[l["situacao"]]
-            h.append(f'<tr data-situacao="{l["situacao"]}" data-remessa="{_e(l["id"])}" data-comissao="{_num(l["comissao"])}" data-divergencia="{_num(l["divergencia"])}">'
+            h.append(f'<tr data-situacao="{l["situacao"]}" data-remessa="{_e(l["id"])}" data-comissao="{_num(l["comissao"])}" data-divergencia="{_num(l["divergencia"])}" '
+                     f'data-negativo="{_num(l["negativo"])}" data-negativo-contrato="{_num(l["negativo_contrato"])}">'
                      f'<th scope="row"><span class="t-nome">{_e(l["nome"])}</span><code class="c-cnpj">{_e(_cnpj_fmt(l["cnpj"]))}</code></th>'
                      f'<td class="n num">{l["operacoes"]}</td><td class="n num">{brl(l["spread"])}</td><td class="n num">{brl(l["comissao"])}</td>'
                      f'<td class="n num">{brl(l["divergencia"]) if l["divergencia"] else "—"}</td>'
-                     f'<td class="n num">{brl(l["negativo"]) if l["negativo"] else "—"}</td><td><span class="sit {cls}">{rot}</span></td>'
+                     f'<td class="n num">{brl(l["negativo"]) if l["negativo"] else "—"}</td>'
+                     f'<td class="n num">{brl(l["negativo_contrato"]) if l["negativo_contrato"] else "—"}</td><td><span class="sit {cls}">{rot}</span></td>'
                      f'<td>{_link_rastro(l["id"])}</td></tr>')
         h.append("</tbody></table></div>")
         h.append('<p class="meta nota-remessa" hidden>Divergência é o valor cheio que o lojista pagou de spread diferente do contratado. '
-                 'Spread negativo é outra natureza: o lojista não pagou a mais, o prejuízo é da Tarvo com a Ponte (Spread R$ do relatório, '
-                 'em contestação). Operações fora da comissão (duplicata, spread negativo) estão em "Fechadas por regra".</p>')
+                 'Spread negativo é outra natureza: o lojista não pagou a mais, o prejuízo é da Tarvo com a Ponte, em contestação. '
+                 'Duas colunas: o spread negativo do relatório (o que aconteceu) e a diferença até o spread do contrato '
+                 '(o que pedir à Ponte, o valor da pendência). Operações fora da comissão (duplicata, spread negativo) estão em "Fechadas por regra".</p>')
     if pn.residuo is not None:
         regra = pn.regras.get("divergencias.criterio_checkout", {})
         h.append(f'<aside class="nota-residuo" data-residuo="{_num(pn.residuo)}"><p><strong>Resíduo de truncamento da Orbe: '

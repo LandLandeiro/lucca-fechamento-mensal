@@ -39,6 +39,7 @@ from tarvo.pendencias import (consolidar_pendencias, ler_pendencias_anteriores, 
                               refs_das_pendencias)
 from tarvo.regras import RegraInvalida, RegraPendente, carregar_regras, valor_da_regra
 from tarvo.saida.escritor import escrever_saida
+from tarvo.painel import gerar_painel
 from tarvo.saida.rascunhos import gerar_rascunhos
 from tarvo.saida.validador import validar_saida
 
@@ -507,15 +508,17 @@ def main(argv: list[str] | None = None) -> int:
         print(f"\nVALIDADOR: {len(r['erros_validacao'])} ERRO(S)", file=sys.stderr)
         for e in r["erros_validacao"]:
             print(f"  ERRO {e}", file=sys.stderr)
+        (args.saida / "painel.html").unlink(missing_ok=True)  # painel de uma execução anterior não fica ao lado de saída inválida
         return 1
     print(f"\nVALIDADOR: OK (rastro fecha com todos os totais; as {r['transacoes_lidas']} linhas da Orbe aparecem uma vez;"
           f" as {r['remessa']['linhas']} linhas do anexo da Ponte também; conservação do checkout e da remessa fecha;"
           " notas = comissões; extratos: cada lançamento uma vez, Σ Aurora = saldo final − inicial, contas lançáveis)")
-    _imprimir_resumo(r, args.saida)
+    painel, _ = gerar_painel(args.saida, args.dados, args.regras)  # só sobre saída validada; lê os CSVs que acabaram de sair
+    _imprimir_resumo(r, args.saida, painel)
     return 0
 
 
-def _imprimir_resumo(r: dict, saida: Path) -> None:
+def _imprimir_resumo(r: dict, saida: Path, painel: Path | None = None) -> None:
     """Resumo do fechamento para o financeiro: o que importa, sem jargão."""
     ano, mes = r["competencia"]
     div_c, div_r = r["divergencias"], r["remessa"]["divergencias"]
@@ -559,6 +562,8 @@ def _imprimir_resumo(r: dict, saida: Path) -> None:
         print(f"  extras: {', '.join(extras)}")
     if r["rascunhos"]:
         print(f"  rascunhos de contestação para a Helena revisar (rascunhos/): {', '.join(r['rascunhos'])}")
+    if painel:
+        print(f"  painel: {painel.name} (abra no navegador com duplo clique, sem servidor)")
     print(linha)
 
 
