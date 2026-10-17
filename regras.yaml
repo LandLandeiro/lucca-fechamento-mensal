@@ -490,6 +490,15 @@ cadastro:
     pergunta_ref: P08
 
 contabil:
+  provisao_do_mes:          # D72 (Q-R 3)
+    valor:
+      fato: "todo mês a folha e os impostos do mês ficam provisionados no fechamento; o pagamento no mês seguinte baixa a provisão"
+      pacote: "o pacote do mês não traz folha nem apuração de impostos do próprio mês: pendência para a Helena, sem valor"
+      referencia: [aurora.folha_mes_anterior, aurora.iss, aurora.inss, aurora.fgts, aurora.irrf, aurora.pis, aurora.cofins]
+    status: CONFIRMADO
+    aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
+    fonte: "Slack Helena 09:48 (Q-R 3): 'Sempre. Todo mês a folha e os impostos do mês ficam provisionados no fechamento, e o pagamento no mês seguinte baixa a provisão.' Pendência sem valor: decisão Lucca 17/10 (D72), nada estimado"
+    pergunta_ref: null
   obrigacoes_mes_anterior_fatos:
     valor: >-
       folha, ISS, INSS, FGTS e DARFs são de agosto e já estavam provisionados; o repasse da Ponte
