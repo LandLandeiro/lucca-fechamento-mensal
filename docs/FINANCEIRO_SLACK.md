@@ -297,3 +297,189 @@ Copiadas do `#duvidas-hackathon-ai` sem edição (incorporadas de `docs/_novas_r
 - Theo Garcia 11:16: (1) Bridge/Mundo Aberto — cobra-se da contraparte se a condição está na planilha mesmo sem aviso?; (2) critério do alerta de antecipação (só lojista sem vendas antes do mês?); (3) valor da contestação do spread negativo (Spread R$ −687,52 ou diferença até o contrato −1.351,87).
 - Desbravadores 11:07: como vem o ajuste de contestação no relatório da Ponte e como entra na nota.
 - Leandro (Barte) encaminhou 11:04: pacote de outubro; ref_origem com "|"; quem_decide comparado por texto?; pendência de acompanhamento conta como alarme falso?
+
+
+---
+
+# 17/10 (fim da manhã): respostas Q-Z a Q-AH
+
+Copiadas do `#duvidas-hackathon-ai` sem edição (lidas no Slack às 13h30, perguntas e respostas inteiras).
+
+## Q-Z · Desbravadores · 11:07 · resposta 11:33 (ajuste da Ponte)
+
+**Pergunta:**
+> [Desbravadores] [Financeiro]: O ajuste de contestação que a Ponte manda no relatório do mês seguinte: como ele aparece? É uma linha com o mesmo Nº de Operação da original, ou com um número novo? Vem com alguma observação que identifique a operação contestada? E, ao registrar o ajuste no mês em que ele aparece, como ele entra na nota da Ponte: abate da comissão do mês, nota complementar ou outro tratamento?
+
+**Resposta (11:33):**
+> *[Financeiro] Resposta para Desbravadores*
+> A Ponte manda o ajuste como uma linha nova, com Nº de Operação próprio e o Spread R$ negativo. A observação traz o número da operação original (“AJUSTE REF PC-…”).
+> Ele entra no mês em que aparece. Abate a nossa participação daquele mês, dentro da nota única para a Ponte, e o rastro aponta para a operação original. Nota complementar não fazemos. Se o mês fechar zerado ou negativo, vale a regra que já está no canal: não emite e vira pendência para mim.
+> No relatório de setembro não tem nenhum ajuste desse tipo. Isso conta para outubro em diante.
+> — Helena
+
+---
+
+## Q-AA · Theo Garcia · 11:16 · resposta 11:37 (aviso × contrato, alerta, spread negativo)
+
+**Pergunta:**
+> [financeiro] Theo Garcia: três perguntas de regra, com exemplo.
+>
+> 1. Quando a contraparte não foi avisada. Na Casa a senhora disse que a Orbe cobrou certo pela planilha, porque ninguém avisou, e por isso não se cobra da Orbe. Dois casos ficam no meio:
+> (a) Bridge: a planilha já dizia 2,19% a partir de 15/09, mas a Orbe só foi avisada dias depois e cobrou 2,59% em 5 vendas de 15 a 18/09 (R$ 29,95, ex.: TX88428053).
+> (b) Mundo Aberto: o spread de 1,20% está na planilha desde julho, mas a Ponte nunca foi avisada (23 operações, R$ 1.418,85, ex.: PC-0926-0016).
+> O que decide se cobramos da contraparte: (i) a condição estar na planilha, mesmo sem aviso, e aí Bridge e Mundo Aberto seguem como cobrança da Orbe e contestação com a Ponte; ou (ii) a contraparte ter sido avisada, e aí os dois viram devolução nossa ao lojista, como a Casa?
+>
+> 2. Alerta de antecipação. Na Atlas o alerta é claro: ela antecipou R$ 179.592,82 em 15/09 com R$ 55.357,50 vendidos desde que começou, em 10/09. Mas pela regra "antecipou mais do que vendeu no mês", outros 5 lojistas também acenderiam. Por exemplo, a Canguru antecipou R$ 31.765,12 em 01/09 com R$ 1.934,10 vendidos no mês, provavelmente sobre parcelas de vendas de agosto que o relatório não traz. Alertamos só quem não tem vendas antes do mês (em setembro, só a Atlas), ou existe outro limite que a senhora usa?
+>
+> 3. Spread negativo. Na pendência de contestação com a Ponte, o valor de cada operação é o spread negativo do relatório (ex.: PC-0926-0210, −R$ 687,52) ou a diferença até o spread do contrato (1,5% sobre a PTAX, −R$ 1.351,87)?
+
+**Resposta (11:37):**
+> *[Financeiro] Resposta para Theo Garcia*
+> 1. *O que decide é o contrato, não o aviso.* A Bridge tem aditivo assinado (2,19% a partir de 15/09). A Mundo Aberto tem o 1,20% negociado e registrado desde julho. Nos dois casos a contraparte cobrou diferente de uma condição contratada. Isso é divergência: eu contesto com a Orbe e com a Ponte, e o lojista é ressarcido. O aviso atrasado é problema nosso de processo, mas não muda quem deve.
+>  A Casa é outra coisa. É uma concessão do comercial, fora do contrato, para segurar o cliente. A Orbe cobrou o que estava contratado. Quem abriu mão da receita fomos nós, então a devolução sai do nosso bolso.
+> 2. *A antecipação é sobre a agenda inteira do lojista*, inclusive parcelas de vendas de meses anteriores que o relatório de setembro não traz. Por isso a comparação com as vendas do mês acende lojista demais. O que me preocupa é lojista novo, sem histórico, antecipando alto. Não temos um limite definido. O critério é de vocês: escrevam no `HIPOTESES.md`.
+> 3. *Coloquem os dois na pendência*, deixando claro qual é qual: o spread negativo do relatório, que é o que aconteceu, e a diferença até o spread do contrato, que é o que eu vou pedir à Ponte, porque a trava deveria ter sido honrada.
+> — Helena
+
+---
+
+## Q-AB · Southlands · 11:23 · resposta 11:38 (regras gerais)
+
+**Pergunta:**
+> [Southlands] [financeiro]
+>
+> 1. Estornos: quando o estorno é de uma venda de mês anterior, qual é a regra geral para achar a taxa contratada que vale? A taxa é a da data da venda original, e a faixa (modalidade e parcelas) vem da linha do próprio estorno?
+>
+> 2. Lojista sem contrato vigente ou com taxa não confirmada: qual é o tratamento padrão? Ele aparece na comissão com valor zero e uma pendência, ou fica fora do arquivo? O repasse segue normal e só a nota fica suspensa?
+>
+> 3. Cobrança acima do contrato: quem arca com o valor cobrado a mais, e como ele volta ao lojista? É devolução pela Tarvo, contestação à Orbe ou à Ponte, ou depende do caso? Na lista de divergências, entra transação por transação, mesmo quando venda e estorno se anulam?
+>
+> 4. Comissão do mês negativa ou zerada: quando estornos superam as vendas, ou quando há isenção comercial, o saldo vira pendência sem nota? Valores de devolução ao lojista ficam separados das divergências de contrato?
+>
+> 5. Ajustes de meses anteriores: créditos e débitos da Ponte (ou da Orbe) referentes a meses fechados entram na comissão e na nota do mês em que aparecem, ou só como pendência? Há algum critério geral de quem decide cada tipo de pendência?
+
+**Resposta (11:38):**
+> *[Financeiro] Resposta para Southlands*
+> Quase tudo isso já está respondido no canal. Vale ler as respostas antes de seguir:
+> 1. *Taxa do estorno:* sim. Vale a taxa da data da venda original, e a faixa sai da própria linha do estorno (modalidade e parcelas).
+> 2. *Lojista sem contrato:* está no canal (Atlas). Não fatura, vira pendência, e o repasse continua normal. Se ele aparece com zero ou fica fora do arquivo de comissões é com vocês.
+> 3. *Cobrança acima do contrato:* está no canal (resposta ao Theo). Sobre a lista: é transação por transação. O estorno de uma venda que veio com taxa errada também entra, com valor negativo.
+> 4. *Zerado ou negativo:* está no canal (notas). Não emite nota e vira pendência. A devolução da Casa fica separada das divergências.
+> 5. *Ajustes de meses anteriores:* estão no canal (estorno de agosto, ajuste da Ponte). Quem decide cada pendência também já foi respondido.
+> — Helena
+
+---
+
+## Q-AC · Prime · 11:26 · resposta 11:41 (Atlas: identidade e apuração)
+
+**Pergunta:**
+> [Financeiro] [Prime]
+>
+> Bom dia! Duas questões sobre a Atlas Idiomas (EC 1076801732), para fechar setembro sem faturar o que não pode ser faturado.
+>
+> Entendemos a regra: sem contrato assinado na aba vigente, não emitimos nota e não calculamos divergência para ela. Faltam dois pontos para a saída ficar coerente:
+>
+> 1) Identidade: a aba "ANTIGO 2025" traz Atlas Idiomas Ltda com CNPJ 39.566.044/0001-19. Podemos usar esse CNPJ só para identificar a Atlas na saída (identidade, não taxa), ou prefere que ela apareça sem CNPJ até o comercial confirmar? São 57 transações e R$ 262.138,61 de volume bruto em setembro.
+>
+> 2) Apuração: "não faturar" nós lemos como não emitir nota. E a comissão? A Atlas sai em comissoes_por_lojista.csv com valor zero e pendência aberta, ou fica fora do arquivo? Hoje não temos taxa contra a qual apurar, então nossa premissa é deixá-la zerada, com as 57 transações no rastro e o valor que a Orbe cobrou (R$ 7.876,05) registrado na pendência para o comercial.
+>
+> Aproveitando: a Atlas antecipou R$ 235.943,10 em setembro contra R$ 135.428,90 de vendas no mesmo mês. Pela resposta que você deu ao Mateus, estamos tratando como alerta para você e o comercial, e não como erro de cálculo.
+
+**Resposta (11:41):**
+> *[Financeiro] Resposta para Prime*
+> 1. Sim, o CNPJ é da Atlas, é a mesma empresa. Podem usar para identificar. Só a taxa daquela aba é que não vale.
+> 2. Zerada com pendência ou fora do arquivo, as duas formas servem. O que não pode é faturar. Escolham uma e registrem no `HIPOTESES.md`.
+> 3. É alerta, como já está no canal. Os números ficam com vocês, eu não confiro.
+> — Helena
+
+---
+
+## Q-AD · Prime · 11:27 · resposta 11:41 (Casa: data-base da isenção)
+
+**Pergunta:**
+> [Financeiro] [Prime]
+>
+> Sobre a tarifa zerada da Casa do Estudante (EC 1018325654), uma confirmação de data-base.
+>
+> Estamos aplicando a isenção pela data da VENDA, a partir de 01/09/2026, e não pela data do movimento. É o que torna coerente a sua resposta ao Mateus sobre o TX88445133: estorno em setembro de uma venda de 21/08, que mantém 1,49% porque em agosto a isenção ainda não valia.
+>
+> Com essa leitura, setembro da Casa fica assim:
+> - 118 transações isentas, comissão contratada R$ 0,00;
+> - o estorno da venda de 21/08 abate R$ 5,50 pela taxa de agosto;
+> - comissão do mês: -R$ 5,50, portanto sem nota fiscal e com pendência para você, pela regra (b) das notas;
+> - R$ 15.396,77 cobrados pela Orbe durante a isenção, que entram como devolução ao lojista, separados das divergências de contrato e fora da cobrança da Orbe, como você definiu com a Fox AI.
+>
+> Confirma a data-base pela data da venda? Se for pela data do movimento, o estorno também fica isento e a comissão da Casa vai a zero em vez de -R$ 5,50.
+
+**Resposta (11:41):**
+> *[Financeiro] Resposta para Prime*
+> A regra já está no canal: a isenção vale para venda a partir de 01/09, e estorno de venda anterior segue a taxa da venda. Os números eu não confiro. Se o mês da Casa fechar negativo, vale a regra das notas.
+> — Helena
+
+---
+
+## Q-AE · Datarmos · 11:47 · resposta 11:49 (Casa, provisão, alerta)
+
+**Pergunta:**
+> [Financeiro] [Datarmos]: três perguntas para fechar setembro.
+>
+> 1. Casa do Estudante: lista de divergências
+> Na resposta para a Fox AI (17/10 10h58), a senhora aceitou as 118 transações também em divergencias_taxa.csv, marcadas como "isenção não informada à Orbe" e fora da cobrança da Orbe. Antes, tinha pedido para deixar separado das divergências de contrato. Hoje deixamos o total (R$ 15.396,77) só na pendência, com o detalhe por transação no rastro. A senhora precisa das 118 linhas em divergencias_taxa.csv, ou basta a pendência com o detalhe anexado?
+>
+> 2. Provisão de folha e impostos de setembro
+> A senhora disse que todo mês a folha e os impostos do mês ficam provisionados no fechamento. O pacote só traz os pagamentos de agosto feitos em setembro, sem os valores de folha e impostos de setembro. O fechamento precisa gerar o lançamento de provisão de setembro? Se precisar, de onde vêm os valores? Ou isso fica com a senhora fora do fechamento automático?
+>
+> 3. Alerta de antecipação da Atlas: reversões contam?
+> A Atlas antecipou R$ 179.592,82 até 15/09, com R$ 55.357,50 em vendas até essa data. Duas antecipações foram revertidas depois: AN88445637 (15/09, revertida em 17/09) e AN88446517 (24/09, revertida em 26/09). Para o alerta "antecipação acima das vendas", consideramos o que foi antecipado, mesmo que revertido depois, ou só o que ficou valendo depois das reversões?
+
+**Resposta (11:49):**
+> *[Financeiro] Resposta para Datarmos*
+> 1. Basta a pendência com o total e o detalhe por transação. Se quiserem pôr as linhas também em divergências, marcadas como isenção, tudo bem, mas não precisa. O que importa é ficar separado das divergências de contrato e fora da cobrança da Orbe.
+> 2. Fica fora do fechamento de vocês. A provisão de setembro quem faz é a contabilidade, comigo, com a folha e as guias, e isso não está no pacote. O fechamento de vocês classifica o que passou nos extratos.
+> 3. Esse critério é de vocês. O alerta é para mim e para o comercial e não muda nenhum número. Registrem a escolha no `HIPOTESES.md`.
+> — Helena
+
+---
+
+## Q-AF · Turma do Barulho · 12:27 · resposta 12:31 (o que muda de um mês para outro)
+
+**Pergunta:**
+> [financeiro] Turma do Barulho: para entender como o fechamento muda de um mês para outro, em outubro podemos receber arquivos com colunas, abas ou formatos diferentes, novas fontes, arquivos ausentes ou correções de arquivos já enviados? Ou a estrutura permanece igual e mudam apenas os registros, lojistas e condições comerciais?
+> Quando faltar uma fonte ou chegar uma informação nova sem regra definida, vocês esperam que o fechamento inteiro aguarde ou que as partes independentes sejam concluídas, deixando explícitos os resultados provisórios, os bloqueios e as pendências? Quem decide quando esses casos podem ser liberados?
+
+**Resposta (12:31):**
+> *[Financeiro] Resposta para Turma do Barulho*
+> A estrutura é a mesma todo mês: mesmas fontes, mesmas colunas. Mudam os registros, os lojistas e as condições. Mas na prática acontece de arquivo chegar atrasado, de a Orbe mandar ajuste depois do relatório, e já teve parceiro mudando o layout sem avisar. Prefiro que a solução avise a que quebre sem ninguém perceber.
+> Quando falta alguma coisa, eu não seguro o mês inteiro. Fecha o que não depende daquilo, marca o que é provisório e deixa claro o que está bloqueado e por quê. Quem libera sou eu. Se for taxa ou cadastro, o comercial decide antes.
+> — Helena
+
+---
+
+## Q-AG · Fox AI · 12:36 · resposta 12:50 (alerta pelo pico)
+
+**Pergunta:**
+> [financeiro] Fox AI: alerta de antecipação (Atlas). Em 15/09 ela tinha R$ 179.592,82 antecipados contra R$ 55.357,50 vendidos desde que começou (10/09). Depois, duas antecipações foram revertidas (17/09 e 26/09), e no fim do mês o antecipado líquido (R$ 127.230,96) fica abaixo das vendas (R$ 135.428,90). Propomos alertar pelo pico (o risco existiu quando o dinheiro foi adiantado) e citar as reversões no alerta. Confere, ou o alerta considera só o saldo do fim do mês?
+
+**Resposta (12:50):**
+> *[Financeiro] Resposta para Fox AI*
+> O critério do alerta é de vocês, como já está no canal. A proposta é razoável: registrem no `HIPOTESES.md` e sigam.
+> — Helena
+
+---
+
+## Q-AH · Lucca Landeiro · 12:44 · resposta 12:50 (valor da devolução)
+
+**Pergunta:**
+> [Financeiro] Lucca Landeiro: na devolução ao lojista, usamos o que a Orbe descontou de fato (valor_taxa) menos a comissão contratada, porque o lojista recebeu o líquido (Q-U 4). Na Casa isso dá R$ 15.396,77, contra R$ 15.397,42 pela fórmula da divergência (bruto × diferença de taxa), que mantivemos em divergencias_taxa.csv como a senhora definiu. A diferença é o truncamento da Orbe. A devolução segue esse valor cobrado de fato?
+
+**Resposta (12:50):**
+> *[Financeiro] Resposta para Lucca Landeiro*
+> Devolvo o que saiu do bolso do lojista, o que foi descontado de fato. A diferença para a fórmula é centavo: segue como você fez.
+> — Helena
+
+---
+
+## Ainda sem resposta (17/10 ~13h30)
+
+- Lucca Landeiro 13:19: o 06 vem todo mês e fecha junto com o mês dele? Se um ajuste trouxer um id que já está no relatório principal, vale o ajuste?
+- Desbravadores 12:04: o Spread R$ negativo da linha "AJUSTE REF PC-…" é o spread inteiro (a participação cai pela metade) ou já é a participação?
