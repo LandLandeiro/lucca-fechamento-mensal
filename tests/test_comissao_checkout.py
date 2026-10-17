@@ -180,7 +180,9 @@ def test_alerta_de_antecipacao_so_para_a_atlas(orbe, cadastro, regras):
     r = alerta_antecipacao(orbe.transacoes, cadastro, (2026, 9), regras)
     (p,) = r.pendencias
     assert (p.id_saida, p.valor_brl, p.quem_decide) == ("PEN-ALERTA_ANTECIPACAO-EC1076801732", Decimal("124235.32"), "Helena + comercial")
-    assert "179592.82 até 2026-09-15" in p.motivo and "55357.50 vendidos" in p.motivo and "Q-N 6" in p.motivo
+    assert "exposição máxima no mês de 124235.32 em 2026-09-15" in p.motivo and "Q-N 6" in p.motivo
+    assert "AN88445637 revertida em 17/09" in p.motivo and "AN88446517 revertida em 26/09" in p.motivo
+    assert "no fim do mês a exposição é -7676.69" in p.motivo
     assert sum(l["valor"] for l in r.rastro) == p.valor_brl
     assert set(p.ref_origem.split("|")) == {l["ref_origem"] for l in r.rastro}
 
@@ -202,3 +204,20 @@ def test_alerta_vale_para_lojista_novo_da_planilha(orbe, cadastro, regras):
     estorno_antigo = replace(ts[0], ref_origem="TXE", tipo_lancamento="ESTORNO", valor_bruto=Decimal("-1.00"),
                              data_venda_original=date(2026, 8, 20))
     assert alerta_antecipacao(ts + [estorno_antigo], cad, (2026, 9), regras).pendencias == []
+
+
+def test_alerta_usa_o_pico_da_exposicao(cadastro, regras):
+    """D73: exposição por data = antecipações − reversões − vendas, acumuladas; vale o máximo, com a data do pico."""
+    from datetime import date
+    from decimal import Decimal
+    from tarvo.calculos.alertas import alerta_antecipacao
+    from tarvo.modelo import TransacaoOrbe
+
+    def t(ref, dia, tipo, bruto, idref=None):
+        return TransacaoOrbe(ref, dia, date(2026, 9, dia), "1076801732", "ATLAS IDIOMAS", tipo, None if "ANTEC" in tipo else "PIX",
+                             1, None, Decimal(bruto), Decimal("2.1"), Decimal("0"), Decimal(bruto), idref, None, "o.csv")
+    ts = [t("V1", 10, "VENDA", "100"), t("A1", 11, "ANTECIPACAO", "150"), t("A2", 12, "ANTECIPACAO", "100"),
+          t("R1", 13, "REVERSAO ANTECIPACAO", "-120", "A2")]
+    (p,) = alerta_antecipacao(ts, cadastro, (2026, 9), regras).pendencias
+    assert p.valor_brl == Decimal("150") and "em 2026-09-12" in p.motivo  # 150 + 100 − 100; depois da reversão, 30
+    assert "A2 revertida em 13/09 (R1)" in p.motivo and "no fim do mês a exposição é 30" in p.motivo

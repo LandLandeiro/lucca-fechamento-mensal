@@ -3,9 +3,10 @@
 Alerta de antecipação (Q-N 6, regra `checkout.alerta_antecipacao`, D66): a antecipação é sobre o que o
 lojista já vendeu, e não há trava. Para lojista SEM histórico (sem vigência na planilha antes do mês e sem
 nenhuma linha com `data_venda_original` anterior ao mês), a antecipação acumulada no mês não pode passar das
-vendas acumuladas até a data. Na primeira data em que passa, uma pendência ALERTA_ANTECIPACAO para
-"Helena + comercial": valor = antecipado − vendido até essa data; rastro = as antecipações (+ bruto) e as
-vendas e estornos (− bruto) até ela, então a soma do rastro é o valor. Para lojista com histórico a
+vendas acumuladas até a data. Exposição por data (D73) = antecipações − reversões − (vendas − estornos),
+acumulados até a data; com pico > 0, uma pendência ALERTA_ANTECIPACAO para "Helena + comercial": valor = a
+exposição no pico, com a data; rastro = as antecipações e reversões (bruto, com sinal) e as vendas e estornos
+(− bruto) até a data do pico, então a soma do rastro é o valor. Para lojista com histórico a
 antecipação cobre recebíveis de meses anteriores, que não estão nos dados: o alerta seria alarme falso.
 `id_saida`: `PEN-ALERTA_ANTECIPACAO-<cnpj ou EC<n>>`. Não muda comissão, nota nem divergência.
 """
@@ -54,23 +55,30 @@ def alerta_antecipacao(transacoes: list[TransacaoOrbe], cadastro: Cadastro, comp
         if not any(t.tipo_lancamento == "ANTECIPACAO" for t in ts) or not _sem_historico(ident, ts, cadastro, inicio_mes):
             continue
         ts = sorted(ts, key=lambda t: (t.data_movimento, t.linha_arquivo))
-        antecipado = vendido = ZERO
+        # D73: exposição por data = antecipações − reversões − (vendas − estornos), acumulados até a data; vale o pico
+        exposicao, serie = ZERO, []
         for d in sorted({t.data_movimento for t in ts}):
-            do_dia = [t for t in ts if t.data_movimento == d]
-            antecipado += sum((t.valor_bruto for t in do_dia if t.tipo_lancamento in ANTECIPACOES), ZERO)
-            vendido += sum((t.valor_bruto for t in do_dia if t.tipo_lancamento in VENDAS), ZERO)
-            if antecipado > vendido:
-                break
-        else:
+            exposicao += sum((t.valor_bruto if t.tipo_lancamento in ANTECIPACOES else -t.valor_bruto
+                              for t in ts if t.data_movimento == d and t.tipo_lancamento in ANTECIPACOES + VENDAS), ZERO)
+            serie.append((d, exposicao))
+        d, pico = max(serie, key=lambda x: (x[1], -x[0].toordinal()))  # o maior; no empate, a primeira data
+        if pico <= 0:
             continue
+        antecipado = sum((t.valor_bruto for t in ts if t.data_movimento <= d and t.tipo_lancamento == "ANTECIPACAO"), ZERO)
+        revertido = -sum((t.valor_bruto for t in ts if t.data_movimento <= d and t.tipo_lancamento == "REVERSAO ANTECIPACAO"), ZERO)
+        vendido = sum((t.valor_bruto for t in ts if t.data_movimento <= d and t.tipo_lancamento in VENDAS), ZERO)
+        reversoes = [f"{t.id_referencia} revertida em {t.data_movimento.strftime('%d/%m')} ({t.ref_origem})"
+                     for t in ts if t.tipo_lancamento == "REVERSAO ANTECIPACAO"]
         ate = [t for t in ts if t.data_movimento <= d and t.tipo_lancamento in ANTECIPACOES + VENDAS]
         nome = cadastro.lojistas[ident].nome if ident in cadastro.lojistas else ts[0].nome_estabelecimento
         pid = f"PEN-ALERTA_ANTECIPACAO-{ident}"
         res.pendencias.append(Pendencia(
-            pid, "ALERTA_ANTECIPACAO", "|".join(t.ref_origem for t in ate), antecipado - vendido,
-            f"{nome} ({ident}): antecipação acumulada de {fmt_dinheiro(antecipado)} até {d.isoformat()} contra "
-            f"{fmt_dinheiro(vendido)} vendidos até a data (lojista sem histórico antes do mês). Alerta, não muda "
-            f"nenhum valor. {cfg['citacao_fonte']}: '{cfg['citacao']}' valor_brl = antecipado − vendido",
+            pid, "ALERTA_ANTECIPACAO", "|".join(t.ref_origem for t in ate), pico,
+            f"{nome} ({ident}): exposição máxima no mês de {fmt_dinheiro(pico)} em {d.isoformat()} (antecipado "
+            f"{fmt_dinheiro(antecipado)} − revertido {fmt_dinheiro(revertido)} − vendido líquido de estornos "
+            f"{fmt_dinheiro(vendido)}, acumulados até a data; lojista sem histórico antes do mês). Reversões no mês: "
+            f"{', '.join(reversoes) or 'nenhuma'}; no fim do mês a exposição é {fmt_dinheiro(serie[-1][1])}. Alerta, não "
+            f"muda nenhum valor. {cfg['citacao_fonte']}: '{cfg['citacao']}' valor_brl = exposição no pico",
             cfg["quem_decide"],
         ))
         for t in ate:
@@ -79,6 +87,7 @@ def alerta_antecipacao(transacoes: list[TransacaoOrbe], cadastro: Cadastro, comp
                 "id_saida": pid, "arquivo_origem": t.arquivo_origem, "ref_origem": t.ref_origem,
                 "valor": sinal * t.valor_bruto, "linha_arquivo": t.linha_arquivo, "tipo_lancamento": t.tipo_lancamento,
                 "valor_bruto": t.valor_bruto,
-                "nota": "antecipação (+ bruto)" if sinal > 0 else "venda/estorno até a data (− bruto)",
+                "nota": {"ANTECIPACAO": "antecipação (+ bruto)", "REVERSAO ANTECIPACAO": "reversão (bruto negativo)"}.get(
+                    t.tipo_lancamento, "venda/estorno até a data do pico (− bruto)"),
             })
     return res

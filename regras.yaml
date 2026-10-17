@@ -184,8 +184,8 @@ checkout:
     valor:
       criterio: >-
         só lojista sem histórico (sem vigência na planilha antes do mês e sem nenhuma linha com data_venda_original
-        anterior ao mês): alerta na primeira data em que a antecipação acumulada no mês passa das vendas acumuladas
-        até a data; valor = antecipado − vendido nessa data
+        anterior ao mês): exposição por data = antecipações − reversões − (vendas − estornos), acumulados no mês até a
+        data; com pico > 0, alerta com o valor e a data do pico (D73; antes, a primeira data em que passava)
       quem_decide: "Helena + comercial"
       citacao: "Isso não deveria acontecer. A antecipação é sobre o que o lojista já vendeu, e a gente não tem trava para isso. Coloquem como alerta: quem precisa saber sou eu e o comercial, e ainda mais com a Atlas sem contrato assinado."
       citacao_fonte: "Helena 09:44, Q-N 6"
