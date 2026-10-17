@@ -23,7 +23,15 @@ Os 4 mais fortes, no formato do case: o que pedi, o que a IA devolveu e o que fi
 - **Pedi**, em outra sessão de IA que não via este código, um script que recalculasse do zero comissões, divergências, remessa e notas. **Bateu no centavo** em todas essas etapas: 207.031,31 com truncamento (registrada no commit `3f83a5a`) e, depois da correção da Helena, 207.039,73, 16.973,65, 39.543,45 e as 21 notas (commit `cc7022d`).
 - **O que fiz:** só aceitei cada etapa depois de bater. Quando a minha previsão não bateu (16 pendências esperadas × 15 calculadas, na E6b), a IA mostrou o porquê antes do commit, e o número ficou como estava.
 
+## 5. Quanto devolver: a fórmula da Helena ficou, e o valor a devolver virou outra coluna
+
+- **O que aconteceu:** a pendência da Casa pedia para devolver R$ 15.397,42, o valor da divergência pela fórmula da Q-H c (bruto × (taxa aplicada − contratada)). A resposta da Helena a uma pergunta de outro time no canal (Q-U 4, Turma do Barulho) mostrou o problema: *"A Orbe já liquida o líquido"*, então o lojista perdeu exatamente o que a Orbe descontou acima do contrato, que é o `valor_taxa` truncado menos a comissão contratada. A diferença era o centavo de truncamento da Orbe: Casa 15.396,77, Rota 1.545,86, Bridge 29,94.
+- **Pedi** para trocar o valor da divergência. **A IA parou antes de implementar:** a troca contrariava a Q-H c, uma resposta CONFIRMADO da Helena (*"O valor da divergência eu quero como valor bruto × (taxa aplicada − contratada)"*), e sugeriu separar os dois valores.
+- **O que fiz:** aceitei separar (D71). `diferenca_brl` segue a Q-H c, e `valor_a_devolver_brl` (Q-U 4) é a coluna que pendências, rascunhos e totais usam. Daí saiu a conta da causa raiz (D74): devolver R$ 16.972,57, recuperar da Orbe R$ 1.545,86, custo para a Tarvo R$ 15.426,71.
+
 ## Outros momentos (resumo)
+
+- **A IA apagou um arquivo meu (17/10, ~12h53).** Ao mover o export da avaliação simulada para `PROMPTS/`, ela encadeou com `;` um `sed` que falhou e o `rm` do original, que não estava no git: o `rm` rodou mesmo com a cópia vazia. Ela parou, contou o que tinha feito e mostrou de onde recuperar: a sessão original, guardada pelo Claude Code em `.jsonl`. Regra a partir dali: script Python para trocas, conferir a cópia (tamanho, linhas, nada pessoal) e só apagar com `&&` em cada passo.
 
 - **Casa do Estudante −5,50:** eu pedi o teste "Casa = 0"; o código deu −5,50 (estorno de uma venda de agosto, pela taxa de agosto). A IA não ajustou o código ao teste: mostrou a conta e perguntou. Mantive −5,50, que virou pendência de nota negativa.
 - **A IA apagou o próprio trabalho** com `git checkout --` num arquivo não commitado, durante um teste de mutação; percebeu na saída do comando e restaurou da cópia. Regra a partir dali: mutação só com backup.
