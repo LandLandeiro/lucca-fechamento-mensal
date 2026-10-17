@@ -15,7 +15,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from tarvo.cadastro import adicionar_nomes_orbe, montar_cadastro, normalizar_nome
-from tarvo.calculos.comissoes import comissao_checkout, ordem_comissao
+from tarvo.calculos.comissoes import CompetenciaAmbigua, comissao_checkout, ordem_comissao, separar_competencia
 from tarvo.calculos.contestacao import contestacao_ponte
 from tarvo.calculos.divergencias import divergencias_checkout, divergencias_remessa
 from tarvo.calculos.notas import conferencia_repasse, notas_a_emitir
@@ -92,16 +92,22 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         arq_taxas, valor_da_regra(regras, "taxas.aba_vigente"), colunas, valor_da_regra(regras, "taxas.casas_decimais_taxa")
     )
     cadastro = montar_cadastro(taxas.linhas, regras, arq_taxas.name)
-    checkout = comissao_checkout(orbe.transacoes, cadastro, regras)
+    try:  # D62: linha de outro mês vira pendência, não aborta
+        sep = separar_competencia(orbe.transacoes)
+    except CompetenciaAmbigua as e:
+        raise ErroEntrada(str(e)) from e
+    competencia = sep.competencia
+    checkout = comissao_checkout(sep.dentro, cadastro, regras)
     divergencias = divergencias_checkout(checkout, cadastro, regras)
 
     arq_ponte = achar_unico(dados, PADRAO_PONTE)
     mail = ler_email(arq_ponte)
     ponte = ler_operacoes(mail.anexo_xlsx, arq_ponte.name, mail.nome_anexo, valor_da_regra(regras, "ponte.linhas_que_nao_sao_dados"))
     avisos_extra = []
-    meses_orbe = {(t.data_movimento.year, t.data_movimento.month) for t in orbe.transacoes}
-    if ponte.competencia and meses_orbe and {ponte.competencia} != meses_orbe:
-        avisos_extra.append(Aviso(arq_ponte.name, "-", f"competência da Ponte {ponte.competencia} ≠ meses da Orbe {sorted(meses_orbe)}"))
+    if ponte.competencia and ponte.competencia != competencia:
+        avisos_extra.append(Aviso(arq_ponte.name, "-", f"competência da Ponte {ponte.competencia} ≠ competência da Orbe {competencia}"))
+    for p in sep.pendencias:
+        avisos_extra.append(Aviso(orbe.arquivo, p.ref_origem, f"linha fora da competência {competencia}: vira pendência {p.id_saida}"))
     declarado_qtd = ponte.totais_declarados.get("Total de operações:")
     if declarado_qtd is not None and declarado_qtd != ponte.total_linhas_dados:
         avisos_extra.append(Aviso(arq_ponte.name, "-", f"Total de operações declarado {declarado_qtd} ≠ {ponte.total_linhas_dados} linhas lidas"))
@@ -124,11 +130,9 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         raise AssertionError("linhas da Orbe perdidas entre leitura e cálculo")
     if len(ponte.operacoes) + len(ponte.linhas_invalidas) != ponte.total_linhas_dados:
         raise AssertionError("linhas do anexo da Ponte perdidas entre leitura e cálculo")
-    if len(meses_orbe) != 1:
-        raise ErroEntrada(f"relatório da Orbe com {len(meses_orbe)} meses ({sorted(meses_orbe)}): competência do checkout ambígua")
 
     comissoes = sorted(checkout.comissoes + remessa.comissoes, key=ordem_comissao)
-    notas = notas_a_emitir(comissoes, checkout.rastro + remessa.rastro, regras, next(iter(meses_orbe)), ponte.competencia,
+    notas = notas_a_emitir(comissoes, checkout.rastro + remessa.rastro, regras, competencia, ponte.competencia,
                            checkout.pendencias_por_cnpj)
     nf_remessa = sum((n["valor_brl"] for n in notas.linhas if n["linha_negocio"] == "REMESSA"), ZERO)
     pend_repasse, rastro_repasse = conferencia_repasse(
@@ -137,7 +141,6 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     )
     contestacao = contestacao_ponte(cls_remessa, div_remessa.linhas, regras)
     # extratos (E6b): classificação por regra + conferências entre fontes
-    competencia = next(iter(meses_orbe))
     plano = contas_lancaveis(ler_plano_contas(achar_unico(dados, PADRAO_PLANO)))
     aurora = ler_extrato_aurora(achar_unico(dados, PADRAO_AURORA))
     meridiano = ler_extrato_meridiano(achar_unico(dados, PADRAO_MERIDIANO))
@@ -200,13 +203,13 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     lancamentos = [l for c in classif for l in c.linhas]
 
     pendencias = consolidar_pendencias(
-        checkout.pendencias, divergencias.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura,
+        checkout.pendencias, sep.pendencias, divergencias.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura,
         notas.pendencias, pend_repasse,
         div_remessa.pendencias_derivadas, contestacao.pendencias, *[c.pendencias for c in classif], conf.pendencias,
     )
     divs = divergencias.linhas + div_remessa.linhas
     rastro = sorted(
-        checkout.rastro + divergencias.rastro + divergencias.rastro_pendencias + remessa.rastro + div_remessa.rastro
+        checkout.rastro + sep.rastro + divergencias.rastro + divergencias.rastro_pendencias + remessa.rastro + div_remessa.rastro
         + notas.rastro + notas.rastro_pendencias + rastro_repasse + div_remessa.rastro_pendencias + contestacao.rastro
         + [l for c in classif for l in c.rastro + c.rastro_pendencias] + conf.rastro_pendencias,
         key=lambda l: (l["id_saida"], l["linha_arquivo"], l["ref_origem"]),
@@ -278,7 +281,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         "pendencias_novas": divergencias.pendencias + notas.pendencias + pend_repasse + div_remessa.pendencias_derivadas + contestacao.pendencias,
         "residuo_checkout": (divergencias.residuo, divergencias.linhas_com_residuo),
         "pendencias": pendencias,
-        "transacoes_em_pendencia": len(checkout.em_pendencia) + len(orbe.linhas_invalidas),
+        "transacoes_em_pendencia": len(checkout.em_pendencia) + len(sep.pendencias) + len(orbe.linhas_invalidas),
         "transacoes_lidas": orbe.total_linhas_dados,
         "divergencias": divergencias.linhas,
         "divergencias_zeradas": divergencias.grupos_zerados,

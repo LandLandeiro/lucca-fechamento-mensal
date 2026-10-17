@@ -135,3 +135,37 @@ def test_totais_conferem_com_a_previsao_independente(checkout):
     assert sum(c["comissao_brl"] for c in checkout.comissoes) == Decimal("207039.73")
     assert _total(checkout, "22224579000109") == Decimal("11916.02")  # Bridge
     assert _total(checkout, "95927868000148") == Decimal("15621.27")  # Rota
+
+
+def test_linha_da_orbe_fora_da_competencia_nao_aborta(tmp_path):
+    """D62 (avaliação simulada): uma linha de agosto no relatório de setembro abortava tudo, sem nenhum CSV.
+    Agora vira aviso + pendência, fica fora da comissão e o resto roda (validador OK)."""
+    import csv as _csv
+    from tarvo.__main__ import executar, main
+    from conftest import RAIZ, copiar_dados
+    linha = b"TX88410316;01/09/2026;1000960410;OXFORD PREP CURSOS;VENDA"
+    dados = copiar_dados(tmp_path / "dados", {"01_orbe_*.csv": [(linha, linha.replace(b"01/09/2026", b"31/08/2026"))]})
+    r = executar(dados, tmp_path / "s", RAIZ / "regras.yaml")
+    assert r["erros_validacao"] == [] and r["competencia"] == (2026, 9)
+    with open(tmp_path / "s" / "pendencias.csv", encoding="utf-8", newline="") as f:
+        pend = {p["id_saida"]: p for p in _csv.DictReader(f, delimiter=";")}
+    p = pend["PEN-ORBE_FORA_COMPETENCIA-TX88410316"]
+    assert (p["ref_origem"], p["valor_brl"]) == ("TX88410316", "42.61") and "2026-08-31" in p["motivo"]
+    assert any(a.local == "TX88410316" and "fora da competência" in a.mensagem for a in r["avisos"])
+    with open(tmp_path / "s" / "rastro.csv", encoding="utf-8", newline="") as f:
+        destinos = {l["id_saida"] for l in _csv.DictReader(f, delimiter=";") if l["ref_origem"] == "TX88410316"}
+    assert destinos == {"PEN-ORBE_FORA_COMPETENCIA-TX88410316"}  # fora da comissão (e da nota) da Oxford
+    assert main(["--dados", str(dados), "--saida", str(tmp_path / "s2")]) == 0
+
+
+def test_meses_empatados_e_erro_de_entrada():
+    from datetime import date
+    from decimal import Decimal
+    import pytest
+    from tarvo.calculos.comissoes import CompetenciaAmbigua, separar_competencia
+    from tarvo.modelo import TransacaoOrbe
+    def t(ref, d):
+        return TransacaoOrbe(ref, 2, d, "1", "X", "VENDA", "PIX", 1, None, Decimal("1"), Decimal("1"), Decimal("0.01"),
+                             Decimal("0.99"), None, None, "o.csv")
+    with pytest.raises(CompetenciaAmbigua):
+        separar_competencia([t("A", date(2026, 9, 1)), t("B", date(2026, 8, 31))])

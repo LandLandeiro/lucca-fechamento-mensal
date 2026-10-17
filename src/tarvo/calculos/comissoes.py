@@ -58,6 +58,47 @@ def id_comissao(cnpj: str, linha: str = LINHA) -> str:
     return f"COM-{cnpj}-{linha}"
 
 
+@dataclass
+class SeparacaoCompetencia:
+    competencia: tuple[int, int]
+    dentro: list[TransacaoOrbe]
+    pendencias: list[Pendencia] = field(default_factory=list)
+    rastro: list[dict] = field(default_factory=list)
+
+
+class CompetenciaAmbigua(ValueError):
+    """O relatório da Orbe não tem um mês predominante (empate ou vazio)."""
+
+
+def separar_competencia(transacoes: list[TransacaoOrbe]) -> SeparacaoCompetencia:
+    """D62: competência do checkout = o mês de `data_movimento` da maioria das linhas da Orbe. Linha de outro
+    mês não aborta o fechamento: fica fora da comissão e vira pendência ORBE_FORA_COMPETENCIA (uma por linha,
+    valor = taxa cobrada, informativo). Sem linhas ou com empate entre meses → CompetenciaAmbigua."""
+    contagem: dict[tuple[int, int], int] = {}
+    for t in transacoes:
+        mes = (t.data_movimento.year, t.data_movimento.month)
+        contagem[mes] = contagem.get(mes, 0) + 1
+    if not contagem:
+        raise CompetenciaAmbigua("relatório da Orbe sem linhas: não há competência")
+    ordem = sorted(contagem.items(), key=lambda kv: -kv[1])
+    if len(ordem) > 1 and ordem[0][1] == ordem[1][1]:
+        raise CompetenciaAmbigua(f"relatório da Orbe com meses empatados {sorted(contagem)}: competência do checkout ambígua")
+    competencia = ordem[0][0]
+    res = SeparacaoCompetencia(competencia, [t for t in transacoes if (t.data_movimento.year, t.data_movimento.month) == competencia])
+    for t in transacoes:
+        if (t.data_movimento.year, t.data_movimento.month) == competencia:
+            continue
+        pid = f"PEN-ORBE_FORA_COMPETENCIA-{t.ref_origem}"
+        res.pendencias.append(Pendencia(
+            pid, "ORBE_FORA_COMPETENCIA", t.ref_origem, t.valor_taxa,
+            f"linha {t.linha_arquivo} da Orbe ({t.tipo_lancamento}, {t.nome_estabelecimento}) com data_movimento "
+            f"{t.data_movimento.isoformat()}, fora da competência {competencia[1]:02d}/{competencia[0]}: fora da comissão "
+            f"do mês. valor_brl = taxa cobrada pela Orbe, informativo", "analista (conferir com a Orbe)",
+        ))
+        res.rastro.append(_linha_rastro(pid, t, t.valor_taxa, None, "linha fora da competência"))
+    return res
+
+
 def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regras: dict) -> ResultadoCheckout:
     """Comissão CHECKOUT por lojista, com rastro e pendências."""
     valor_da_regra(regras, "checkout.base_comissao")
