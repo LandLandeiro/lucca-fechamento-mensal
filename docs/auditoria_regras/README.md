@@ -43,5 +43,9 @@ Diferenças de centavos que a comparação revelou, todas resolvidas:
 | D45 | Sem o 06, a solução seguia sem aviso | **D89**: aviso informativo "sem arquivo de ajustes tardios da Orbe neste mês" |
 | D46 | Arquivo faltando ou layout mudado (a auditoria não leu o código) | Já existia: um arquivo obrigatório que falta ou se repete, ou uma coluna renomeada, para o fechamento com mensagem clara. Faltava o leitor do Aurora, que lia por posição: **D84** (aviso de cabeçalho). Fechar parcialmente sem uma fonte ficou para "com mais tempo" (README) |
 
-Das baixas, corrigimos o comentário desatualizado da Bridge em `divergencias.natureza.fonte` (D15 da auditoria).
+Das baixas, corrigimos o comentário desatualizado da Bridge em `divergencias.natureza.fonte` (D15 da auditoria). A D40 dela (o status da conta da Orbe) fez a `aurora.orbe_recebivel` voltar a ASSUMO (**D90**).
+
+## Depois da auditoria
+
+Os exemplos concretos da Helena viraram testes com o valor que ela afirmou (`tests/test_casos_ouro.py`), e toda regra CONFIRMADO passou a ter de citar a fala literal (`tests/test_citacoes_regras.py`). Ver `docs/TESTE_DAS_REGRAS.md`.
 
