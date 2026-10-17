@@ -252,7 +252,14 @@ cadastro:
     pergunta_ref: P08
 
 contabil:
-  pagamento_de_obrigacao_do_mes_anterior:   # baixa de passivo provisionado (conta de contrapartida)
+  obrigacoes_mes_anterior_fatos:
+    valor: >-
+      folha, ISS, INSS, FGTS e DARFs são de agosto e já estavam provisionados; o repasse da Ponte
+      de 04/09 é o spread de agosto, já registrado como comissão a receber
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:49"
+    pergunta_ref: P02
+  obrigacoes_mes_anterior_contas:   # contrapartida de cada lançamento; a Helena devolveu a escolha ("me diga como você lançaria")
     valor:
       AURORA:
         L15: "2.1.04.001"   # PAGTO SALARIOS - FOLHA 08/2026
@@ -264,8 +271,9 @@ contabil:
         L87: "2.1.03.002"   # DEBITO DARF 2172 COFINS
       MERIDIANO:
         MRD2026090132: {D: "1.1.01.002", C: "1.1.03.002"}   # TED RECEB PONTE CAMBIO SA REPASSE COMISSAO 08/2026
-    status: CONFIRMADO
-    fonte: "Slack Helena 20:49"
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca; base: contabil.obrigacoes_mes_anterior_fatos (Slack Helena 20:49) + 04_plano_de_contas"
     pergunta_ref: P02
   creditos_sem_origem:      # a Helena devolveu a decisão (20:49); decisão do Lucca
     valor:

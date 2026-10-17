@@ -31,7 +31,7 @@
 
 ## Regras (`regras.yaml`)
 
-- 40 regras: CONFIRMADO 19 · SEI 11 · ASSUMO 7 · PENDENTE 3 (`divergencias.data_referencia_vigencia`, `remessa.arredondamento_participacao`, `contabil.padroes_de_descricao`, este último preenchido na E6)
+- 41 regras: CONFIRMADO 19 · SEI 11 · ASSUMO 8 · PENDENTE 3 (`divergencias.data_referencia_vigencia`, `remessa.arredondamento_participacao`, `contabil.padroes_de_descricao`, este último preenchido na E6)
 - Nenhum bloqueio de regra para o mínimo (comissão CHECKOUT)
 - HIPOTESES com os textos literais do financeiro (Q-A…Q-G → P01–P11), fonte `docs/FINANCEIRO_SLACK.md`
 

@@ -28,7 +28,8 @@ Espelho executável: `regras.yaml` (mesmo status, mesma fonte). Evidências: `do
 | H19 | Divergência de spread | Spread aplicado ≠ contratado = divergência no valor cheio | CONFIRMADO | Slack Helena 20:58 | R$ 1.418,88 (Mundo Aberto) | — |
 | H20 | Rota Global +0,50 p.p. | Contrato não mudou: é divergência | CONFIRMADO | Slack Helena 20:49 | R$ 1.546,28 | Era PENDENTE |
 | H21 | Casa do Estudante | Taxa contratada 0 para MDR e antecipação de 2026-09-01 a 2026-12-31; remessa normal; tudo o que a Orbe cobrou é divergência | CONFIRMADO | Slack Helena 20:49 | R$ 15.391,27 (Σ `valor_taxa` da Casa) | Era PENDENTE; comissão checkout da Casa = 0 → não emite NF |
-| H22 | Pagamentos de obrigações de 08/2026 | Baixa de passivo provisionado (L15, L42, L54, L55, L57, L86, L87); repasse Ponte MRD2026090132 D 1.1.01.002 / C 1.1.03.002 | CONFIRMADO | Slack Helena 20:49 | R$ 411.790,94 de classificação | Era PENDENTE |
+| H22 | Obrigações de 08/2026: fatos | Folha, ISS, INSS, FGTS e DARFs são de agosto e já estavam provisionados; o repasse da Ponte de 04/09 é o spread de agosto, já registrado como comissão a receber | CONFIRMADO | Slack Helena 20:49 | R$ 411.790,94 de classificação | Era PENDENTE |
+| H24 | Obrigações de 08/2026: contas | Baixa de passivo: L15 2.1.04.001; L42 2.1.03.003; L54 2.1.04.002; L55 2.1.04.003; L57 2.1.03.004; L86 2.1.03.001; L87 2.1.03.002; repasse Ponte MRD2026090132 D 1.1.01.002 / C 1.1.03.002 | ASSUMO (Lucca; a Helena devolveu a escolha em 20:49: "me diga como você lançaria") | Fatos de H22 + plano de contas | R$ 411.790,94 de classificação | Separado de H22: antes estava como CONFIRMADO junto com os fatos |
 | H23 | Créditos sem origem | L50 C 1.1.09.002 + pendência; L65 C 2.1.01.001 + pendência (motivo da devolução); L92 D 1.1.09.001 (cai no Meridiano em 01/10) | ASSUMO (Lucca; a Helena devolveu a decisão em 20:49) | Slack Helena 20:49 | R$ 319.750,00 de classificação | Era PENDENTE |
 
 ## Perguntas ao financeiro
@@ -39,7 +40,7 @@ Fonte única dos textos: `docs/FINANCEIRO_SLACK.md` (copiado do Slack sem ediç�
 | # | Tema | Q | Quem perguntou · horário | Resposta · horário | Situação | O que mudou na solução |
 |---|---|---|---|---|---|---|
 | P01 | Spread negativo | Q-E (b) | MN AI · 20:30 | Helena · 20:48 | respondida | `remessa.spread_negativo` CONFIRMADO: fora da comissão e da nota, vai para divergências (H18) |
-| P02 | Competência de folha, impostos e repasse 08/2026 | Q-F item 3 | Lucca · 20:36 | Helena · 20:49 | respondida | `contabil.pagamento_de_obrigacao_do_mes_anterior`: baixa de passivo provisionado / comissão a receber (H22) |
+| P02 | Competência de folha, impostos e repasse 08/2026 | Q-F item 3 | Lucca · 20:36 | Helena · 20:49 | respondida | `contabil.obrigacoes_mes_anterior_fatos` CONFIRMADO (H22); `contabil.obrigacoes_mes_anterior_contas` ASSUMO do Lucca (H24) |
 | P03 | Base da comissão e NF de checkout e de remessa | Q-A e Q-D | Fox AI · 20:01; MN AI · 20:26 | Helena · 20:05; 20:47 | respondida | `checkout.base_comissao`, `divergencias.tratamento`, `notas.estrutura_nf_checkout`, `ponte.tomador_nf_remessa` CONFIRMADO (H01, H02, H08) |
 | P04 | Atlas Idiomas sem contrato | Q-C | Fox AI · 20:16 | Helena · 20:24 | respondida | `cadastro.lojista_sem_contrato_vigente`: não fatura, pendência para o comercial (H05) |
 | P05 | ECs sem cadastro | Q-C | Fox AI · 20:16 | Helena · 20:24 | respondida | `cadastro.mapeamento_ec_confirmado` (H04, D07) |
