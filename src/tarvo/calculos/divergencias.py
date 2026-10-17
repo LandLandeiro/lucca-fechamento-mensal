@@ -137,7 +137,8 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
                 "liquida_com": ", ".join(outros),
                 "natureza": _natureza_checkout(c, aplicada, cadastro),
                 "motivo": motivo,
-                "decisao": decisao,
+                # D85: a devolução da Casa (concessão comercial) decide Helena + comercial, não só a Helena
+                "decisao": (c.condicao or {}).get("quem_decide_divergencia") or decisao,
             })
             res.itens_por_div[ida] = [c]
             res.rastro.append({
@@ -200,11 +201,13 @@ def _pendencias_por_lojista(res: ResultadoDivergencias, condicoes: dict[str, dic
                      f"menos, {cfg['liquido_fonte']}) e recuperar o mesmo valor da Orbe (rascunho em rascunhos/; o valor "
                      f"não soma duas vezes). {cfg['citacao_fonte']}: '{cfg['citacao']}'")
         texto += ". Detalhe por transação em divergencias_taxa.csv (DIV-<id_transacao>)"
-        pid = f"PEN-DIVERGENCIA_CHECKOUT-{cnpj}"
-        if len({k for (c, k) in grupos if c == cnpj}) > 1:
+        # D85 (Q-N 1 "Deixem separado"): a devolução por concessão comercial tem tipo próprio, fora das divergências
+        tipo = "DEVOLUCAO_CONCESSAO_COMERCIAL" if natureza == "condicao_nao_informada" else "DIVERGENCIA_CHECKOUT"
+        pid = f"PEN-{tipo}-{cnpj}"
+        if len({k for (c, k) in grupos if c == cnpj}) > 1 and tipo == "DIVERGENCIA_CHECKOUT":
             pid += f"-{natureza.upper()}"
         texto = texto.replace(".'.", ".'")
-        res.pendencias.append(Pendencia(pid, "DIVERGENCIA_CHECKOUT", "|".join(d["ref_origem"] for d in divs), total,
+        res.pendencias.append(Pendencia(pid, tipo, "|".join(d["ref_origem"] for d in divs), total,
                                         " ".join(texto.split()), quem))
         for d in divs:
             for c in res.itens_por_div[d["id_saida"]]:

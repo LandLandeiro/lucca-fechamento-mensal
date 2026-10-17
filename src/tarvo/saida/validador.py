@@ -62,7 +62,8 @@ PREFIXO_EXCLUSAO = "EXC-"
 # pendências derivadas de um número já calculado: reapontam linhas que já têm destino
 PREFIXOS_DERIVADOS = ("PEN-NF_NEGATIVA-", "PEN-CONFERENCIA_REPASSE-", "PEN-EXCESSO_REMESSA-", "PEN-APORTE_",
                       "PEN-CONTESTACAO_PONTE-", "PEN-DIVERGENCIA_CHECKOUT-", "PEN-NOTA_BLOQUEADA-",
-                      "PEN-ALERTA_ANTECIPACAO-", "PEN-CADASTRO_REMESSA-")
+                      "PEN-ALERTA_ANTECIPACAO-", "PEN-CADASTRO_REMESSA-",
+                      "PEN-DEVOLUCAO_CONCESSAO_COMERCIAL-")
 
 
 def _d(texto: str | None) -> Decimal:

@@ -127,11 +127,11 @@ def test_uma_pendencia_por_lojista_para_decidir(divs):
     Casa (condição especial do comercial): Helena + comercial, com a fala dela da Q-F 2."""
     pend = {p.id_saida: p for p in divs.pendencias}
     assert {(k, p.valor_brl, p.quem_decide) for k, p in pend.items()} == {
-        ("PEN-DIVERGENCIA_CHECKOUT-00520815000100", Decimal("15396.77"), "Helena + comercial"),  # D71: valor a devolver
+        ("PEN-DEVOLUCAO_CONCESSAO_COMERCIAL-00520815000100", Decimal("15396.77"), "Helena + comercial"),  # D71: valor a devolver
         ("PEN-DIVERGENCIA_CHECKOUT-95927868000148", Decimal("1545.86"), "Helena"),
         ("PEN-DIVERGENCIA_CHECKOUT-22224579000109", Decimal("29.94"), "Helena"),  # D76: contrato (aditivo assinado)  # D63: condição não informada
     }
-    casa = pend["PEN-DIVERGENCIA_CHECKOUT-00520815000100"]
+    casa = pend["PEN-DEVOLUCAO_CONCESSAO_COMERCIAL-00520815000100"]
     assert "O que foi cobrado eu devolvo ao lojista, junto com o comercial." in casa.motivo
     assert "cobro a Orbe" not in casa.motivo  # a Casa é devolução ao lojista, não cobrança da Orbe
     assert "Isso eu decido, não vai automático." in pend["PEN-DIVERGENCIA_CHECKOUT-95927868000148"].motivo
@@ -205,7 +205,7 @@ def test_natureza_de_cada_divergencia(divs):
                            "95927868000148": {"contrato_orbe"}}  # D76: "O que decide é o contrato, não o aviso" (Q-AA 1)
     bridge = {p.id_saida: p for p in divs.pendencias}["PEN-DIVERGENCIA_CHECKOUT-22224579000109"]
     assert "Devolver 29.94 ao lojista" in bridge.motivo and "recuperar o mesmo valor da Orbe" in bridge.motivo
-    casa = {p.id_saida: p for p in divs.pendencias}["PEN-DIVERGENCIA_CHECKOUT-00520815000100"]
+    casa = {p.id_saida: p for p in divs.pendencias}["PEN-DEVOLUCAO_CONCESSAO_COMERCIAL-00520815000100"]
     assert "Quem abriu mão da receita fomos nós" in casa.motivo
 
 
@@ -296,5 +296,15 @@ def test_devolver_e_recuperar(divs):
     pend = {p.id_saida: p for p in divs.pendencias}
     rota = pend["PEN-DIVERGENCIA_CHECKOUT-95927868000148"].motivo
     assert "Devolver 1545.86 ao lojista" in rota and "recuperar o mesmo valor da Orbe" in rota and "Q-U 4" in rota
-    casa = pend["PEN-DIVERGENCIA_CHECKOUT-00520815000100"].motivo
+    casa = pend["PEN-DEVOLUCAO_CONCESSAO_COMERCIAL-00520815000100"].motivo
     assert "Devolver 15396.77 ao lojista" in casa and "nada a recuperar da Orbe" in casa
+
+
+def test_devolucao_da_casa_tem_tipo_proprio(divs):
+    """D85 (Q-N 1: 'Deixem separado das divergências de contrato'; Q-AA 1): a devolução da Casa, concessão do comercial,
+    não é DIVERGENCIA_CHECKOUT; as 118 linhas dela têm decisão 'Helena + comercial'."""
+    tipos = {p.id_saida: p.tipo for p in divs.pendencias}
+    assert tipos["PEN-DEVOLUCAO_CONCESSAO_COMERCIAL-00520815000100"] == "DEVOLUCAO_CONCESSAO_COMERCIAL"
+    assert {tipos["PEN-DIVERGENCIA_CHECKOUT-95927868000148"], tipos["PEN-DIVERGENCIA_CHECKOUT-22224579000109"]} == {"DIVERGENCIA_CHECKOUT"}
+    casa = [d for d in divs.linhas if d["cnpj"] == "00520815000100"]
+    assert len(casa) == 118 and {d["decisao"] for d in casa} == {"Helena + comercial"}
