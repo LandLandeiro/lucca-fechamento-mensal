@@ -1,9 +1,9 @@
 # Status
 
-> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 14:50 (auditoria independente das regras e teste das regras, D85–D90).
+> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 15:25 (painel na main; respostas Q-AI a Q-AM, D91–D96).
 
 **Nível atual:** **Alvo** (todos os 6 CSVs gerados e validados); os 184 lançamentos por REGRA (D52); IA só para nome que nenhuma regra reconhece
-**Próximo passo:** trazer o painel para a main (instrução do Lucca a seguir); Checkpoint 2 às 16:00.
+**Próximo passo:** Checkpoint 2 às 16:00; entrega às 18h30.
 
 ## Mínimo
 
@@ -35,6 +35,18 @@
 - [x] **Rastro de 100% dos números** (17/10 ~09h15, D45): o validador recusa número sem rastro ou com soma diferente, e linha do rastro de qualquer `id_saida` que não exista na fonte (id_transacao, Nº Operação + linha, L<n>, FITID + linha); auditoria independente com 0 violações (`docs/AUDITORIA.md`)
 - [x] Auditoria independente da saída (`scripts/auditar_saida.py`, sem importar o pacote): formato sem violação; coerência com 1 achado (o −0,03 acima); matriz de conformidade Q-A…Q-M em `docs/CONFORMIDADE.md`
 - [x] **Roda em outubro sem mudar código** (17/10, D48–D50): `tests/test_outubro.py` (12 testes, no CI) fecha um mês sintético gerado de setembro (`tests/fixtures/gerar_outubro.py`, datas +1 mês, EC novo, estorno da Bridge de venda de 05/09, TED de 300 mil em 01/10, PIX da EduAbroad). Resultado: exit 0, validador OK, auditoria 0 violações; competência 10/2026; Casa com taxa 0; EC novo vira pendência; estorno pela taxa antiga (2,59%); EduAbroad por REGRA (nome da Orbe); 1 aporte de nome novo vai para a IA mockada e é aceito pela prova da soma; TED de 300 mil por REGRA; nenhuma pendência cita "setembro". Com `--pendencias-anteriores`, a L92 de setembro sai resolvida
+
+## 17/10 tarde: painel e respostas Q-AI a Q-AM (D91–D96)
+
+- [x] **Painel** (`saida/painel.html`, `docs/PAINEL.md`): feito na branch `relatorio` (17/10 12:21–14:52) e trazido para a main por fast-forward em `067f017`. O `python -m tarvo` gera o painel depois do validador, com os mesmos bytes no Linux e no Windows. Telas: visão geral, decisões, contratado × cobrado, remessa e rastro. Ele só soma linhas da saída e não calcula regra nova; 23 testes em `tests/test_painel.py`
+- [x] D91: ajuste tardio que chega depois da aprovação entra no mês seguinte (Q-AJ 1), com a opção `--fechamento-anterior-aprovado`; sem ela, a linha de outro mês vira pendência
+- [x] D92: data-base da antecipação (Q-AI) CONFIRMADO: as 4 antecipações da Casa ficam isentas pela data delas; caso-ouro AN88445172
+- [x] D93: bandeira trocada no estorno (Q-AK) não abre pendência nem aviso, conferido nos 7 estornos do 06; caso-ouro TX88447011
+- [x] D94: ajuste sem a transação original (Q-AL 2) entra pelo valor que veio e vira pendência `AJUSTE_SEM_ORIGINAL`; testado no outubro sintético
+- [x] D95: `saida/manifesto.csv` (arquivos, linhas lidas, sha256, versão das regras), determinístico; data e hora em `logs/` (fora do git)
+- [x] D96: `saida/rastro_regras.csv`: a regra aplicada em cada linha do rastro (8.295 linhas), sem mudar o `rastro.csv`
+- Números: iguais (notas 243.284,29; devolver 16.972,57; recuperar 1.575,80; custo 15.396,77; 15 pendências; 5.251 linhas de rastro). Regras: CONFIRMADO 52 · ASSUMO 38 · SEI 13 · PENDENTE 0 (103)
+- [ ] Sem resposta: Spread R$ do ajuste da Ponte (Desbravadores 12:04)
 
 ## 17/10 tarde: auditoria independente das regras e teste das regras (D85–D90)
 
