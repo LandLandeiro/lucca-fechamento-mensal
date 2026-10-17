@@ -59,6 +59,17 @@ def _ler(caminho: Path, erros: list[str]) -> list[dict] | None:
 # exclusão anotada (EXC-…, sem número reportado). DIV-… reaponta linhas e não conta.
 PREFIXOS_COBERTURA = ("COM-", "PEN-", "EXC-")
 PREFIXO_EXCLUSAO = "EXC-"
+# pendências derivadas de um número já calculado: reapontam linhas que já têm destino
+PREFIXOS_DERIVADOS = ("PEN-NF_NEGATIVA-", "PEN-CONFERENCIA_REPASSE-")
+
+
+def _d(texto: str | None) -> Decimal:
+    """Número da saída para as checagens de soma; fora do formato conta 0 (o erro de formato já é reportado)."""
+    return Decimal(texto) if _RE_DINHEIRO.match(texto or "") else Decimal("0")
+
+
+def _destino(id_saida: str) -> bool:
+    return id_saida.startswith(PREFIXOS_COBERTURA) and not id_saida.startswith(PREFIXOS_DERIVADOS)
 
 
 def validar_saida(
@@ -132,6 +143,8 @@ def validar_saida(
         if ids.startswith(PREFIXO_EXCLUSAO):
             erros.append(f"{ids}: exclusão anotada não pode ser número de saída")
 
+    if "notas_a_emitir.csv" in dados:
+        erros.extend(_notas(dados))
     if valor_taxa_orbe:
         erros.extend(_conservacao_checkout(dados, valor_taxa_orbe))
     if spread_ponte:
@@ -142,7 +155,7 @@ def validar_saida(
             esperadas = {(r, str(n)) for r, n in esperadas}
             vistas = Counter(
                 (l["ref_origem"], l.get("linha_arquivo", "")) for l in dados["rastro.csv"]
-                if l.get("arquivo_origem") == arquivo and l["id_saida"].startswith(PREFIXOS_COBERTURA)
+                if l.get("arquivo_origem") == arquivo and _destino(l["id_saida"])
             )
             faltando = sorted(esperadas - set(vistas))
             repetidas = sorted(r for r, n in vistas.items() if n > 1)
@@ -156,14 +169,37 @@ def validar_saida(
     return erros
 
 
+def _notas(dados: dict[str, list[dict]]) -> list[str]:
+    """Σ notas CHECKOUT = Σ comissões CHECKOUT positivas (e cada nota = a comissão do lojista);
+    nota REMESSA = Σ comissão REMESSA; nenhuma nota ≤ 0."""
+    erros: list[str] = []
+    notas = dados["notas_a_emitir.csv"]
+    comissoes = dados.get("comissoes_por_lojista.csv", [])
+    com = {(l["cnpj"], l["linha_negocio"]): _d(l["comissao_brl"]) for l in comissoes}
+    for n in notas:
+        if _d(n["valor_brl"]) <= 0:
+            erros.append(f"{n['id_saida']}: nota com valor {n['valor_brl']} ≤ 0")
+        if n["linha_negocio"] == "CHECKOUT" and com.get((n["tomador_cnpj"], "CHECKOUT")) != _d(n["valor_brl"]):
+            erros.append(f"{n['id_saida']}: valor {n['valor_brl']} ≠ comissão CHECKOUT do lojista {com.get((n['tomador_cnpj'], 'CHECKOUT'))}")
+    positivas = sum((v for (_, ln), v in com.items() if ln == "CHECKOUT" and v > 0), Decimal("0"))
+    nf_checkout = sum((_d(n["valor_brl"]) for n in notas if n["linha_negocio"] == "CHECKOUT"), Decimal("0"))
+    if nf_checkout != positivas:
+        erros.append(f"notas CHECKOUT: Σ {nf_checkout} ≠ Σ comissões CHECKOUT positivas {positivas}")
+    remessa = sum((v for (_, ln), v in com.items() if ln == "REMESSA"), Decimal("0"))
+    nf_remessa = [n for n in notas if n["linha_negocio"] == "REMESSA"]
+    if remessa > 0 and (len(nf_remessa) != 1 or _d(nf_remessa[0]["valor_brl"]) != remessa):
+        erros.append(f"notas REMESSA: esperada 1 nota de {remessa}, achei {[(n['id_saida'], n['valor_brl']) for n in nf_remessa]}")
+    return erros
+
+
 def _conservacao_checkout(dados: dict[str, list[dict]], valor_taxa_orbe: dict[str, dict[str, Decimal]]) -> list[str]:
     erros: list[str] = []
     rastro = dados["rastro.csv"]
     com_ids = {l["id_saida"] for l in dados.get("comissoes_por_lojista.csv", []) if l["linha_negocio"] == "CHECKOUT"}
     div_ids = {l["id_saida"] for l in dados.get("divergencias_taxa.csv", []) if l["linha_negocio"] == "CHECKOUT"}
-    soma_com = sum((Decimal(l["comissao_brl"]) for l in dados.get("comissoes_por_lojista.csv", [])
+    soma_com = sum((_d(l["comissao_brl"]) for l in dados.get("comissoes_por_lojista.csv", [])
                     if l["id_saida"] in com_ids), Decimal("0"))
-    soma_div = sum((Decimal(l["diferenca_brl"]) for l in dados.get("divergencias_taxa.csv", [])
+    soma_div = sum((_d(l["diferenca_brl"]) for l in dados.get("divergencias_taxa.csv", [])
                     if l["id_saida"] in div_ids), Decimal("0"))
     soma_fonte = Decimal("0")
     refs_com: set[tuple[str, str]] = set()
@@ -207,11 +243,11 @@ def _conservacao_remessa(
                 continue
             chave = (l["ref_origem"], int(l["linha_arquivo"])) if (l.get("linha_arquivo") or "").isdigit() else None
             ids = l["id_saida"]
-            if ids in com_ids or ids.startswith(PREFIXO_EXCLUSAO) or (ids in pen_ids and ids.startswith("PEN-")):
+            if ids in com_ids or ids.startswith(PREFIXO_EXCLUSAO) or (ids in pen_ids and _destino(ids)):
                 if chave not in fonte:
                     erros.append(f"{ids}: {l['ref_origem']} linha {l.get('linha_arquivo')} não existe no anexo")
                     continue
-                spread, valor = fonte[chave], Decimal(l["valor"])
+                spread, valor = fonte[chave], _d(l["valor"])
                 if ids in com_ids:
                     partes["elegíveis"] += spread
                     if abs(2 * valor - spread) > Decimal("0.01"):

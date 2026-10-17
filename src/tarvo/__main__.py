@@ -16,6 +16,7 @@ from pathlib import Path
 from tarvo.cadastro import montar_cadastro
 from tarvo.calculos.comissoes import comissao_checkout, ordem_comissao
 from tarvo.calculos.divergencias import divergencias_checkout, divergencias_remessa
+from tarvo.calculos.notas import conferencia_repasse, notas_a_emitir
 from tarvo.calculos.remessa import classificar_remessa, comissao_remessa
 from tarvo.formatos import fmt_dinheiro
 from tarvo.leitores.orbe import ErroLeitura, ler_orbe
@@ -95,22 +96,33 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
                   "analista (conferir o relatório com a Ponte)")
         for li in ponte.linhas_invalidas
     ]
-    pendencias = consolidar_pendencias(checkout.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura)
     if len(orbe.transacoes) + len(orbe.linhas_invalidas) != orbe.total_linhas_dados:
         raise AssertionError("linhas da Orbe perdidas entre leitura e cálculo")
     if len(ponte.operacoes) + len(ponte.linhas_invalidas) != ponte.total_linhas_dados:
         raise AssertionError("linhas do anexo da Ponte perdidas entre leitura e cálculo")
+    if len(meses_orbe) != 1:
+        raise ErroEntrada(f"relatório da Orbe com {len(meses_orbe)} meses ({sorted(meses_orbe)}): competência do checkout ambígua")
 
     comissoes = sorted(checkout.comissoes + remessa.comissoes, key=ordem_comissao)
+    notas = notas_a_emitir(comissoes, checkout.rastro + remessa.rastro, regras, next(iter(meses_orbe)), ponte.competencia)
+    nf_remessa = sum((n["valor_brl"] for n in notas.linhas if n["linha_negocio"] == "REMESSA"), ZERO)
+    pend_repasse, rastro_repasse = conferencia_repasse(
+        nf_remessa, ponte.totais_declarados.get("Spread total R$:"), cls_remessa, mail.corpo, ponte.arquivo, regras
+    )
+    pendencias = consolidar_pendencias(
+        checkout.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura, notas.pendencias, pend_repasse
+    )
     divs = divergencias.linhas + div_remessa.linhas
     rastro = sorted(
-        checkout.rastro + divergencias.rastro + remessa.rastro + div_remessa.rastro,
+        checkout.rastro + divergencias.rastro + remessa.rastro + div_remessa.rastro
+        + notas.rastro + notas.rastro_pendencias + rastro_repasse,
         key=lambda l: (l["id_saida"], l["linha_arquivo"], l["ref_origem"]),
     )
     escrever_saida(
         {
             "comissoes_por_lojista.csv": comissoes,
             "divergencias_taxa.csv": divs,
+            "notas_a_emitir.csv": notas.linhas,
             "pendencias.csv": [pendencia_para_linha(p) for p in pendencias],
             "rastro.csv": rastro,
         },
@@ -149,6 +161,8 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
         "comissoes": checkout.comissoes,
         "total_checkout": sum((c["comissao_brl"] for c in checkout.comissoes), ZERO),
         "lojistas": {c["cnpj"]: c["lojista"] for c in comissoes},
+        "notas": notas.linhas,
+        "pendencias_novas": notas.pendencias + pend_repasse,
         "pendencias": pendencias,
         "transacoes_em_pendencia": len(checkout.em_pendencia) + len(orbe.linhas_invalidas),
         "transacoes_lidas": orbe.total_linhas_dados,
@@ -213,6 +227,19 @@ def _imprimir_remessa(r: dict) -> None:
               f"  (pela coluna 'Spread %' do relatório: {fmt_dinheiro(m['div_pela_coluna'].get(cnpj, ZERO)) if tipo == 'ACIMA_DO_CONTRATADO' else '-'})")
 
 
+def _imprimir_notas(r: dict) -> None:
+    notas = r["notas"]
+    print(f"\nNotas a emitir: {len(notas)}")
+    for linha in ("CHECKOUT", "REMESSA"):
+        sel = [n for n in notas if n["linha_negocio"] == linha]
+        print(f"  {linha:<9} {len(sel):>3} notas  {fmt_dinheiro(sum((n['valor_brl'] for n in sel), ZERO)):>12}")
+    for n in notas:
+        if n["linha_negocio"] == "REMESSA":
+            print(f"    {n['id_saida']}: {n['tomador']} — {n['discriminacao']}")
+    for p in r["pendencias_novas"]:
+        print(f"  pendência {p.id_saida} ({fmt_dinheiro(p.valor_brl)}), quem decide: {p.quem_decide}\n    {p.motivo}")
+
+
 def main(argv: list[str] | None = None) -> int:
     for stream in (sys.stdout, sys.stderr):  # console cp1252 (Windows): troca o que não sabe mostrar
         if hasattr(stream, "reconfigure"):
@@ -243,13 +270,15 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  {p.id_saida}: {valor} — quem decide: {p.quem_decide}")
     _imprimir_divergencias(r)
     _imprimir_remessa(r)
+    _imprimir_notas(r)
     if r["erros_validacao"]:
         print(f"\nVALIDADOR: {len(r['erros_validacao'])} ERRO(S)", file=sys.stderr)
         for e in r["erros_validacao"]:
             print(f"  ERRO {e}", file=sys.stderr)
         return 1
     print(f"\nVALIDADOR: OK (rastro fecha com todos os totais; as {r['transacoes_lidas']} linhas da Orbe aparecem uma vez;"
-          f" as {r['remessa']['linhas']} linhas do anexo da Ponte também; conservação do checkout e da remessa fecha)")
+          f" as {r['remessa']['linhas']} linhas do anexo da Ponte também; conservação do checkout e da remessa fecha;"
+          " notas = comissões)")
     print(f"saída: {args.saida}")
     return 0
 

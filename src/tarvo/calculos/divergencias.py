@@ -11,7 +11,8 @@ CHECKOUT (regras usadas, todas de `regras.yaml`):
   líquida com os estornos dela (`id_referencia`) no mesmo arquivo; só lista se o líquido
   ≠ 0. Estorno de venda que não está no arquivo (mês anterior) é avaliado sozinho;
 - divergencias.tolerancia_checkout (ASSUMO, D09): 0 (mesmo truncamento da Orbe);
-- D17: a REVERSAO ANTECIPACAO é líquida com a antecipação que ela anula, do mesmo jeito.
+- divergencias.reversao_liquida_com_antecipacao (ASSUMO, D17): a REVERSAO ANTECIPACAO é
+  líquida com a antecipação que ela anula, do mesmo jeito.
 
 Transações em pendência (ex.: Atlas, sem contrato) não entram: não há taxa contratada
 para comparar.
@@ -27,13 +28,12 @@ from decimal import ROUND_HALF_EVEN, Decimal
 
 from tarvo.cadastro import Cadastro, linha_vigente
 from tarvo.calculos.comissoes import ComissaoTransacao, ResultadoCheckout
-from tarvo.calculos.remessa import ClassificacaoRemessa
+from tarvo.calculos.remessa import ClassificacaoRemessa, participacao
 from tarvo.formatos import CENTAVO, fmt_pct
 from tarvo.modelo import ItemRastro, OperacaoPonte, Pendencia
 from tarvo.regras import valor_da_regra
 
 LINHA = "CHECKOUT"
-LIGADOS_POR_REFERENCIA = ("ESTORNO", "REVERSAO ANTECIPACAO")
 
 
 @dataclass
@@ -58,11 +58,13 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
     valor_da_regra(regras, "divergencias.tratamento")
     valor_da_regra(regras, "divergencias.estorno_de_venda_divergente")
     tolerancia = Decimal(str(valor_da_regra(regras, "divergencias.tolerancia_checkout")))
+    ligados = ("ESTORNO", "REVERSAO ANTECIPACAO") if valor_da_regra(
+        regras, "divergencias.reversao_liquida_com_antecipacao") else ("ESTORNO",)
 
     grupos: dict[str, list[ComissaoTransacao]] = {}
     for c in sorted(checkout.por_transacao.values(), key=lambda x: x.transacao.linha_arquivo):
         t = c.transacao
-        if t.tipo_lancamento in LIGADOS_POR_REFERENCIA and t.id_referencia in checkout.por_transacao:
+        if t.tipo_lancamento in ligados and t.id_referencia in checkout.por_transacao:
             grupos.setdefault(t.id_referencia, []).append(c)
         else:
             grupos.setdefault(t.ref_origem, []).insert(0, c)  # a venda (cabeça) vai primeiro
@@ -149,6 +151,8 @@ def divergencias_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: 
     spread_padrao = Decimal(str(padrao["spread_pct"]))
     tolerancia = Decimal(str(valor_da_regra(regras, "ponte.tolerancia_spread_pct")))
     motivo_negativo = valor_da_regra(regras, "remessa.motivo_spread_negativo")
+    valor_da_regra(regras, "remessa.divergencia_spread_negativo")
+    fracao = Decimal(str(valor_da_regra(regras, "ponte.participacao_tarvo")))
     coluna = valor_da_regra(regras, "taxas.coluna_por_produto")["REMESSA"]
 
     res = ResultadoDivergenciasRemessa()
@@ -168,11 +172,11 @@ def divergencias_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: 
             res.pendencias.append(_pend(op, "REMESSA_SPREAD_INDEFINIDO", f"spread contratado em texto: {bruto!r} (R{linha.linha_planilha})"))
             continue
 
-        aplicado = (op.taxa_cliente - op.ptax_ref) / op.ptax_ref  # ponte.formula_spread_pct
+        aplicado = (op.taxa_cliente - op.ptax_ref) / op.ptax_ref  # ponte.formula_spread_pct (tolerância e exibição)
         if not negativo and abs(aplicado - contratado) <= tolerancia:
             continue
-        exato = op.valor_me * (op.taxa_cliente - op.ptax_ref) - contratado * op.ptax_ref * op.valor_me
-        dif = exato.quantize(CENTAVO, rounding=ROUND_HALF_EVEN)
+        # D22: Spread R$ do relatório (mesma base da comissão) − contratado × PTAX × Valor ME; D20: meio → par
+        dif = (op.spread_brl - contratado * op.ptax_ref * op.valor_me).quantize(CENTAVO, rounding=ROUND_HALF_EVEN)
         pela_coluna = ((op.spread_pct - contratado) * op.ptax_ref * op.valor_me).quantize(CENTAVO, rounding=ROUND_HALF_EVEN)
         res.total_pela_coluna_spread_pct[cnpj] = res.total_pela_coluna_spread_pct.get(cnpj, Decimal("0")) + pela_coluna
 
@@ -197,6 +201,7 @@ def divergencias_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: 
             "ptax_ref": str(op.ptax_ref),
             "taxa_cliente": str(op.taxa_cliente),
             "spread_brl": op.spread_brl,
+            "impacto_repasse_tarvo": participacao(op.spread_brl, fracao) if negativo else None,  # D21
             "direcao": "COBROU_A_MAIS" if dif > 0 else "COBROU_A_MENOS",
             "motivo": motivo,
             "decisao": "Helena",

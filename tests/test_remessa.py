@@ -93,9 +93,19 @@ def test_pc_0926_0210_spread_negativo_fora_da_comissao(cls, rem, divr):
     assert exc["id_saida"] == "EXC-REMESSA-SPREAD_NEGATIVO" and exc["valor"] == Decimal("-687.52")
     d = next(x for x in divr.linhas if x["ref_origem"] == "PC-0926-0210")
     assert d["linha_negocio"] == "REMESSA" and d["direcao"] == "COBROU_A_MENOS"
-    assert "trava vencida (2h), Helena contesta" in d["motivo"]
-    # (−1,5523% − 1,5% padrão) × PTAX × ME: valor cheio da regra uniforme (ver D21)
+    assert "trava vencida (2h); Helena contesta o desconto no repasse" in d["motivo"]
+    # D22: Spread R$ −687,52 − 1,5% (padrão) × PTAX × ME = −1.351,87 (valor cheio contra o contrato, D21)
     assert d["diferenca_brl"] == Decimal("-1351.87")
+    assert d["impacto_repasse_tarvo"] == Decimal("-343.76")  # 50% × −687,52
+
+
+def test_negativos_d21_d22(divr):
+    neg = {d["ref_origem"]: d for d in divr.linhas if d["spread_brl"] < 0}
+    assert neg["PC-0926-0326"]["diferenca_brl"] == Decimal("-1001.29")  # Canguru (R141)
+    assert sum(d["diferenca_brl"] for d in neg.values()) == Decimal("-3565.98")
+    # −172,515 → −172,52 (meio → par)
+    assert sum(d["impacto_repasse_tarvo"] for d in neg.values()) == Decimal("-917.03")
+    assert all(d["impacto_repasse_tarvo"] is None for d in divr.linhas if d["spread_brl"] >= 0)
 
 
 def test_ressalva_conta_normalmente(cls):
@@ -132,7 +142,7 @@ def test_mundo_aberto_comissao_sobre_o_spread_realizado(rem):
 # --- divergência ------------------------------------------------------------
 
 def test_pc_0926_0011_mundo_aberto(divr):
-    # R10: (1,5007% − 1,20%) × 4,0315 × 2.438,46 = 29,56
+    # R10 (D22): Spread R$ 147,53 − 1,20% × 4,0315 × 2.438,46 (117,9666) = 29,5634 → 29,56
     d = next(x for x in divr.linhas if x["ref_origem"] == "PC-0926-0011")
     assert d["diferenca_brl"] == Decimal("29.56")
     assert (d["taxa_contratada_pct"], d["taxa_aplicada_pct"]) == (Decimal("0.0120"), Decimal("0.015007"))

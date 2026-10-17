@@ -64,3 +64,11 @@ Log cronológico: hora, etapa, o que foi feito, como foi verificado, commit.
 - **Verificado:** 233 linhas = 228 elegíveis + 1 duplicata + 4 negativos; Σ Spread 78.073,59 = declarado. Comissão 39.542,89. Hand-check PC-0926-0011: (4,0920 − 4,0315) × 2.438,46 − 1,2% × 4,0315 × 2.438,46 = 147,5268 − 117,9666 = 29,56. PC-0926-0002: 50% × 262,01 = 131,005 → 131,00 (meio → par). `pytest`: 83 passed.
 - **A confirmar com o Lucca:** D21 (divergência do spread negativo pela fórmula: −3.565,99; pelo spread: −1.834,05), D20 (arredondamento da divergência).
 - **Commit:** `E4: comissão e divergências de remessa`.
+
+### ~22h20–22h35 · Decisões D17/D20/D21/D22 e E6a: notas a emitir
+- **Feito:** D22: divergência de remessa = Spread R$ − contratado × PTAX × ME (mesma base da comissão). D21: `impacto_repasse_tarvo` = 50% × Spread R$ nos negativos, motivo novo. D17 e D20 confirmadas (D17 virou a regra `divergencias.reversao_liquida_com_antecipacao`, lida pelo código). `calculos/notas.py`: 1 nota por lojista com comissão CHECKOUT > 0, 1 nota REMESSA para a Ponte; discriminação em `notas.discriminacao` com a competência dos dados; nota negativa → pendência NF_NEGATIVA; pendência CONFERENCIA_REPASSE calculada (participação × total declarado × nota, decomposta pelas exclusões; data do TED lida do e-mail). Validador: notas = comissões e nenhuma nota ≤ 0; pendências derivadas fora da cobertura.
+- **Verificado:** Mundo Aberto 1.418,88; negativos −3.565,98 (Canguru −1.001,29); impacto −917,03; 21 notas (207.036,81 + 39.542,89); conferência 39.036,80 × 39.542,89 = 506,09 = 917,03 − 410,94, todos iguais aos números previstos pelo Lucca. `pytest`: 91 passed.
+- **Bugs achados e corrigidos:** (1) o validador dava exceção (InvalidOperation) com vírgula decimal em vez de reportar erro: D26; (2) uma substituição em lote quebrou duas f-strings da CLI (`
+` virou quebra de linha real); a CLI não rodava e foi corrigida antes do commit.
+- **Commit:** `D21/D22 e E6a: notas a emitir com conferência do repasse`.
+

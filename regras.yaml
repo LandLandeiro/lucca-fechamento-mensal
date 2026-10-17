@@ -156,8 +156,30 @@ notas:
     status: CONFIRMADO
     fonte: "Slack Helena 20:47"
     pergunta_ref: P03
+  discriminacao:            # {competencia} = MM/AAAA, vinda dos dados (Orbe no checkout; cabeçalho do relatório na remessa)
+    valor:
+      CHECKOUT: "Serviço de intermediação de pagamentos (checkout) - competência {competencia}"
+      REMESSA: "Intermediação de operações de câmbio - participação de 50% do spread realizado - competência {competencia}"
+    status: ASSUMO
+    autor: Lucca
+    fonte: "redação Lucca (~22h20); Slack Helena 20:47 (d): 'Não temos texto padrão. Algo simples com o serviço e a competência resolve.'"
+    pergunta_ref: P03
+  conferencia_repasse:      # repasse previsto pela Ponte × nota REMESSA
+    valor: >-
+      comparar participação × 'Spread total R$' declarado pela Ponte com a nota REMESSA; a diferença vira
+      pendência CONFERENCIA_REPASSE para a Helena, decomposta em spreads negativos (contestar) e duplicata (avisar)
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca ~22h20; e-mail Ponte: repasse 'creditado em' data do corpo, 'em caso de divergência, responder em até 5 dias úteis'"
+    pergunta_ref: null
 
 divergencias:
+  reversao_liquida_com_antecipacao:   # D17
+    valor: true
+    status: ASSUMO
+    autor: Lucca
+    fonte: "D17, confirmada pelo Lucca (~22h20): a REVERSAO ANTECIPACAO é líquida com a antecipação que ela anula (id_referencia)"
+    pergunta_ref: null
   tratamento:
     valor: "taxa cobrada ≠ contratada é divergência, listada com transação e valor; nunca devolução automática"
     status: CONFIRMADO
@@ -221,22 +243,31 @@ remessa:
     autor: Lucca
     fonte: "decisão Lucca 16/10 ~22h (D19): sem viés sistemático e o rastro fecha exato"
     pergunta_ref: null
-  formula_divergencia:
-    valor: "(spread % aplicado − contratado) × PTAX × Valor ME, valor cheio; aplicado = ponte.formula_spread_pct sobre Taxa Cliente e PTAX"
+  formula_divergencia:      # D22
+    valor: "Spread R$ (coluna do relatório) − contratado × PTAX × Valor ME; valor cheio; mesma base da comissão"
     status: ASSUMO
     autor: Lucca
-    fonte: "proposta da Fox AI (Q-G, 20:52), 'É o valor cheio' (Slack Helena 20:58); contratado em branco/'padrão' = remessa.spread_padrao"
+    fonte: "decisão Lucca ~22h20 (D22); 'É o valor cheio' (Slack Helena 20:58); contratado em branco/'padrão' = remessa.spread_padrao"
     pergunta_ref: P11
-  arredondamento_divergencia:   # não definido pelo Lucca: mesma regra da participação, a confirmar (D20)
+  arredondamento_divergencia:   # D20
     valor: ROUND_HALF_EVEN_POR_OPERACAO
     status: ASSUMO
     autor: Lucca
-    fonte: "extensão de remessa.arredondamento_participacao à divergência (D20); a confirmar"
+    fonte: "D20, confirmada pelo Lucca (~22h20): mesma regra de remessa.arredondamento_participacao"
     pergunta_ref: null
+  divergencia_spread_negativo:  # D21
+    valor:
+      diferenca_brl: "valor cheio contra o contrato (remessa.formula_divergencia)"
+      impacto_repasse_tarvo: "participação × Spread R$ (remessa.arredondamento_participacao), coluna extra"
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca ~22h20 (D21); fato: Slack Helena 20:48 (fora da comissão e da nota; ela contesta)"
+    pergunta_ref: P01
   motivo_spread_negativo:
-    valor: "trava vencida (2h), Helena contesta"
-    status: CONFIRMADO
-    fonte: "Slack Helena 20:48 ('A trava vale 2 horas pelo contrato, e essas passaram do prazo. Fica fora da comissão e da nota, e eu contesto.')"
+    valor: "trava vencida (2h); Helena contesta o desconto no repasse"
+    status: ASSUMO
+    autor: Lucca
+    fonte: "redação Lucca (D21) sobre o fato da Slack Helena 20:48 ('A trava vale 2 horas pelo contrato, e essas passaram do prazo. Fica fora da comissão e da nota, e eu contesto.')"
     pergunta_ref: P01
 
 cadastro:
