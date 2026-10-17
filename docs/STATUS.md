@@ -1,16 +1,18 @@
 # Status
 
-> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 15:25 (painel na main; respostas Q-AI a Q-AM, D91–D96).
+> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 16:10 (auditoria final docs × saída: números de "Números atuais" refeitos com o arquivo 06; clone limpo). Antes: 17/10 15:25 (painel na main; respostas Q-AI a Q-AM, D91–D96).
 
 **Nível atual:** **Alvo** (todos os 6 CSVs gerados e validados); os 184 lançamentos por REGRA (D52); IA só para nome que nenhuma regra reconhece
-**Próximo passo:** Checkpoint 2 às 16:00; entrega às 18h30.
+**Próximo passo:** Checkpoint 2 no thread; código congelado às 17h; exports PROMPTS/01 e PROMPTS/05; entrega às 18h30.
+
+**Clone limpo (17/10 15:51–15:56, HEAD `1454222`):** clone do GitHub numa pasta nova, venv novo, passos do README; fechamento sem chave em ~1 s, `VALIDADOR: OK`, `saida/` idêntica byte a byte à commitada, `pytest` 303 passed em 97 s.
 
 ## Mínimo
 
 - [x] Leitor Orbe (com testes)
 - [x] Leitor taxas + cadastro EC→CNPJ (com testes)
 - [x] `comissoes_por_lojista.csv` — CHECKOUT
-- [x] `rastro.csv` das comissões CHECKOUT (1943/1943 linhas da Orbe, cada uma exatamente uma vez: COM-… ou PEN-…)
+- [x] `rastro.csv` das comissões CHECKOUT (1943/1943 linhas da Orbe, cada uma exatamente uma vez: COM-… ou PEN-…; com o 06, D75: 1.957 linhas, 1.943 do 01 + 14 do 06)
 - [x] Validador (soma do rastro = total; formato; cobertura das linhas da Orbe); falha = código 1
 - [x] **Conferência do mínimo:** um script independente do Lucca (outra sessão de IA, sem ver este código) recalculou do zero e bateu os 21 lojistas no centavo: 207.031,31 com truncamento; refeita depois da Q-H (arredondamento comum): 207.039,73, de novo no centavo, com 57 transações em pendência e 1.943 linhas
 - [x] Saída em ordem determinística: linha de negócio, comissão decrescente, CNPJ; rastro por `id_saida` e linha
@@ -19,10 +21,10 @@
 
 - [x] Leitor e-mail Ponte + anexo (stdlib `email`; aba e colunas pelo cabeçalho; totais conferidos com o declarado)
 - [x] Comissão REMESSA (E4): 228 operações elegíveis, R$ 39.543,45
-- [x] `divergencias_taxa.csv`, parte **CHECKOUT** (E5a): 200 divergências, líquidas com os estornos (D10); conservação com resíduo de truncamento validada
+- [x] `divergencias_taxa.csv`, parte **CHECKOUT** (E5a): 200 divergências, líquidas com os estornos (D10); conservação com resíduo de truncamento validada. Hoje: 210 linhas, transação por transação, com os 5 pares venda/estorno (D77)
 - [x] `divergencias_taxa.csv`, parte **REMESSA** (E4): 27 divergências (23 Mundo Aberto + 4 spreads negativos)
 - [ ] Amostra de divergências conferida pelo Lucca
-- [x] `notas_a_emitir.csv` (E6a): 20 notas CHECKOUT (R$ 207.045,23) + 1 nota REMESSA para a Ponte (R$ 39.543,45)
+- [x] `notas_a_emitir.csv` (E6a): 20 notas CHECKOUT (R$ 207.045,23; com o 06, D75: R$ 203.740,84) + 1 nota REMESSA para a Ponte (R$ 39.543,45)
 - [x] Leitores Aurora, Meridiano, plano de contas (com testes)
 - [x] `lancamentos_classificados.csv` parte 1 (REGRA): 184 lançamentos, **todos por regra** desde a D52 (os 7 da EduAbroad casam pelo nome da Orbe ligado ao EC)
 - [x] `lancamentos_classificados.csv` parte 2 (IA nas sobras, D42): **0 sobras em setembro** (eram 7 da EduAbroad até a correção da D35, D52); testada com nome novo numa cópia de setembro (`tests/test_ia.py`) e no outubro sintético (aporte da Nórdica como "NEI EDUCACAO INTERNACIONAL" → IA mockada → aceita pela prova da soma)
@@ -30,11 +32,11 @@
 
 ## Extra
 
-- [x] `pendencias.csv` com motivo e quem decide: **16 pendências** (checkout, divergências por lojista e natureza, alerta de antecipação, remessa, notas, extratos); `ref_origem` só com ids, lista completa separada por `|` (D55)
+- [x] `pendencias.csv` com motivo e quem decide: **15 pendências** (eram 16 com a provisão do mês, D72; saiu na D78) (checkout, divergências por lojista e natureza, alerta de antecipação, remessa, notas, extratos); `ref_origem` só com ids, lista completa separada por `|` (D55)
 - [x] Extra `contestacao_ponte.csv` (Q-L): 28 operações em 3 pendências CONTESTACAO_PONTE, pronto para a Helena mandar à Ponte
 - [x] **Rastro de 100% dos números** (17/10 ~09h15, D45): o validador recusa número sem rastro ou com soma diferente, e linha do rastro de qualquer `id_saida` que não exista na fonte (id_transacao, Nº Operação + linha, L<n>, FITID + linha); auditoria independente com 0 violações (`docs/AUDITORIA.md`)
 - [x] Auditoria independente da saída (`scripts/auditar_saida.py`, sem importar o pacote): formato sem violação; coerência com 1 achado (o −0,03 acima); matriz de conformidade Q-A…Q-M em `docs/CONFORMIDADE.md`
-- [x] **Roda em outubro sem mudar código** (17/10, D48–D50): `tests/test_outubro.py` (12 testes, no CI) fecha um mês sintético gerado de setembro (`tests/fixtures/gerar_outubro.py`, datas +1 mês, EC novo, estorno da Bridge de venda de 05/09, TED de 300 mil em 01/10, PIX da EduAbroad). Resultado: exit 0, validador OK, auditoria 0 violações; competência 10/2026; Casa com taxa 0; EC novo vira pendência; estorno pela taxa antiga (2,59%); EduAbroad por REGRA (nome da Orbe); 1 aporte de nome novo vai para a IA mockada e é aceito pela prova da soma; TED de 300 mil por REGRA; nenhuma pendência cita "setembro". Com `--pendencias-anteriores`, a L92 de setembro sai resolvida
+- [x] **Roda em outubro sem mudar código** (17/10, D48–D50): `tests/test_outubro.py` (12 testes na época, 16 hoje, no CI) fecha um mês sintético gerado de setembro (`tests/fixtures/gerar_outubro.py`, datas +1 mês, EC novo, estorno da Bridge de venda de 05/09, TED de 300 mil em 01/10, PIX da EduAbroad). Resultado: exit 0, validador OK, auditoria 0 violações; competência 10/2026; Casa com taxa 0; EC novo vira pendência; estorno pela taxa antiga (2,59%); EduAbroad por REGRA (nome da Orbe); 1 aporte de nome novo vai para a IA mockada e é aceito pela prova da soma; TED de 300 mil por REGRA; nenhuma pendência cita "setembro". Com `--pendencias-anteriores`, a L92 de setembro sai resolvida
 
 ## 17/10 tarde: painel e respostas Q-AI a Q-AM (D91–D96)
 
@@ -72,18 +74,19 @@
 - [x] D82: Atlas identificada pelo CNPJ da aba de 2025; fora do arquivo de comissões
 - [x] D83: ajuste da Ponte: regra registrada, pendência AJUSTE_PONTE (abatimento não implementado)
 - [x] D84: Aurora avisa layout mudado
-- [ ] Sem resposta: o 06 vem todo mês e o id repetido (Lucca 13:19); Spread R$ do ajuste da Ponte (Desbravadores 12:04)
+- [x] o 06 vem todo mês e o id repetido (Lucca 13:19): respondida na Q-AJ (13:34; D91)
+- [ ] Sem resposta: Spread R$ do ajuste da Ponte (Desbravadores 12:04)
 
 ## 17/10 tarde (D71–D74)
 
 - [x] D71: `valor_a_devolver_brl` (cobrado pela Orbe − comissão contratada) ao lado da divergência da Q-H c: Casa 15.396,77, Rota 1.545,86, Bridge 29,94
 - [x] D72: pendência PROVISAO_DO_MES (folha e impostos de setembro fora do pacote, sem valor)
 - [x] D73: alerta de antecipação pela exposição máxima: Atlas 124.235,32 em 15/09
-- [x] D74: devolver aos lojistas 16.972,57; recuperar da Orbe 1.545,86; custo para a Tarvo 15.426,71
+- [x] D74: devolver aos lojistas 16.972,57; recuperar da Orbe 1.545,86; custo para a Tarvo 15.426,71 (corrigido pela D76: recuperar 1.575,80, custo 15.396,77)
 
 ## Respostas de 17/10 de manhã (Q-N a Q-Y, `docs/FINANCEIRO_SLACK.md`)
 
-- [x] D63: coluna `natureza` em `divergencias_taxa.csv`; Casa e Bridge = `condicao_nao_informada` (devolver ao lojista, não cobrar a Orbe); Rota = `contrato_orbe`; Mundo Aberto `spread_acima_contrato`; 4 `spread_negativo`
+- [x] D63: coluna `natureza` em `divergencias_taxa.csv`; Casa e Bridge = `condicao_nao_informada` (devolver ao lojista, não cobrar a Orbe); Rota = `contrato_orbe`; Mundo Aberto `spread_acima_contrato`; 4 `spread_negativo` (corrigido pela D76: Bridge = `contrato_orbe`; só a Casa fica `condicao_nao_informada`)
 - [x] D64: critério da divergência da Mundo Aberto escrito (Spread %, 1.418,85; R$ 0,03 para o Spread R$), ASSUMO com aceite
 - [x] D65: devolução L65 em 2.1.01.001, a conta do repasse de 09/09 (L26), com o motivo na regra e no lançamento
 - [x] D66: alerta de antecipação só para lojista sem histórico: Atlas, 179.592,82 × 55.357,50 até 15/09
@@ -91,7 +94,7 @@
 - [x] D68: rascunhos de contestação em `saida/rascunhos/` (Orbe: Rota; Ponte: Mundo Aberto, negativos, duplicata)
 - [x] D69: Q-P 2 (CNPJ fora da planilha na Ponte), Q-N 3 (H15 CONFIRMADO), Q-N 4 e Q-N 7 testados, Q-Y (H39 CONFIRMADO), Q-S (`aprovado_por`)
 - [x] D70: ver a IA funcionando no outubro sintético (execução real em `cache_ia/`)
-- [ ] Sem resposta (Theo 11:16): data do aviso da Bridge, critério do alerta, valor da contestação do negativo; (Desbravadores 11:07) ajuste da contestação no relatório da Ponte
+- [x] ~~Sem resposta~~ (Theo 11:16): data do aviso da Bridge, critério do alerta, valor da contestação do negativo, respondidas na Q-AA (11:37; D76, D80, D81); (Desbravadores 11:07) ajuste da contestação no relatório da Ponte, respondida na Q-Z (D83)
 
 ## Correções da avaliação simulada (17/10, `docs/AVALIACAO_SIMULADA.md`)
 
@@ -106,11 +109,11 @@
 - [x] D60: spread negativo lê a Observação (só trava vencida vai para a contestação)
 - [x] D61: condições especiais em lista no `regras.yaml`
 - [x] D62: linha da Orbe fora da competência vira aviso + pendência, o resto roda
-- [ ] Ainda da avaliação (não pedido nesta rodada): README com placeholders, números velhos no HIPOTESES (H02, H11, H19), checkpoints sem registro, repositório privado
+- [ ] Ainda da avaliação (não pedido nesta rodada): ~~README com placeholders~~ (URL real, auditoria final 17/10 16h), ~~números velhos no HIPOTESES (H02, H11, H19)~~ (refeitos na auditoria final), checkpoints sem registro (o 1 está em `docs/CHECKPOINTS.md`; o 2 a registrar), repositório privado
 
 ## Regras (`regras.yaml`)
 
-- 99 entradas: CONFIRMADO 48 · ASSUMO 38 · SEI 13 · PENDENTE 0 (17/10 14:50); toda CONFIRMADO com `aprovado_por` (Q-S, D69) e com uma fala literal do canal (teste, D90). Antes:
+- **103 entradas: CONFIRMADO 52 · ASSUMO 38 · SEI 13 · PENDENTE 0** (17/10 15:22, D91–D96). Antes: 99 entradas: CONFIRMADO 48 · ASSUMO 38 · SEI 13 · PENDENTE 0 (17/10 14:50); toda CONFIRMADO com `aprovado_por` (Q-S, D69) e com uma fala literal do canal (teste, D90). Antes:
   93 entradas: CONFIRMADO 45 · ASSUMO 36 · SEI 12 · PENDENTE 0; toda CONFIRMADO com `aprovado_por` (Q-S, D69). Novas em 17/10 de manhã (D53–D61) e à tarde (D63–D69): `divergencias.natureza`, `checkout.alerta_antecipacao`, `remessa.cnpj_fora_da_planilha`, `notas.discriminacao.CHECKOUT_COMPLEMENTO_ANTERIOR`, além das da manhã; `divergencias.estorno_de_venda_divergente` virou CONFIRMADO (Q-N 3)
 - **Q-K (22:33):** a conferência do repasse não prevê desconto (D38). **Q-L (22:34):** contestação com a Ponte por motivo (D39). **Q-M (22:34):** `orbe_recebivel` CONFIRMADO, de volta a ASSUMO na D90 ("Conta por conta eu não valido", Q-Y); saldo negativo do Aurora (conta garantida) e conciliação da Orbe por parcela ficam de fora
 - **Q-H (21:13) corrigiu o ASSUMO de truncar (D09):** arredondamento comum (meio para longe do zero) por linha na comissão, nas divergências e nos 50% da remessa (D27). Q-I (21:14): contas das obrigações de agosto e despesas diretas CONFIRMADO. Q-J (21:45): nota de remessa pelo realizado + pendência da nossa metade do excesso
@@ -118,11 +121,11 @@
 
 ## Números atuais (saída de `python -m tarvo --dados data --saida saida`)
 
-Todos conferidos no centavo contra a previsão independente do Lucca antes do commit.
+Todos conferidos no centavo contra a previsão independente do Lucca antes do commit. Refeitos com o arquivo 06 na auditoria final (17/10 16h), contra a saída e uma recontagem independente. Testes: 303 (`pytest --collect-only`).
 
 ### Comissão
 
-- **CHECKOUT: R$ 207.039,73**, em 21 lojistas e 1.886 transações (Bridge 11.916,02; Casa −5,50)
+- **CHECKOUT: R$ 203.735,34**, em 21 lojistas e 1.900 transações, com os 14 ajustes tardios do 06 (−3.304,39, D75; só o 01: 207.039,73 em 1.886) (Bridge 11.769,74; Casa −5,50)
 - **REMESSA: R$ 39.543,45**, em 14 lojistas e 228 operações elegíveis (round(50% × Spread R$) por operação, Q-H d)
   - comparação: 50% do total de cada lojista arredondado uma vez = 39.542,92 (R$ 0,53 em 12 lojistas)
 
@@ -136,7 +139,7 @@ Todos conferidos no centavo contra a previsão independente do Lucca antes do co
 
 ### Divergências
 
-- **CHECKOUT: 200, R$ 16.973,65**, todas COBROU_A_MAIS; decisão: Helena (round(bruto × (aplicada − contratada)), só onde as taxas diferem; Q-H c)
+- **CHECKOUT: 210 linhas, R$ 16.973,65**: 205 COBROU_A_MAIS (17.081,18) e 5 ESTORNO_DE_VENDA_ACIMA_DO_CONTRATO (−107,53, D86); decisão: Helena (Rota, Bridge) e Helena + comercial (Casa, D85) (round(bruto × (aplicada − contratada)), só onde as taxas diferem; Q-H c)
 
   | Lojista | Divergências | Divergência (Q-H c) | A devolver (D71) | Recuperar da Orbe (D74) |
   |---|---:|---:|---:|---:|
@@ -145,8 +148,8 @@ Todos conferidos no centavo contra a previsão independente do Lucca antes do co
   | Escola Bridge de Idiomas (2,59% em vez de 2,19% de 15 a 18/09; aditivo assinado) | 5 | 29,95 | 29,94 | 29,94 |
   | **Total** (D77: transação por transação, com os 5 pares venda/estorno) | 210 | 16.973,65 | **16.972,57** | **1.575,80** (custo para a Tarvo: **15.396,77**) |
 
-  Mais 5 vendas divergentes estornadas por inteiro no mês (4 da Rota, 1 da Casa): líquido 0, não listadas (D10)
-- **Conservação do checkout:** Σ `valor_taxa` Orbe 224.004,31 = Σ comissão 207.039,73 + Σ divergências 16.973,65 + **resíduo de truncamento −9,07** (969 linhas com 1 centavo; nenhuma linha acima do limite da D29) ✓
+  Os 5 pares venda/estorno no mês (4 da Rota, 1 da Casa) estão nas 210 linhas desde a D77, o estorno com valor negativo: líquido 0 (até a D77 não eram listados, D10)
+- **Conservação do checkout:** Σ `valor_taxa` Orbe 220.699,99 = Σ comissão 203.735,34 + Σ divergências 16.973,65 + **resíduo de truncamento −9,00** (976 linhas com 1 centavo; nenhuma linha acima do limite da D29) ✓ (só o 01: 224.004,31 = 207.039,73 + 16.973,65 − 9,07, 969 linhas)
 - **REMESSA: 27, total −R$ 2.147,13** (D28: round((Spread % do relatório − contratado) × PTAX × ME))
   - **Mundo Aberto: 23, R$ 1.418,85** COBROU_A_MAIS (1,5% aplicado × 1,2% contratado)
   - spreads negativos: 4, **−R$ 3.565,98** COBROU_A_MENOS ("trava vencida (2h); em contestação com a Ponte (Helena)"): Canguru −1.001,30, Novo Horizonte −637,91, Dublin −574,90, Ponte Aérea −1.351,87; `participacao_tarvo_no_spread` **−917,03** (informativa, D38)
@@ -154,7 +157,7 @@ Todos conferidos no centavo contra a previsão independente do Lucca antes do co
 
 ### Notas a emitir
 
-- **21 notas**: 20 CHECKOUT, uma por lojista com comissão > 0, **R$ 207.045,23** (= 207.039,73 + 5,50 da Casa, que fica fora); 1 REMESSA, NF-75374179000146-REMESSA para a Ponte Câmbio S.A., **R$ 39.543,45** (pelo realizado, com o excesso da Mundo Aberto; Q-J)
+- **21 notas, R$ 243.284,29**: 20 CHECKOUT, uma por lojista com comissão > 0, **R$ 203.740,84** (= 203.735,34 + 5,50 da Casa, que fica fora); 1 REMESSA, NF-75374179000146-REMESSA para a Ponte Câmbio S.A., **R$ 39.543,45** (pelo realizado, com o excesso da Mundo Aberto; Q-J)
 - Competência 09/2026 lida dos dados (mês único da Orbe; "Competência: 09/2026" no relatório da Ponte)
 
 ### Pendências e validador
