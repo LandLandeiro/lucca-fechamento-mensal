@@ -1,6 +1,6 @@
 # Tarvo · fechamento de setembro/2026
 
-[![CI](https://github.com/LandLandeiro/tarvo-fechamento/actions/workflows/ci.yml/badge.svg)](https://github.com/LandLandeiro/tarvo-fechamento/actions/workflows/ci.yml)
+[![CI](https://github.com/LandLandeiro/lucca-fechamento-mensal/actions/workflows/ci.yml/badge.svg)](https://github.com/LandLandeiro/lucca-fechamento-mensal/actions/workflows/ci.yml)
 
 **O que o CI garante (a cada push):** o fechamento roda do zero num ambiente limpo, em Windows e Linux, com Python 3.12 e 3.14; os testes passam; e a saída gerada é idêntica, byte a byte, à commitada em `saida/`, sem chave de API (a IA responde pelo `cache_ia/`).
 
@@ -25,7 +25,7 @@
 Com Python 3.12 ou mais novo e Git (num Windows sem Python configurado, veja [Como rodar do zero](#como-rodar-do-zero)):
 
 ```
-git clone https://github.com/LandLandeiro/tarvo-fechamento.git && cd tarvo-fechamento
+git clone https://github.com/LandLandeiro/lucca-fechamento-mensal.git && cd lucca-fechamento-mensal
 python -m pip install -e .
 python -m tarvo --dados data --saida saida
 ```
@@ -92,8 +92,8 @@ Arquivos **extras** (além dos 6 do case):
 No PowerShell, a partir de uma pasta qualquer:
 
 ```powershell
-git clone <url-do-repositório> tarvo-fechamento
-cd tarvo-fechamento
+git clone <url-do-repositório> lucca-fechamento-mensal
+cd lucca-fechamento-mensal
 
 # 1. ambiente (troque o caminho se instalou o Python em outro lugar; com o "py launcher": py -3.12 -m venv .venv)
 & "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe" -m venv .venv
