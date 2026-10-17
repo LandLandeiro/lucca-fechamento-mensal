@@ -1,5 +1,7 @@
 # Auditoria antes do Checkpoint 1
 
+> Registro datado: os números daqui são de antes do arquivo 06 (ajustes tardios, D75, 17/10 tarde), como a comissão de checkout 207.039,73 e as notas de checkout 207.045,23. Os atuais (203.735,34 e 203.740,84) estão em `docs/STATUS.md`.
+
 > **Atualização 17/10 11:53 (correções da avaliação simulada, D52–D62):** `scripts/auditar_saida.py` na saída nova: **0 violações**. Comissões, divergências, notas, lançamentos (valores) e contestação não mudaram. Mudou: 14 pendências (+3 DIVERGENCIA_CHECKOUT, D53), `ref_origem` das pendências só com ids (D55), e os 7 lançamentos da EduAbroad passaram a REGRA (D52). Na tabela 4b abaixo, as linhas 8 (IA, 5 lançamentos, 394.222,69) e 9 (decisões humanas, 2, 62.037,47) agora estão dentro das linhas 2 (`meridiano.aporte_lojista`, 64 lançamentos) e 3 (`aurora.repasse_lojista`, 44): 147 lançamentos por regra ASSUMO, 37 por regra CONFIRMADO, 0 por IA, 0 por decisão humana.
 
 ## Resultado final, depois das decisões do Lucca (17/10 ~09h15, D45)
