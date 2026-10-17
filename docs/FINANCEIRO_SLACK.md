@@ -479,7 +479,87 @@ Copiadas do `#duvidas-hackathon-ai` sem edição (lidas no Slack às 13h30, perg
 
 ---
 
-## Ainda sem resposta (17/10 ~13h30)
+## Q-AI · David Deodato · 13:19 · resposta 13:34 (Casa: data-base da antecipação)
 
-- Lucca Landeiro 13:19: o 06 vem todo mês e fecha junto com o mês dele? Se um ajuste trouxer um id que já está no relatório principal, vale o ajuste?
+**Pergunta:**
+> *[Financeiro]* 
+> A isenção da Casa do Estudante inclui antecipação de setembro a dezembro. Para essa tarifa, a isenção vale pela data da antecipação ou pela data das vendas que geraram os recebíveis?
+> Ex: a AN88445172 ocorreu em 09/09, mas não traz referência nem data das vendas originais. Se ela antecipou recebíveis de agosto, a tarifa também fica zerada? Ou precisamos identificar essas vendas antes de calcular a comissão e a devolução?
+
+**Resposta (13:34):**
+> *[Financeiro] Resposta para David*
+> Vale pela data da antecipação. A antecipação é um serviço que a gente presta no dia em que ela acontece: se foi em setembro, está dentro da isenção. Não precisa ir atrás das vendas de origem.
+> — Helena
+
+---
+
+## Q-AJ · Lucca Landeiro · 13:19 · resposta 13:34 (arquivo de ajustes tardios)
+
+**Pergunta:**
+> [Financeiro] Lucca Landeiro: sobre o 06_orbe_ajustes_tardios: (1) esse arquivo de ajustes tardios vem todo mês e sempre fecha junto com o mês dele, mesmo chegando depois do relatório? (2) Se um ajuste trouxer um id_transacao que já está no relatório principal (correção de uma linha), vale a linha do ajuste e a original sai? Em setembro não acontece; é para outubro não depender de adivinhação.
+
+**Resposta (13:34):**
+> *[Financeiro] Resposta para Lucca Landeiro*
+> 1. Vem quando a Orbe tem ajuste, não todo mês. Se chega antes de eu aprovar o fechamento, entra no mês do movimento, como agora. Se chegar depois da aprovação, entra no mês seguinte.
+> 2. Correção de uma linha com o mesmo id nunca aconteceu. Se acontecer, o critério é de vocês: deixem claro no `HIPOTESES.md` e mostrem a pendência para mim.
+> — Helena
+
+---
+
+## Q-AK · Turma do Barulho · 13:35 · resposta 14:08 (bandeira diferente no estorno)
+
+**Pergunta:**
+> [financeiro]
+> Helena, encontramos sete estornos no `06` com bandeira diferente da venda referenciada (estorno → venda):
+> • `TX88447011` → `TX88413573`: AMEX → VISA
+> • `TX88447030` → `TX88438558`: ELO → VISA
+> • `TX88447044` → `TX88425142`: HIPERCARD → ELO
+> • `TX88447057` → `TX88430977`: AMEX → ELO
+> • `TX88447070` → `TX88424537`: ELO → VISA
+> • `TX88447093` → `TX88416714`: VISA → AMEX
+> • `TX88447109` → `TX88428997`: VISA → ELO
+> As bandeiras acima estão na ordem *venda → estorno*. EC, data original, modalidade, parcelas e taxa aplicada conferem; bruto, taxa e líquido são opostos exatos, sem outra anulação referenciada.
+> Propomos manter esses vínculos e incluir os estornos em setembro pela taxa contratada da venda original, preservando os dados e registrando a divergência de bandeira para correção com a Orbe. Como bandeira não determina a taxa nas regras informadas, ela não alteraria o cálculo. Você confirma esse tratamento?
+
+**Resposta (14:08):**
+> *[Financeiro] Resposta para Turma do Barulho*
+> Bandeira não muda a taxa para a gente. A Orbe às vezes troca a bandeira no estorno; não precisa contestar nem abrir pendência. Sigam com o vínculo pela referência, como vocês fizeram.
+> — Helena
+
+---
+
+## Q-AL · Desbravadores · 13:36 · resposta 14:10 (ajuste sem a transação original)
+
+**Pergunta:**
+> [Desbravadores] [Financeiro] duas dúvidas sobre os arquivos de ajustes que a Orbe manda depois do relatório:
+> 1. Se uma mesma transação (mesmo id_transacao) aparecer no relatório e no arquivo de ajustes, como devemos tratar? E se ela aparecer com valores diferentes em cada arquivo?
+> 2. Se o arquivo de ajustes trouxer o estorno, ou a reversão de antecipação, de uma transação deste mesmo mês que não está em nenhum arquivo da Orbe que recebemos, como devemos tratar?
+
+**Resposta (14:10):**
+> *[Financeiro] Resposta para Desbravadores*
+> 1. Já está no canal, na resposta ao Lucca.
+> 2. Em setembro isso não acontece: todas as referências do arquivo de ajustes estão no relatório. Se um dia acontecer, o ajuste entra pelo valor que veio e vira pendência para eu pedir a original à Orbe.
+> — Helena
+
+---
+
+## Q-AM · Turma do Barulho · 13:48 · resposta 14:11, da Organização (auditabilidade do rastro)
+
+**Pergunta:**
+> Qual a estrutura de rastro desejada e existe algum padrão nice-to-have para ser adotado para ser auditavel para a equipe tanto da Tarvo quanto da Barte?
+
+**Resposta (14:11):**
+> *[Logística] Resposta para Turma do Barulho*
+> O mínimo é o `rastro.csv` no formato das instruções (`id_saida; arquivo_origem; ref_origem; valor`): toda comissão e toda nota com um `id_saida`, e a soma de `valor` por `id_saida` batendo com o número reportado.
+> Para ficar auditável de verdade, ajuda ter:
+> • rastro também das divergências e da nota da Ponte;
+> • um registro de cada execução: quais arquivos entraram, quantas linhas de cada, data e hora;
+> • em cada linha, a regra aplicada (taxa contratada usada, isenção, estorno pela venda original).
+> Quem abrir tem que conseguir refazer qualquer número sem perguntar para vocês.
+> — Organização
+
+---
+
+## Ainda sem resposta (17/10 ~15h10)
+
 - Desbravadores 12:04: o Spread R$ negativo da linha "AJUSTE REF PC-…" é o spread inteiro (a participação cai pela metade) ou já é a participação?
