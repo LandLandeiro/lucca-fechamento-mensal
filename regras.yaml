@@ -200,6 +200,14 @@ checkout:
       vínculo com as vendas antecipadas: a base disponível é o valor_bruto da linha
       fala (Q-D a): 'A antecipação entra na mesma nota'
     pergunta_ref: null
+  data_base_antecipacao:    # D92
+    valor: >-
+      a taxa contratada (e a condição especial, como a isenção da Casa) da ANTECIPACAO vale pela data da própria
+      antecipação (data_movimento), sem ir atrás das vendas que geraram os recebíveis
+    status: CONFIRMADO
+    aprovado_por: "Helena"   # Q-S: regra de fechamento = Helena
+    fonte: "Slack Helena 13:34 (Q-AI): 'Vale pela data da antecipação. A antecipação é um serviço que a gente presta no dia em que ela acontece: se foi em setembro, está dentro da isenção. Não precisa ir atrás das vendas de origem.' Caso: as 4 antecipações da Casa (AN88445172 09/09, AN88445486 11/09, AN88445740 15/09, AN88445802 16/09) com taxa 0"
+    pergunta_ref: P39
   estorno:
     valor: "abate a comissão no mês do estorno, pela taxa contratada vigente na data da venda original; agosto não reabre"
     status: CONFIRMADO

@@ -120,6 +120,7 @@ Fonte única dos textos: `docs/FINANCEIRO_SLACK.md` (copiado do Slack sem ediç�
 | P36 | Arquivo faltando, layout, provisório | Q-AF | Turma do Barulho · 12:27 | Helena · 12:31 | respondida | aviso de layout no Aurora (D84); 06 opcional e arquivo desconhecido (D75) |
 | P37 | Alerta pelo pico | Q-AG | Fox AI · 12:36 | Helena · 12:50 | respondida | H53 (D73, D81) |
 | P38 | Valor da devolução | Q-AH | Lucca · 12:44 | Helena · 12:50 | respondida | `divergencias.valor_a_devolver` CONFIRMADO (D79) |
+| P39 | Casa: data-base da antecipação | Q-AI | David Deodato · 13:19 | Helena · 13:34 | respondida | `checkout.data_base_antecipacao` CONFIRMADO (D92): as 4 antecipações da Casa ficam isentas pela data delas; caso-ouro AN88445172 |
 | P40 | O 06 vem todo mês? Id repetido? | Q-AJ | Lucca · 13:19 | Helena · 13:34 | respondida | `orbe.mes_do_ajuste_tardio` CONFIRMADO, opção `--fechamento-anterior-aprovado` (H56, D91); id repetido segue ASSUMO, com aceite |
 
 **Nota de autocorreção (Q-F, item 1):** na minha pergunta, os rótulos de modalidade estão trocados. 2,49/2,99/3,59% são as faixas **crédito à vista / 2–6x / 7–12x** da planilha (o débito é 1,49%). A resposta não muda: o contrato não mudou. O código compara por modalidade direto na planilha.

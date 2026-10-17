@@ -44,6 +44,9 @@ CASOS = [
      "test_divergencias::test_venda_divergente_estornada_no_mes_lista_as_duas_com_sinal"),
     ("PIX de 18.240: remessa de outubro", "Q-N 5 09:44: 'A operação sai em outubro.'",
      "test_extratos::test_pix_de_18240_e_acompanhamento_da_remessa_de_outubro"),
+    ("AN88445172 e as outras 3 antecipações da Casa: isentas pela data da antecipação",
+     "Q-AI 13:34: 'Vale pela data da antecipação.'",
+     "test_casos_ouro::test_antecipacao_da_casa_isenta_pela_data_dela"),
 ]
 
 
@@ -69,3 +72,18 @@ def test_registro_de_casos_ouro_completo():
         marcas = {m.name for m in getattr(funcao, "pytestmark", [])}
         assert "caso_ouro" in marcas, f"{caso}: {alvo} sem a marca caso_ouro"
         assert fala.split(" ")[0] and Path(RAIZ / "tests" / f"{modulo}.py").exists()
+
+
+@pytest.mark.caso_ouro
+def test_antecipacao_da_casa_isenta_pela_data_dela(checkout):
+    """Q-AI (Helena 13:34): 'Vale pela data da antecipação. A antecipação é um serviço que a gente presta no dia em
+    que ela acontece: se foi em setembro, está dentro da isenção. Não precisa ir atrás das vendas de origem.'
+    AN88445172 (09/09) não traz as vendas de origem: taxa 0 pela data dela; o que a Orbe cobrou volta ao lojista."""
+    antecipacoes = {r: c for r, c in checkout.por_transacao.items()
+                    if c.cnpj == "00520815000100" and c.transacao.tipo_lancamento == "ANTECIPACAO"}
+    assert sorted(antecipacoes) == ["AN88445172", "AN88445486", "AN88445740", "AN88445802"]
+    for c in antecipacoes.values():
+        assert c.data_ref == c.transacao.data_movimento and c.data_ref.month == 9
+        assert (c.taxa_contratada, c.comissao) == (Decimal("0"), Decimal("0.00"))
+    an = antecipacoes["AN88445172"]
+    assert (an.transacao.valor_bruto, an.transacao.valor_taxa) == (Decimal("4937.92"), Decimal("103.69"))
