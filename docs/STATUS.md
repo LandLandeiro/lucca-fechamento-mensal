@@ -30,11 +30,18 @@
 
 ## Extra
 
-- [x] `pendencias.csv` com motivo e quem decide: **15 pendências** (checkout, divergências por lojista e natureza, alerta de antecipação, remessa, notas, extratos); `ref_origem` só com ids, lista completa separada por `|` (D55)
+- [x] `pendencias.csv` com motivo e quem decide: **16 pendências** (checkout, divergências por lojista e natureza, alerta de antecipação, remessa, notas, extratos); `ref_origem` só com ids, lista completa separada por `|` (D55)
 - [x] Extra `contestacao_ponte.csv` (Q-L): 28 operações em 3 pendências CONTESTACAO_PONTE, pronto para a Helena mandar à Ponte
 - [x] **Rastro de 100% dos números** (17/10 ~09h15, D45): o validador recusa número sem rastro ou com soma diferente, e linha do rastro de qualquer `id_saida` que não exista na fonte (id_transacao, Nº Operação + linha, L<n>, FITID + linha); auditoria independente com 0 violações (`docs/AUDITORIA.md`)
 - [x] Auditoria independente da saída (`scripts/auditar_saida.py`, sem importar o pacote): formato sem violação; coerência com 1 achado (o −0,03 acima); matriz de conformidade Q-A…Q-M em `docs/CONFORMIDADE.md`
 - [x] **Roda em outubro sem mudar código** (17/10, D48–D50): `tests/test_outubro.py` (12 testes, no CI) fecha um mês sintético gerado de setembro (`tests/fixtures/gerar_outubro.py`, datas +1 mês, EC novo, estorno da Bridge de venda de 05/09, TED de 300 mil em 01/10, PIX da EduAbroad). Resultado: exit 0, validador OK, auditoria 0 violações; competência 10/2026; Casa com taxa 0; EC novo vira pendência; estorno pela taxa antiga (2,59%); EduAbroad por REGRA (nome da Orbe); 1 aporte de nome novo vai para a IA mockada e é aceito pela prova da soma; TED de 300 mil por REGRA; nenhuma pendência cita "setembro". Com `--pendencias-anteriores`, a L92 de setembro sai resolvida
+
+## 17/10 tarde (D71–D74)
+
+- [x] D71: `valor_a_devolver_brl` (cobrado pela Orbe − comissão contratada) ao lado da divergência da Q-H c: Casa 15.396,77, Rota 1.545,86, Bridge 29,94
+- [x] D72: pendência PROVISAO_DO_MES (folha e impostos de setembro fora do pacote, sem valor)
+- [x] D73: alerta de antecipação pela exposição máxima: Atlas 124.235,32 em 15/09
+- [x] D74: devolver aos lojistas 16.972,57; recuperar da Orbe 1.545,86; custo para a Tarvo 15.426,71
 
 ## Respostas de 17/10 de manhã (Q-N a Q-Y, `docs/FINANCEIRO_SLACK.md`)
 
