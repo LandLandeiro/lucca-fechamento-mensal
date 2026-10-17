@@ -2,3 +2,4 @@
 data/** -text
 saida/*.csv text eol=lf
 tests/fixtures/outubro/** -text
+saida/rascunhos/* text eol=lf

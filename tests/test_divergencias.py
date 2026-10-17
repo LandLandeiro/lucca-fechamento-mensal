@@ -4,11 +4,12 @@ diferenca = round(valor_bruto × (taxa aplicada − contratada)), só quando as 
 (Helena 21:13, Q-H c); o centavo de truncamento da Orbe é resíduo, não divergência.
 """
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from tarvo.calculos.divergencias import divergencias_checkout
+from tarvo.calculos.divergencias import divergencias_checkout, divergencias_remessa
 from tarvo.formatos import fmt_dinheiro
 
 
@@ -124,9 +125,9 @@ def test_uma_pendencia_por_lojista_para_decidir(divs):
     Casa (condição especial do comercial): Helena + comercial, com a fala dela da Q-F 2."""
     pend = {p.id_saida: p for p in divs.pendencias}
     assert {(k, p.valor_brl, p.quem_decide) for k, p in pend.items()} == {
-        ("PEN-DIVERGENCIA_CHECKOUT-00520815000100", Decimal("15397.42"), "Helena + comercial"),
-        ("PEN-DIVERGENCIA_CHECKOUT-95927868000148", Decimal("1546.28"), "Helena"),
-        ("PEN-DIVERGENCIA_CHECKOUT-22224579000109", Decimal("29.95"), "Helena"),
+        ("PEN-DIVERGENCIA_CHECKOUT-00520815000100", Decimal("15396.77"), "Helena + comercial"),  # D71: valor a devolver
+        ("PEN-DIVERGENCIA_CHECKOUT-95927868000148", Decimal("1545.86"), "Helena"),
+        ("PEN-DIVERGENCIA_CHECKOUT-22224579000109", Decimal("29.94"), "Helena + comercial"),  # D63: condição não informada
     }
     casa = pend["PEN-DIVERGENCIA_CHECKOUT-00520815000100"]
     assert "O que foi cobrado eu devolvo ao lojista, junto com o comercial." in casa.motivo
@@ -190,3 +191,107 @@ def test_item_sem_campo_obrigatorio_e_erro(cadastro, regras):
     r = _com_condicoes(regras, {k: v for k, v in ITEM_ROTA.items() if k != "fonte"})
     with pytest.raises(RegraInvalida, match="faltam campos"):
         taxa_contratada(cadastro, ROTA, "Débito", date(2026, 9, 20), r)
+
+
+def test_natureza_de_cada_divergencia(divs):
+    """D63 (Q-N 1, Q-V, Q-T 1): Casa (condição especial) e Bridge (a Orbe aplicou a taxa da linha anterior da
+    planilha) são condição não informada à Orbe: devolução ao lojista, sem cobrar a Orbe. Rota: contrato."""
+    por_lojista = {}
+    for d in divs.linhas:
+        por_lojista.setdefault(d["cnpj"], set()).add(d["natureza"])
+    assert por_lojista == {"00520815000100": {"condicao_nao_informada"}, "22224579000109": {"condicao_nao_informada"},
+                           "95927868000148": {"contrato_orbe"}}
+    bridge = {p.id_saida: p for p in divs.pendencias}["PEN-DIVERGENCIA_CHECKOUT-22224579000109"]
+    assert "A Bridge foi avisada alguns dias depois de 15/09" in bridge.motivo and "Não há o que cobrar da Orbe" in bridge.motivo
+    assert "Devolver 29.94 ao lojista" in bridge.motivo and "data do aviso em aberto" in bridge.motivo.lower()
+
+
+def test_natureza_da_remessa(divr_saida):
+    nat = {}
+    for d in divr_saida:
+        nat.setdefault(d["natureza"], []).append(d)
+    assert {k: len(v) for k, v in nat.items()} == {"spread_acima_contrato": 23, "spread_negativo": 4}
+    assert all(d["diferenca_brl"] < 0 for d in nat["spread_negativo"])
+
+
+@pytest.fixture(scope="module")
+def divr_saida(cadastro, regras):
+    from tarvo.calculos.remessa import classificar_remessa
+    from tarvo.leitores.ponte_email import ler_email, ler_operacoes
+    from tarvo.regras import valor_da_regra
+    from conftest import DADOS
+    eml = next(DADOS.glob("03_*.eml"))
+    mail = ler_email(eml)
+    ponte = ler_operacoes(mail.anexo_xlsx, eml.name, mail.nome_anexo, valor_da_regra(regras, "ponte.linhas_que_nao_sao_dados"))
+    return divergencias_remessa(classificar_remessa(ponte.operacoes, ponte.competencia, cadastro, regras), cadastro, regras).linhas
+
+
+@pytest.mark.parametrize("valor", ["", "isencao_nao_informada", "spread_negativo"])
+def test_validador_recusa_natureza_vazia_ou_fora_da_lista(tmp_path, valor):
+    """Vazia, nome antigo, ou natureza de remessa numa linha de checkout: erro."""
+    import csv as _csv
+    from tarvo.__main__ import executar
+    from tarvo.saida.validador import validar_saida
+    from conftest import DADOS, RAIZ
+    pasta = tmp_path / "s"
+    executar(DADOS, pasta, RAIZ / "regras.yaml")
+    caminho = pasta / "divergencias_taxa.csv"
+    with open(caminho, encoding="utf-8", newline="") as f:
+        linhas = list(_csv.reader(f, delimiter=";"))
+    i = linhas[0].index("natureza")
+    linhas[1][i] = valor  # a primeira é de checkout (ordenadas por diferença)
+    with open(caminho, "w", encoding="utf-8", newline="") as f:
+        _csv.writer(f, delimiter=";", lineterminator="\n").writerows(linhas)
+    assert any("natureza" in e and linhas[1][0] in e for e in validar_saida(pasta))
+
+
+def test_orbe_cobrando_abaixo_do_contrato_vira_pendencia(regras):
+    """Q-N 7 (Helena 09:44): 'Também é divergência e eu decido caso a caso.' Diferença negativa → pendência."""
+    from datetime import date
+    from tarvo.calculos.divergencias import ResultadoDivergencias, _pendencias_por_lojista
+    res = ResultadoDivergencias()
+    from tarvo.calculos.comissoes import ComissaoTransacao
+    from tarvo.modelo import TransacaoOrbe
+    tx = TransacaoOrbe("TXN1", 2, date(2026, 10, 5), "1074504011", "ROTA", "VENDA", "PIX", 1, None, Decimal("1000"),
+                       Decimal("0.89"), Decimal("8.90"), Decimal("991.10"), None, None, "o.csv")
+    res.linhas = [{"id_saida": "DIV-TXN1", "cnpj": "95927868000148", "ref_origem": "TXN1", "diferenca_brl": Decimal("-12.34"),
+                   "valor_a_devolver_brl": Decimal("-12.34"), "natureza": "contrato_orbe", "lojista": "Rota",
+                   "data": date(2026, 10, 5)}]
+    res.itens_por_div = {"DIV-TXN1": [ComissaoTransacao(tx, "95927868000148", Decimal("0.0213"), Decimal("21.24"), "")]}
+    _pendencias_por_lojista(res, {}, regras)
+    (p,) = res.pendencias
+    assert p.valor_brl == Decimal("-12.34") and "12.34 a menos" in p.motivo and p.quem_decide == "Helena"
+
+
+def test_estorno_da_casa_usa_a_taxa_de_21_08_sem_isencao(checkout):
+    """Q-N 4: 'Vale a taxa da data da venda original ... Em 21/08 a isenção ainda não valia.'"""
+    c = checkout.por_transacao["TX88445133"]
+    assert c.transacao.data_venda_original == date(2026, 8, 21) and c.condicao is None
+    assert c.taxa_contratada > 0 and c.fonte_taxa.startswith("planilha R13")
+
+
+def test_valor_a_devolver_separado_da_diferenca_da_q_h(divs):
+    """D71: diferenca_brl segue a Q-H c (bruto × (aplicada − contratada)); valor_a_devolver_brl = valor cobrado pela
+    Orbe − comissão contratada (o lojista recebeu o líquido, Q-U 4). Casa: 15.397,42 × 15.396,77 (116 linhas; o par
+    TX88441917/TX88446763, venda e estorno do mês, se anula e não é listado: são as 118 do cálculo linha a linha)."""
+    tot = {}
+    for d in divs.linhas:
+        a = tot.setdefault(d["cnpj"], [0, Decimal(0), Decimal(0)])
+        a[0] += 1; a[1] += d["diferenca_brl"]; a[2] += d["valor_a_devolver_brl"]
+        assert d["valor_a_devolver_brl"] == d["valor_taxa_orbe"] - d["comissao_contratada"]
+    assert tot == {"00520815000100": [116, Decimal("15397.42"), Decimal("15396.77")],
+                   "95927868000148": [79, Decimal("1546.28"), Decimal("1545.86")],
+                   "22224579000109": [5, Decimal("29.95"), Decimal("29.94")]}
+
+
+def test_devolver_e_recuperar(divs):
+    """D74 (Q-A, Q-U 4): toda divergência de checkout é devolução ao lojista; contrato_orbe também se recupera da
+    Orbe (o mesmo valor); condicao_nao_informada não. Devolver − recuperar = Casa + Bridge (Orbe não avisada)."""
+    devolver = sum(d["valor_a_devolver_brl"] for d in divs.linhas)
+    recuperar = sum(d["valor_a_devolver_brl"] for d in divs.linhas if d["natureza"] == "contrato_orbe")
+    assert (devolver, recuperar, devolver - recuperar) == (Decimal("16972.57"), Decimal("1545.86"), Decimal("15426.71"))
+    pend = {p.id_saida: p for p in divs.pendencias}
+    rota = pend["PEN-DIVERGENCIA_CHECKOUT-95927868000148"].motivo
+    assert "Devolver 1545.86 ao lojista" in rota and "recuperar o mesmo valor da Orbe" in rota and "Q-U 4" in rota
+    casa = pend["PEN-DIVERGENCIA_CHECKOUT-00520815000100"].motivo
+    assert "Devolver 15396.77 ao lojista" in casa and "nada a recuperar da Orbe" in casa

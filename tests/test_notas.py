@@ -121,7 +121,7 @@ def test_validador_recusa_contestacao_que_nao_fecha(saida, tmp_path):
     from tarvo.saida.validador import validar_saida
 
     pasta, _ = saida
-    for p in pasta.iterdir():
+    for p in pasta.glob("*.csv"):
         (tmp_path / p.name).write_bytes(p.read_bytes())
 
     def adulterar(linhas):
@@ -155,7 +155,7 @@ def test_validador_recusa_nota_errada(saida, tmp_path):
     from tarvo.saida.validador import validar_saida
 
     pasta, _ = saida
-    for p in pasta.iterdir():
+    for p in pasta.glob("*.csv"):
         (tmp_path / p.name).write_bytes(p.read_bytes())
 
     def adulterar(linhas):
@@ -208,7 +208,7 @@ def test_nota_nao_sai_com_valor_parcial(tmp_path):
 def test_validador_recusa_nota_de_lojista_bloqueado(saida, tmp_path):
     from tarvo.saida.validador import validar_saida
     pasta, _ = saida
-    for p in pasta.iterdir():
+    for p in pasta.glob("*.csv"):
         (tmp_path / p.name).write_bytes(p.read_bytes())
 
     def bloquear(linhas):  # uma NOTA_BLOQUEADA da Rota, que tem nota emitida
@@ -216,3 +216,43 @@ def test_validador_recusa_nota_de_lojista_bloqueado(saida, tmp_path):
     _reescrever(tmp_path / "pendencias.csv", bloquear)
     erros = validar_saida(tmp_path)
     assert any("NF-95927868000148-CHECKOUT" in e and "NOTA_BLOQUEADA" in e for e in erros)
+
+
+def test_rascunhos_de_contestacao(saida):
+    """D68 (Q-T 2, Q-X 1): um rascunho por contraparte e lojista, com a lista anexa; Casa e Bridge
+    (condição não informada à Orbe) não ganham rascunho para a Orbe."""
+    import re
+    pasta = saida[0] / "rascunhos"
+    assert sorted(p.name for p in pasta.glob("*.md")) == [
+        "orbe_rota_global.md", "ponte_duplicata.md", "ponte_mundo_aberto.md", "ponte_spreads_negativos.md"]
+    totais = {p.stem: re.search(r"total_brl=(-?\d+\.\d{2})", p.read_text(encoding="utf-8")).group(1) for p in pasta.glob("*.md")}
+    assert totais == {"orbe_rota_global": "1545.86",  # D74: recuperar = valor a devolver
+                       "ponte_mundo_aberto": "1418.85", "ponte_spreads_negativos": "-1834.05",
+                      "ponte_duplicata": "821.88"}
+    for nome, total in totais.items():
+        assert sum(Decimal(l["valor_brl"]) for l in _csv(pasta, f"{nome}.csv")) == Decimal(total)
+    assert len(_csv(pasta, "orbe_rota_global.csv")) == 79
+    assert "RASCUNHO para a Helena revisar" in (pasta / "orbe_rota_global.md").read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("estrago, trecho", [("total", "≠ Σ"), ("casa", "condicao_nao_informada")])
+def test_validador_recusa_rascunho_errado(saida, tmp_path, estrago, trecho):
+    import shutil
+    from tarvo.saida.validador import validar_saida
+    shutil.copytree(saida[0], tmp_path / "s")
+    rasc = tmp_path / "s" / "rascunhos"
+    if estrago == "total":
+        md = rasc / "ponte_mundo_aberto.md"
+        md.write_text(md.read_text(encoding="utf-8").replace("total_brl=1418.85", "total_brl=1418.88"), encoding="utf-8")
+    else:  # uma transação da Casa (devolução, nunca cobrança da Orbe) no rascunho para a Orbe
+        with open(rasc / "orbe_rota_global.csv", "a", encoding="utf-8", newline="") as f:
+            f.write("AN88445802;2026-09-16;ANTECIPACAO;57456.27;2.1;0;0.00\n")
+    assert any(trecho in e for e in validar_saida(tmp_path / "s"))
+
+
+def test_rascunhos_deterministicos(tmp_path):
+    a, b = tmp_path / "a", tmp_path / "b"
+    executar(DADOS, a, RAIZ / "regras.yaml")
+    executar(DADOS, b, RAIZ / "regras.yaml")
+    for p in (a / "rascunhos").iterdir():
+        assert p.read_bytes() == (b / "rascunhos" / p.name).read_bytes(), p.name

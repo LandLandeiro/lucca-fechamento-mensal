@@ -24,7 +24,7 @@ def test_roda_o_minimo_e_valida(tmp_path, capsys):
     assert "conservação do checkout e da remessa fecha" in out
     assert {p.name for p in (tmp_path / "saida").iterdir()} == {
         "comissoes_por_lojista.csv", "divergencias_taxa.csv", "lancamentos_classificados.csv", "notas_a_emitir.csv",
-        "pendencias.csv", "rastro.csv", "contestacao_ponte.csv", "sugestoes_regra.csv",  # extras
+        "pendencias.csv", "rastro.csv", "contestacao_ponte.csv", "sugestoes_regra.csv", "rascunhos",  # extras
     }
 
 
@@ -62,7 +62,9 @@ def test_resumo_para_o_financeiro(tmp_path, capsys):
     out = capsys.readouterr().out
     resumo = out[out.index("RESUMO DO FECHAMENTO"):]
     for trecho in ("RESUMO DO FECHAMENTO - setembro de 2026", "R$ 207.039,73", "R$ 39.543,45", "R$ 246.588,68  (21 notas)",
-                   "R$ 16.973,65  (200 transações)", "por regra 184, por IA conferida 0, por decisão de uma pessoa 0",
-                   "Pendências: 14", "os 6 do fechamento: comissoes_por_lojista.csv"):
+                   "checkout, devolver aos lojistas:          R$ 16.972,57  (200 transações)",
+                   "recuperar da Orbe (contrato):            R$ 1.545,86",
+                   "custo para a Tarvo (Orbe não avisada):    R$ 15.426,71", "por regra 184, por IA conferida 0, por decisão de uma pessoa 0",
+                   "Pendências: 16", "os 6 do fechamento: comissoes_por_lojista.csv"):
         assert trecho in resumo, trecho
     assert "−" not in resumo  # console cp1252 do Windows não tem o sinal de menos tipográfico

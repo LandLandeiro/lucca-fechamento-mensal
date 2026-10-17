@@ -230,7 +230,7 @@ def _reescrever(caminho, f):
 def test_validador_extratos_recusa(saida, tmp_path, aurora, meridiano, plano):
     from tarvo.saida.validador import validar_saida
 
-    for p in saida[0].iterdir():
+    for p in saida[0].glob("*.csv"):
         (tmp_path / p.name).write_bytes(p.read_bytes())
 
     def adulterar(linhas):
@@ -271,7 +271,7 @@ def test_nomes_da_orbe_pelo_ec(cadastro, orbe, regras):
 
 def test_total_de_pendencias(saida):
     tipos = sorted(p["tipo"] for p in _csv(saida[0], "pendencias.csv"))
-    assert len(tipos) == 14 and "IA_REPROVADA" not in tipos and "SEM_REGRA" not in tipos
+    assert len(tipos) == 16 and "IA_REPROVADA" not in tipos and "SEM_REGRA" not in tipos
     assert tipos.count("CONTESTACAO_PONTE") == 3
 
 
@@ -352,7 +352,7 @@ def test_validador_recusa_humano_com_conta_sem_decisao(saida, tmp_path):
     import csv as _csvmod
     from tarvo.saida.validador import validar_saida
     pasta, _ = saida
-    for p in pasta.iterdir():
+    for p in pasta.glob("*.csv"):
         (tmp_path / p.name).write_bytes(p.read_bytes())
     caminho = tmp_path / "lancamentos_classificados.csv"
     with open(caminho, encoding="utf-8", newline="") as f:
@@ -425,7 +425,7 @@ def test_confianca_nunca_vazia(saida, tmp_path):
     pasta, _ = saida
     lan = _csv(pasta, "lancamentos_classificados.csv")
     assert all(l["confianca"] == "1.00" for l in lan)  # setembro: tudo por regra
-    for p in pasta.iterdir():
+    for p in pasta.glob("*.csv"):
         (tmp_path / p.name).write_bytes(p.read_bytes())
 
     def adulterar(linhas):
@@ -512,3 +512,22 @@ def test_ano_sem_feriados_no_calendario_gera_aviso(tmp_path):
     regras.write_text(novo, encoding="utf-8")
     r = executar(DADOS, tmp_path / "s", regras)
     assert r["erros_validacao"] == [] and any("sem feriados de 2026" in a.mensagem for a in r["avisos"])
+
+
+def test_devolucao_volta_para_a_conta_do_repasse(saida, regras):
+    """D65 (Q-R 2, Q-I a, Q-X 2): a devolução L65 baixa a conta onde o repasse à Mundo Aberto foi registrado."""
+    lan = {l["id_saida"]: l for l in _csv(saida[0], "lancamentos_classificados.csv")}
+    repasse, devolucao = lan["LAN-AURORA-L26"], lan["LAN-AURORA-L65"]
+    assert "MUNDO ABERTO" in repasse["descricao"] and repasse["data"] == "2026-09-09"
+    assert devolucao["conta_codigo"] == repasse["conta_codigo"] == "2.1.01.001"
+    assert (repasse["lado_contrapartida"], devolucao["lado_contrapartida"]) == ("D", "C")  # a obrigação volta
+    assert "baixa a conta onde o repasse estava" in devolucao["motivo_conta"]
+    assert "Q-R 2" in regras["classificacao_extratos.aurora.devolucao_pix_lojista"]["aceite"]
+
+
+def test_provisao_do_mes_vira_pendencia_sem_valor(saida):
+    """D72 (Q-R 3, 'Sempre'): a provisão de folha e impostos de setembro não está no pacote → pendência sem valor."""
+    (p,) = [p for p in _csv(saida[0], "pendencias.csv") if p["tipo"] == "PROVISAO_DO_MES"]
+    assert p["id_saida"] == "PEN-PROVISAO_DO_MES-2026-09" and p["valor_brl"] == "" and p["quem_decide"] == "Helena"
+    assert p["motivo"].startswith("provisão de folha e impostos de setembro: valores fora do pacote")
+    assert p["ref_origem"].split("|") == ["L15", "L42", "L54", "L55", "L57", "L86", "L87"]  # as baixas de agosto

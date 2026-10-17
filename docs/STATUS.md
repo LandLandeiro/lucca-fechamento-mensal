@@ -1,9 +1,9 @@
 # Status
 
-> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 ~13h10 (correções da avaliação simulada, D52–D62).
+> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 ~16h10 (respostas de 17/10 de manhã, D63–D70).
 
 **Nível atual:** **Alvo** (todos os 6 CSVs gerados e validados); os 184 lançamentos por REGRA (D52); IA só para nome que nenhuma regra reconhece
-**Próximo passo:** README (problema e limitações), números velhos do HIPOTESES (H02, H11, H19), pitch.
+**Próximo passo:** README (problema em 2 frases), números velhos do HIPOTESES (H02, H11, H19), pitch; rever H51 e H53 se o Theo (11:16) tiver resposta.
 
 ## Mínimo
 
@@ -30,11 +30,30 @@
 
 ## Extra
 
-- [x] `pendencias.csv` com motivo e quem decide: **14 pendências** (checkout, divergências por lojista, remessa, notas, extratos); `ref_origem` só com ids, lista completa separada por `|` (D55)
+- [x] `pendencias.csv` com motivo e quem decide: **16 pendências** (checkout, divergências por lojista e natureza, alerta de antecipação, remessa, notas, extratos); `ref_origem` só com ids, lista completa separada por `|` (D55)
 - [x] Extra `contestacao_ponte.csv` (Q-L): 28 operações em 3 pendências CONTESTACAO_PONTE, pronto para a Helena mandar à Ponte
 - [x] **Rastro de 100% dos números** (17/10 ~09h15, D45): o validador recusa número sem rastro ou com soma diferente, e linha do rastro de qualquer `id_saida` que não exista na fonte (id_transacao, Nº Operação + linha, L<n>, FITID + linha); auditoria independente com 0 violações (`docs/AUDITORIA.md`)
 - [x] Auditoria independente da saída (`scripts/auditar_saida.py`, sem importar o pacote): formato sem violação; coerência com 1 achado (o −0,03 acima); matriz de conformidade Q-A…Q-M em `docs/CONFORMIDADE.md`
 - [x] **Roda em outubro sem mudar código** (17/10, D48–D50): `tests/test_outubro.py` (12 testes, no CI) fecha um mês sintético gerado de setembro (`tests/fixtures/gerar_outubro.py`, datas +1 mês, EC novo, estorno da Bridge de venda de 05/09, TED de 300 mil em 01/10, PIX da EduAbroad). Resultado: exit 0, validador OK, auditoria 0 violações; competência 10/2026; Casa com taxa 0; EC novo vira pendência; estorno pela taxa antiga (2,59%); EduAbroad por REGRA (nome da Orbe); 1 aporte de nome novo vai para a IA mockada e é aceito pela prova da soma; TED de 300 mil por REGRA; nenhuma pendência cita "setembro". Com `--pendencias-anteriores`, a L92 de setembro sai resolvida
+
+## 17/10 tarde (D71–D74)
+
+- [x] D71: `valor_a_devolver_brl` (cobrado pela Orbe − comissão contratada) ao lado da divergência da Q-H c: Casa 15.396,77, Rota 1.545,86, Bridge 29,94
+- [x] D72: pendência PROVISAO_DO_MES (folha e impostos de setembro fora do pacote, sem valor)
+- [x] D73: alerta de antecipação pela exposição máxima: Atlas 124.235,32 em 15/09
+- [x] D74: devolver aos lojistas 16.972,57; recuperar da Orbe 1.545,86; custo para a Tarvo 15.426,71
+
+## Respostas de 17/10 de manhã (Q-N a Q-Y, `docs/FINANCEIRO_SLACK.md`)
+
+- [x] D63: coluna `natureza` em `divergencias_taxa.csv`; Casa e Bridge = `condicao_nao_informada` (devolver ao lojista, não cobrar a Orbe); Rota = `contrato_orbe`; Mundo Aberto `spread_acima_contrato`; 4 `spread_negativo`
+- [x] D64: critério da divergência da Mundo Aberto escrito (Spread %, 1.418,85; R$ 0,03 para o Spread R$), ASSUMO com aceite
+- [x] D65: devolução L65 em 2.1.01.001, a conta do repasse de 09/09 (L26), com o motivo na regra e no lançamento
+- [x] D66: alerta de antecipação só para lojista sem histórico: Atlas, 179.592,82 × 55.357,50 até 15/09
+- [x] D67: Atlas em outubro com `--orbe-anterior` (57 linhas de setembro na nota de outubro, pela taxa confirmada)
+- [x] D68: rascunhos de contestação em `saida/rascunhos/` (Orbe: Rota; Ponte: Mundo Aberto, negativos, duplicata)
+- [x] D69: Q-P 2 (CNPJ fora da planilha na Ponte), Q-N 3 (H15 CONFIRMADO), Q-N 4 e Q-N 7 testados, Q-Y (H39 CONFIRMADO), Q-S (`aprovado_por`)
+- [x] D70: ver a IA funcionando no outubro sintético (execução real em `cache_ia/`)
+- [ ] Sem resposta (Theo 11:16): data do aviso da Bridge, critério do alerta, valor da contestação do negativo; (Desbravadores 11:07) ajuste da contestação no relatório da Ponte
 
 ## Correções da avaliação simulada (17/10, `docs/AVALIACAO_SIMULADA.md`)
 
@@ -53,7 +72,7 @@
 
 ## Regras (`regras.yaml`)
 
-- 90 entradas: CONFIRMADO 44 · ASSUMO 34 · SEI 12 · PENDENTE 0. Novas em 17/10 (D53–D61): `divergencias.pendencia_por_lojista`, `notas.nota_com_transacao_pendente`, `calendario.feriados_nacionais`, `remessa.spread_negativo_por_observacao`; `cadastro.condicao_especial_casa_do_estudante` virou a lista `cadastro.condicoes_especiais` (D61); `decisoes_humanas` L28/L69 marcadas `substituida` (D52)
+- 93 entradas: CONFIRMADO 45 · ASSUMO 36 · SEI 12 · PENDENTE 0; toda CONFIRMADO com `aprovado_por` (Q-S, D69). Novas em 17/10 de manhã (D53–D61) e à tarde (D63–D69): `divergencias.natureza`, `checkout.alerta_antecipacao`, `remessa.cnpj_fora_da_planilha`, `notas.discriminacao.CHECKOUT_COMPLEMENTO_ANTERIOR`, além das da manhã; `divergencias.estorno_de_venda_divergente` virou CONFIRMADO (Q-N 3)
 - **Q-K (22:33):** a conferência do repasse não prevê desconto (D38). **Q-L (22:34):** contestação com a Ponte por motivo (D39). **Q-M (22:34):** `orbe_recebivel` CONFIRMADO; saldo negativo do Aurora (conta garantida) e conciliação da Orbe por parcela ficam de fora
 - **Q-H (21:13) corrigiu o ASSUMO de truncar (D09):** arredondamento comum (meio para longe do zero) por linha na comissão, nas divergências e nos 50% da remessa (D27). Q-I (21:14): contas das obrigações de agosto e despesas diretas CONFIRMADO. Q-J (21:45): nota de remessa pelo realizado + pendência da nossa metade do excesso
 - HIPOTESES com os textos literais do financeiro (Q-A…Q-M → P01–P17), fonte `docs/FINANCEIRO_SLACK.md`

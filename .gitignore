@@ -18,3 +18,4 @@ __pycache__/
 .pytest_cache/
 # scripts de exploração local
 scratch/
+saida_outubro/

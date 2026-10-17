@@ -27,7 +27,7 @@ def _reescrever(caminho: Path, transformar):
 
 def _copia(saida, tmp_path):
     pasta, _ = saida
-    for p in pasta.iterdir():
+    for p in pasta.glob("*.csv"):
         (tmp_path / p.name).write_bytes(p.read_bytes())
     return tmp_path
 
@@ -179,7 +179,7 @@ def test_cnpj_e_decimal_fora_do_formato_sao_erro(saida, tmp_path):
 
 
 def _copiar(pasta, destino):
-    for p in pasta.iterdir():
+    for p in pasta.glob("*.csv"):
         (destino / p.name).write_bytes(p.read_bytes())
 
 
@@ -255,3 +255,16 @@ def test_validador_recusa_ref_origem_de_pendencia_em_prosa_ou_incompleta(saida, 
         return linhas
     _reescrever(pasta / "pendencias.csv", trocar)
     assert any("PEN-EXCESSO_REMESSA-17217888000111" in e and trecho in e for e in validar_saida(pasta))
+
+
+def test_validador_recusa_valor_a_devolver_que_nao_fecha(saida, tmp_path):
+    """D71: valor_a_devolver_brl tem que ser valor_taxa_orbe − comissao_contratada da própria linha."""
+    from tarvo.saida.validador import validar_saida
+    pasta = _copia(saida, tmp_path)
+
+    def estragar(linhas):
+        i = linhas[0].index("valor_a_devolver_brl")
+        linhas[1][i] = "1.00"
+        return linhas
+    _reescrever(pasta / "divergencias_taxa.csv", estragar)
+    assert any("valor_a_devolver_brl" in e for e in validar_saida(pasta))

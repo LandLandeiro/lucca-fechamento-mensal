@@ -1,0 +1,23 @@
+{
+  "gerado_em": "2026-10-17",
+  "linha": {
+    "banco": "MERIDIANO",
+    "data": "2026-10-01",
+    "descricao": "PIX RECEB NEI EDUCACAO INTERNACIONAL",
+    "sinal": "+",
+    "valor": "72488.87"
+  },
+  "modelo": "claude-haiku-5-5",
+  "prompt_sha256": "5c91c54fcba343ab41ea3c96b0a8cfd8ab145122a5d61464930ba278900e7db6",
+  "prompt_versao": "1",
+  "resposta": {
+    "confianca": 0.9,
+    "conta_codigo": "2.1.02.001",
+    "justificativa": "Entrada no câmbio Meridiano via PIX de 'NEI EDUCACAO INTERNACIONAL', abreviação de Nórdica Educação Internacional Ltda; recursos de lojista destinados a remessas internacionais, a liquidar.",
+    "lojista_cnpj": "14760206000124"
+  },
+  "uso": {
+    "input_tokens": 2612,
+    "output_tokens": 143
+  }
+}

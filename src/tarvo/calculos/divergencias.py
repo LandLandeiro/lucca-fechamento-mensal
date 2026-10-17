@@ -50,6 +50,7 @@ class ResultadoDivergencias:
     rastro: list[dict] = field(default_factory=list)
     pendencias: list[Pendencia] = field(default_factory=list)  # DIVERGENCIA_CHECKOUT, uma por lojista (D53)
     rastro_pendencias: list[dict] = field(default_factory=list)
+    itens_por_div: dict[str, list[ComissaoTransacao]] = field(default_factory=dict)  # DIV-… → transações do grupo
     grupos_zerados: int = 0  # vendas divergentes cujo estorno zerou a diferença (não listadas)
     residuo: Decimal = ZERO  # Σ (valor_taxa − comissão − divergência da linha): truncamento da Orbe
     linhas_com_residuo: int = 0
@@ -73,6 +74,7 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
     valor_da_regra(regras, "divergencias.tratamento")
     valor_da_regra(regras, "divergencias.estorno_de_venda_divergente")
     valor_da_regra(regras, "divergencias.criterio_checkout")
+    valor_da_regra(regras, "divergencias.valor_a_devolver")  # D71
     modo = modo_arredondamento(valor_da_regra(regras, "checkout.arredondamento_comissao_contratada"))
     ligados = ("ESTORNO", "REVERSAO ANTECIPACAO") if valor_da_regra(
         regras, "divergencias.reversao_liquida_com_antecipacao") else ("ESTORNO",)
@@ -110,6 +112,7 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
         if outros:
             motivo += f"; líquida com {', '.join(outros)} (parcial)"
         condicoes[id_divergencia(cabeca_id)] = cabeca.condicao
+        natureza = _natureza_checkout(cabeca, aplicada, cadastro)
         res.linhas.append({
             "id_saida": id_divergencia(cabeca_id),
             "cnpj": cabeca.cnpj,
@@ -124,11 +127,15 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
             "valor_bruto": sum((c.transacao.valor_bruto for c in itens), ZERO),
             "comissao_contratada": sum((c.comissao for c in itens), ZERO),
             "valor_taxa_orbe": sum((c.transacao.valor_taxa for c in itens), ZERO),
+            # D71: o que o lojista perdeu de fato (a Orbe liquida o líquido, Q-U 4): valor cobrado − comissão contratada
+            "valor_a_devolver_brl": sum((c.transacao.valor_taxa - c.comissao for c in itens), ZERO),
             "direcao": "COBROU_A_MAIS" if liquido > 0 else "COBROU_A_MENOS",
             "liquida_com": ", ".join(outros),
+            "natureza": natureza,
             "motivo": motivo,
             "decisao": decisao,
         })
+        res.itens_por_div[id_divergencia(cabeca_id)] = itens
         for c, d in zip(itens, difs):
             item = ItemRastro(id_divergencia(cabeca_id), c.transacao.arquivo_origem, c.transacao.ref_origem, d)
             res.rastro.append({
@@ -149,37 +156,84 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
     return res
 
 
+NATUREZAS = ("contrato_orbe", "condicao_nao_informada", "spread_acima_contrato", "spread_abaixo_contrato", "spread_negativo")
+
+
+def _natureza_checkout(c: ComissaoTransacao, aplicada: Decimal, cadastro: Cadastro) -> str:
+    """D63 (`divergencias.natureza`): `condicao_nao_informada` quando a taxa contratada veio de condição especial
+    (a Orbe não tem como saber, Q-N 1) ou quando a Orbe aplicou exatamente a taxa da linha anterior da planilha
+    (vigência já encerrada na data: a condição nova não chegou à Orbe, Q-T 1); senão `contrato_orbe`."""
+    if c.condicao is not None:
+        return "condicao_nao_informada"
+    data = c.data_ref or c.transacao.data_movimento
+    anteriores = [(v.fim, l) for l, v in cadastro.linhas_por_cnpj.get(c.cnpj, [])
+                  if v is not None and v.fim is not None and v.fim < data]
+    if anteriores:
+        _, linha = max(anteriores, key=lambda x: x[0])
+        if linha.taxas.get(c.coluna) == aplicada:
+            return "condicao_nao_informada"
+    return "contrato_orbe"
+
+
 def _pendencias_por_lojista(res: ResultadoDivergencias, condicoes: dict[str, dict | None], regras: dict) -> None:
     """D53: o que a Helena decide vira pendência, uma por lojista, com valor e as transações (rastro)."""
     cfg = valor_da_regra(regras, "divergencias.pendencia_por_lojista")
     por_cnpj: dict[str, list[dict]] = {}
     for l in res.linhas:
         por_cnpj.setdefault(l["cnpj"], []).append(l)
-    rastro_por_div: dict[str, list[dict]] = {}
-    for r in res.rastro:
-        rastro_por_div.setdefault(r["id_saida"], []).append(r)
-    for cnpj, divs in sorted(por_cnpj.items()):
-        total = sum((d["diferenca_brl"] for d in divs), ZERO)
+    nat = valor_da_regra(regras, "divergencias.natureza")
+    grupos: dict[tuple[str, str], list[dict]] = {}
+    for cnpj, divs in por_cnpj.items():
+        for d in divs:
+            grupos.setdefault((cnpj, d["natureza"]), []).append(d)
+    for (cnpj, natureza), divs in sorted(grupos.items()):
+        total = sum((d["valor_a_devolver_brl"] for d in divs), ZERO)  # D71: valor a devolver, não a diferença da Q-H c
         cond = next((condicoes[d["id_saida"]] for d in divs if condicoes.get(d["id_saida"])), None)
         nome, n = divs[0]["lojista"], len(divs)
-        if cond is not None:
-            quem = cond.get("quem_decide_divergencia") or cfg["quem_decide"]
-            vig = cond["vigencia"]
-            texto = (f"{nome}: o contrato tem condição especial ({cond.get('descricao', 'regras.yaml')}, {vig['inicio']} a "
-                     f"{vig['fim']}) e a Orbe cobrou {fmt_dinheiro(total)} em {n} transações. "
-                     f"{cond.get('citacao_fonte', 'regras.yaml')}: '{cond.get('citacao', '')}'. "
-                     f"Detalhe por transação em divergencias_taxa.csv (DIV-<id_transacao>)")
+        datas = sorted(d["data"] for d in divs)
+        sentido = "a mais" if total > 0 else "a menos"
+        if natureza == "condicao_nao_informada":
+            quem = (cond or {}).get("quem_decide_divergencia") or nat["condicao_nao_informada"]["quem_decide"]
+            if cond is not None:
+                vig = cond["vigencia"]
+                fato = (f"o contrato tem condição especial ({cond.get('descricao', 'regras.yaml')}, {vig['inicio']} a "
+                        f"{vig['fim']}) e a Orbe cobrou {fmt_dinheiro(total)} em {n} transações. "
+                        f"{cond.get('citacao_fonte', 'regras.yaml')}: '{cond.get('citacao', '')}'")
+            else:
+                fato = (f"a planilha tem taxa nova e a Orbe aplicou a taxa anterior em {n} transações "
+                        f"({datas[0].isoformat()} a {datas[-1].isoformat()}), cobrando {fmt_dinheiro(total)} {sentido}")
+                aviso = nat["condicao_nao_informada"].get("avisos_conhecidos", {}).get(cnpj)
+                if aviso:
+                    fato += f". {aviso}"
+            texto = (f"{nome}: {fato}. {nat['condicao_nao_informada']['citacao_fonte']}: "
+                     f"'{nat['condicao_nao_informada']['citacao']}'. Devolver {fmt_dinheiro(abs(total))} ao lojista "
+                     f"(a Orbe liquida o líquido: o lojista já recebeu a menos, {cfg['liquido_fonte']}); nada a recuperar "
+                     f"da Orbe e sem rascunho para ela: custo da Tarvo por a Orbe não ter sido avisada")
+            if cond is None:
+                texto += (f". Se o aviso à Orbe foi antes de alguma das {n} transações ({datas[0].strftime('%d/%m')}–"
+                          f"{datas[-1].strftime('%d/%m')}), essa parte vira cobrança da Orbe. Data do aviso em aberto")
         else:
             quem = cfg["quem_decide"]
-            sentido = "a mais" if total > 0 else "a menos"
-            texto = (f"{nome}: a Orbe cobrou {fmt_dinheiro(abs(total))} {sentido} que o contrato em {n} transações. "
-                     f"{cfg['citacao_fonte']}: '{cfg['citacao']}'. "
-                     f"Detalhe por transação em divergencias_taxa.csv (DIV-<id_transacao>)")
+            texto = (f"{nome}: a Orbe descontou {fmt_dinheiro(abs(total))} {sentido} que o contrato em {n} transações. "
+                     f"Devolver {fmt_dinheiro(abs(total))} ao lojista (a Orbe liquida o líquido: o lojista já recebeu a "
+                     f"menos, {cfg['liquido_fonte']}) e recuperar o mesmo valor da Orbe (rascunho em rascunhos/; o valor "
+                     f"não soma duas vezes). {cfg['citacao_fonte']}: '{cfg['citacao']}'")
+        texto += ". Detalhe por transação em divergencias_taxa.csv (DIV-<id_transacao>)"
         pid = f"PEN-DIVERGENCIA_CHECKOUT-{cnpj}"
+        if len({k for (c, k) in grupos if c == cnpj}) > 1:
+            pid += f"-{natureza.upper()}"
+        texto = texto.replace(".'.", ".'")
         res.pendencias.append(Pendencia(pid, "DIVERGENCIA_CHECKOUT", "|".join(d["ref_origem"] for d in divs), total,
                                         " ".join(texto.split()), quem))
         for d in divs:
-            res.rastro_pendencias.extend({**r, "id_saida": pid} for r in rastro_por_div[d["id_saida"]])
+            for c in res.itens_por_div[d["id_saida"]]:
+                res.rastro_pendencias.append({
+                    "id_saida": pid, "arquivo_origem": c.transacao.arquivo_origem, "ref_origem": c.transacao.ref_origem,
+                    "valor": c.transacao.valor_taxa - c.comissao, "linha_arquivo": c.transacao.linha_arquivo,
+                    "tipo_lancamento": c.transacao.tipo_lancamento, "valor_bruto": c.transacao.valor_bruto,
+                    "taxa_contratada_pct": c.taxa_contratada,
+                    "nota": f"a devolver: valor cobrado pela Orbe {c.transacao.valor_taxa} − comissão contratada {c.comissao}",
+                })
 
 
 @dataclass
@@ -269,6 +323,8 @@ def divergencias_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: 
             "spread_brl": op.spread_brl,
             "participacao_tarvo_no_spread": participacao(op.spread_brl, fracao, modo_part) if negativo else None,  # D38: informativa
             "direcao": "COBROU_A_MAIS" if dif > 0 else "COBROU_A_MENOS",
+            # D63 (Q-O): no spread negativo o lojista não pagou a mais; o prejuízo é da Tarvo com a Ponte
+            "natureza": "spread_negativo" if negativo else ("spread_acima_contrato" if dif > 0 else "spread_abaixo_contrato"),
             "motivo": motivo,
             "decisao": "Helena",
         })

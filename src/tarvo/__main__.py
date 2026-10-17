@@ -16,6 +16,8 @@ from pathlib import Path
 
 from tarvo.cadastro import adicionar_nomes_orbe, montar_cadastro, normalizar_nome
 from tarvo.calculos.comissoes import CompetenciaAmbigua, comissao_checkout, ordem_comissao, separar_competencia
+from tarvo.calculos.alertas import alerta_antecipacao
+from tarvo.calculos.retomada import complementar_discriminacao, marcar_retomadas, resolvidas_sem_contrato, retomar_sem_contrato
 from tarvo.calculos.contestacao import contestacao_ponte
 from tarvo.calculos.divergencias import divergencias_checkout, divergencias_remessa
 from tarvo.calculos.notas import conferencia_repasse, notas_a_emitir
@@ -32,9 +34,11 @@ from tarvo.leitores.plano_contas import contas_lancaveis, ler_plano_contas
 from tarvo.leitores.ponte_email import ler_email, ler_operacoes
 from tarvo.leitores.taxas import ler_taxas_vigentes
 from tarvo.modelo import Aviso, Pendencia
-from tarvo.pendencias import consolidar_pendencias, ler_pendencias_anteriores, pendencia_para_linha, refs_das_pendencias
+from tarvo.pendencias import (consolidar_pendencias, ler_pendencias_anteriores, pendencia_para_linha, pendencia_provisao,
+                              refs_das_pendencias)
 from tarvo.regras import RegraInvalida, RegraPendente, carregar_regras, valor_da_regra
 from tarvo.saida.escritor import escrever_saida
+from tarvo.saida.rascunhos import gerar_rascunhos
 from tarvo.saida.validador import validar_saida
 
 PADRAO_ORBE = "01_orbe_relatorio_comissoes_*.csv"
@@ -67,6 +71,9 @@ def criar_parser() -> argparse.ArgumentParser:
                         help="arquivo de regras (padrão: regras.yaml da raiz do repositório)")
     parser.add_argument("--pendencias-anteriores", type=Path, default=None,
                         help="pendencias.csv do mês anterior: o que foi resolvido neste mês sai como resolvido, não como pendência nova")
+    parser.add_argument("--orbe-anterior", type=Path, default=None,
+                        help="relatório da Orbe do mês anterior: com --pendencias-anteriores, linhas de lojista que aguardavam "
+                             "contrato e agora têm contrato entram na comissão e na nota deste mês")
     parser.add_argument("--sem-ia", action="store_true",
                         help="não usa IA nem o cache dela: lançamentos sem regra ficam para uma pessoa")
     return parser
@@ -80,7 +87,8 @@ def achar_unico(pasta: Path, padrao: str) -> Path:
 
 
 def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, cliente_ia=_PADRAO,
-             cache_ia: Path = CACHE_IA_PADRAO, pendencias_anteriores: Path | None = None) -> dict:
+             cache_ia: Path = CACHE_IA_PADRAO, pendencias_anteriores: Path | None = None,
+             orbe_anterior: Path | None = None) -> dict:
     """Roda o fechamento e devolve o resumo. Levanta exceção em erro de entrada."""
     regras = carregar_regras(regras_path)
     arq_orbe = achar_unico(dados, PADRAO_ORBE)
@@ -97,8 +105,13 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     except CompetenciaAmbigua as e:
         raise ErroEntrada(str(e)) from e
     competencia = sep.competencia
-    checkout = comissao_checkout(sep.dentro, cadastro, regras)
+    pend_ant = ler_pendencias_anteriores(pendencias_anteriores) if pendencias_anteriores else None
+    orbe_ant = ler_orbe(orbe_anterior) if orbe_anterior else None
+    retomadas, avisos_retomada = retomar_sem_contrato(pend_ant, orbe_ant, cadastro)  # D67 (Q-Q)
+    checkout = comissao_checkout(sep.dentro + [t for _, ts in retomadas for t in ts], cadastro, regras)
+    marcar_retomadas(checkout.rastro, retomadas, competencia)
     divergencias = divergencias_checkout(checkout, cadastro, regras)
+    alertas = alerta_antecipacao(sep.dentro, cadastro, competencia, regras)  # D66: só avisa, não muda número
 
     arq_ponte = achar_unico(dados, PADRAO_PONTE)
     mail = ler_email(arq_ponte)
@@ -134,6 +147,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     comissoes = sorted(checkout.comissoes + remessa.comissoes, key=ordem_comissao)
     notas = notas_a_emitir(comissoes, checkout.rastro + remessa.rastro, regras, competencia, ponte.competencia,
                            checkout.pendencias_por_cnpj)
+    complementar_discriminacao(notas.linhas, retomadas, cadastro, regras)
     nf_remessa = sum((n["valor_brl"] for n in notas.linhas if n["linha_negocio"] == "REMESSA"), ZERO)
     pend_repasse, rastro_repasse = conferencia_repasse(
         nf_remessa, [l for l in notas.rastro if l["id_saida"].endswith("-REMESSA")],
@@ -197,19 +211,21 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         {cnpj: lj.nome for cnpj, lj in cadastro.lojistas.items()},
         [lan for c in classif for lan, _ in c.sem_regra if normalizar_nome(lan.descricao).startswith("PIX RECEB ")],
         valor_da_regra(regras, "classificacao_extratos.conferencias")["resgate_acima_do_aplicado"],
-        ler_pendencias_anteriores(pendencias_anteriores) if pendencias_anteriores else None,
+        pend_ant,
         feriados,
     )
     lancamentos = [l for c in classif for l in c.linhas]
+    provisao = pendencia_provisao(competencia, lancamentos, regras)  # D72 (Q-R 3)
+    conf.resolvidas.extend(resolvidas_sem_contrato(retomadas, cadastro, competencia))
 
     pendencias = consolidar_pendencias(
-        checkout.pendencias, sep.pendencias, divergencias.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura,
+        checkout.pendencias, sep.pendencias, divergencias.pendencias, alertas.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura,
         notas.pendencias, pend_repasse,
-        div_remessa.pendencias_derivadas, contestacao.pendencias, *[c.pendencias for c in classif], conf.pendencias,
+        div_remessa.pendencias_derivadas, contestacao.pendencias, *[c.pendencias for c in classif], conf.pendencias, [provisao],
     )
     divs = divergencias.linhas + div_remessa.linhas
     rastro = sorted(
-        checkout.rastro + sep.rastro + divergencias.rastro + divergencias.rastro_pendencias + remessa.rastro + div_remessa.rastro
+        checkout.rastro + sep.rastro + alertas.rastro + divergencias.rastro + divergencias.rastro_pendencias + remessa.rastro + div_remessa.rastro
         + notas.rastro + notas.rastro_pendencias + rastro_repasse + div_remessa.rastro_pendencias + contestacao.rastro
         + [l for c in classif for l in c.rastro + c.rastro_pendencias] + conf.rastro_pendencias,
         key=lambda l: (l["id_saida"], l["linha_arquivo"], l["ref_origem"]),
@@ -229,8 +245,11 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         },
         saida,
     )
+    rascunhos = gerar_rascunhos(saida, divs, contestacao.linhas, competencia,  # D68 (Q-T 2, Q-X 1)
+                                valor_da_regra(regras, "ponte.tomador_nf_remessa")["nome"])
     refs_esperadas = {
         orbe.arquivo: {(t.ref_origem, t.linha_arquivo) for t in orbe.transacoes},
+        **({orbe_ant.arquivo: {(t.ref_origem, t.linha_arquivo) for _, ts in retomadas for t in ts}} if retomadas else {}),
         ponte.arquivo: {(o.ref_origem, o.linha_planilha) for o in ponte.operacoes},
     }
     refs_extratos = {ext.arquivo: {(l.ref_origem, ext.linhas_arquivo[l.ref_origem]) for l in ext.lancamentos}
@@ -239,7 +258,9 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     erros = validar_saida(
         saida,
         refs_esperadas=refs_esperadas,
-        fonte_orbe={orbe.arquivo: {t.ref_origem: (t.valor_taxa, t.valor_bruto, t.taxa_aplicada_pct / 100) for t in orbe.transacoes}},
+        fonte_orbe={arq: {t.ref_origem: (t.valor_taxa, t.valor_bruto, t.taxa_aplicada_pct / 100) for t in ts}
+                    for arq, ts in [(orbe.arquivo, orbe.transacoes)]
+                    + ([(orbe_ant.arquivo, [t for _, x in retomadas for t in x])] if retomadas else [])},
         modo_checkout=modo_arredondamento(valor_da_regra(regras, "checkout.arredondamento_comissao_contratada")),
         spread_ponte={ponte.arquivo: {(o.ref_origem, o.linha_planilha): o.spread_brl for o in ponte.operacoes}},
         spread_declarado=ponte.totais_declarados.get("Spread total R$:"),
@@ -253,7 +274,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         excl.setdefault(motivo, []).append(op)
     return {
         "arquivos": [arq_orbe.name, arq_taxas.name, f"{arq_ponte.name} (anexo {mail.nome_anexo})"],
-        "avisos": orbe.avisos + taxas.avisos + cadastro.avisos + ponte.avisos + aurora.avisos + meridiano.avisos + avisos_extra,
+        "avisos": orbe.avisos + taxas.avisos + cadastro.avisos + checkout.avisos + avisos_retomada + ponte.avisos + aurora.avisos + meridiano.avisos + avisos_extra,
         "extratos": {
             "leituras": (aurora, meridiano),
             "classif": classif,
@@ -294,6 +315,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         "competencia": competencia,
         "lancamentos": lancamentos,
         "arquivos_saida": sorted(p.name for p in saida.glob("*.csv")),
+        "rascunhos": rascunhos,
         "fontes_rastro": fontes_rastro,
     }
 
@@ -432,7 +454,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"erro: --saida não é uma pasta: {args.saida}", file=sys.stderr)
         return 2
     try:
-        r = executar(args.dados, args.saida, args.regras, sem_ia=args.sem_ia, pendencias_anteriores=args.pendencias_anteriores)
+        r = executar(args.dados, args.saida, args.regras, sem_ia=args.sem_ia, pendencias_anteriores=args.pendencias_anteriores,
+                     orbe_anterior=args.orbe_anterior)
     except (ErroEntrada, ErroLeitura, RegraInvalida, RegraPendente, FileNotFoundError) as e:
         print(f"erro: {e}", file=sys.stderr)
         return 2
@@ -474,10 +497,6 @@ def _imprimir_resumo(r: dict, saida: Path) -> None:
     for p in r["pendencias"]:
         por_resp[p.quem_decide] = por_resp.get(p.quem_decide, 0) + 1
 
-    def parte(divs, direcao):
-        sel = [d["diferenca_brl"] for d in divs if d["direcao"] == direcao]
-        return len(sel), fmt_brl(abs(sum(sel, ZERO)))
-
     obrig = ["comissoes_por_lojista.csv", "divergencias_taxa.csv", "notas_a_emitir.csv",
              "lancamentos_classificados.csv", "pendencias.csv", "rastro.csv"]
     extras = [a for a in r["arquivos_saida"] if a not in obrig]
@@ -487,12 +506,20 @@ def _imprimir_resumo(r: dict, saida: Path) -> None:
     print(f"Comissão de remessa (50% do spread):    {fmt_brl(r['remessa']['total']):>16}  ({len(r['remessa']['comissoes'])} lojistas)")
     print(f"Notas fiscais a emitir:                 {fmt_brl(sum((n['valor_brl'] for n in notas), ZERO)):>16}  ({len(notas)} notas)")
     print("Taxa cobrada diferente do contrato (a Helena decide cada caso):")
-    for nome, divs, unidade in (("checkout", div_c, "transações"), ("remessa", div_r, "operações")):
-        for direcao, texto in (("COBROU_A_MAIS", "a mais"), ("COBROU_A_MENOS", "a menos")):
-            n, v = parte(divs, direcao)
-            if n:
-                rotulo = f"  {nome}, cobrado {texto}:"
-                print(f"{rotulo:<40}{v:>16}  ({n} {unidade})")
+    devolver = sum((d["valor_a_devolver_brl"] for d in div_c), ZERO)  # D74: toda divergência de checkout
+    recuperar = sum((d["valor_a_devolver_brl"] for d in div_c if d["natureza"] == "contrato_orbe"), ZERO)
+    print(f"  {'checkout, devolver aos lojistas:':<38}{fmt_brl(devolver):>16}  ({len(div_c)} transações)")
+    print(f"  {'  recuperar da Orbe (contrato):':<38}{fmt_brl(recuperar):>16}")
+    print(f"  {'  custo para a Tarvo (Orbe não avisada):':<38}{fmt_brl(devolver - recuperar):>16}")
+    rotulos = {  # D63: na remessa, a natureza diz o que se contesta com a Ponte
+        "spread_acima_contrato": ("remessa, contestar com a Ponte:", "operações"),
+        "spread_abaixo_contrato": ("remessa, cobrado a menos:", "operações"),
+        "spread_negativo": ("remessa, spread negativo (vs. contrato):", "operações"),
+    }
+    for natureza, (rotulo, unidade) in rotulos.items():
+        sel = [d["diferenca_brl"] for d in div_r if d["natureza"] == natureza]
+        if sel:
+            print(f"  {rotulo:<38}{fmt_brl(sum(sel, ZERO)):>16}  ({len(sel)} {unidade})")
     print(f"Lançamentos dos extratos: {len(r['lancamentos'])} (por regra {metodos['REGRA']}, por IA conferida "
           f"{metodos['IA']}, por decisão de uma pessoa {metodos['HUMANO']})")
     print(f"Pendências: {len(r['pendencias'])}, com motivo e valor em pendencias.csv")
@@ -502,6 +529,8 @@ def _imprimir_resumo(r: dict, saida: Path) -> None:
     print(f"  os 6 do fechamento: {', '.join(obrig)}")
     if extras:
         print(f"  extras: {', '.join(extras)}")
+    if r["rascunhos"]:
+        print(f"  rascunhos de contestação para a Helena revisar (rascunhos/): {', '.join(r['rascunhos'])}")
     print(linha)
 
 

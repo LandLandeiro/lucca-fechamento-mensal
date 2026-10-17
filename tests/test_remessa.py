@@ -193,3 +193,33 @@ def test_spread_negativo_depende_da_observacao(ponte, cadastro, regras, observac
         (p,) = [p for p in rem.pendencias if p.id_saida == "PEN-SPREAD_NEGATIVO_SEM_TRAVA-PC-0926-0210"]
         assert p.valor_brl < 0 and "Helena" in p.quem_decide
         assert "PC-0926-0210" not in {o.ref_origem for o, _ in c.elegiveis}
+
+
+def test_criterio_da_mundo_aberto_escrito_com_a_diferenca(divr, regras, cadastro, cls):
+    """D64 (Q-X 4, Q-G): Spread % do relatório (1.418,85); pelo Spread R$ seria 1.418,88 (R$ 0,03 a mais)."""
+    from tarvo.cadastro import linha_vigente
+    from tarvo.formatos import centavos
+    regra = regras["remessa.formula_divergencia"]
+    assert regra["status"] == "ASSUMO" and "Q-X 4" in regra["aceite"] and "0,03" in regra["valor"]["diferenca_para_spread_rs"]
+    mundo = [d for d in divr.linhas if d["cnpj"] == "17217888000111"]
+    assert sum(d["diferenca_brl"] for d in mundo) == Decimal("1418.85")
+    ops = {o.ref_origem: o for o, _ in cls.elegiveis}
+    pelo_spread_rs = sum(centavos(ops[d["ref_origem"]].spread_brl - d["taxa_contratada_pct"] * ops[d["ref_origem"]].ptax_ref
+                                  * ops[d["ref_origem"]].valor_me, "ROUND_HALF_UP") for d in mundo)
+    assert pelo_spread_rs == Decimal("1418.88")
+
+
+def test_cnpj_fora_da_planilha_calcula_e_abre_pendencia_de_cadastro(ponte, cadastro, regras):
+    """D69 (Q-P 2): calcula a metade do spread e abre pendência de cadastro para o comercial."""
+    import copy
+    nordica = "14760206000124"
+    cad = copy.deepcopy(cadastro)
+    del cad.lojistas[nordica]
+    del cad.linhas_por_cnpj[nordica]
+    c = classificar_remessa(ponte.operacoes, ponte.competencia, cad, regras)
+    assert nordica in c.sem_cadastro and any(cn == nordica for _, cn in c.elegiveis)
+    rem = comissao_remessa(c, cad, regras)
+    com = next(x for x in rem.comissoes if x["cnpj"] == nordica)
+    (p,) = [p for p in rem.pendencias if p.id_saida == f"PEN-CADASTRO_REMESSA-{nordica}"]
+    assert (p.valor_brl, p.quem_decide) == (com["comissao_brl"], "comercial") and "Q-P 2" in p.motivo
+    assert sum(l["valor"] for l in rem.rastro if l["id_saida"] == p.id_saida) == p.valor_brl

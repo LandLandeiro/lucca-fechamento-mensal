@@ -61,7 +61,8 @@ PREFIXOS_COBERTURA = ("COM-", "PEN-", "EXC-")
 PREFIXO_EXCLUSAO = "EXC-"
 # pendências derivadas de um número já calculado: reapontam linhas que já têm destino
 PREFIXOS_DERIVADOS = ("PEN-NF_NEGATIVA-", "PEN-CONFERENCIA_REPASSE-", "PEN-EXCESSO_REMESSA-", "PEN-APORTE_",
-                      "PEN-CONTESTACAO_PONTE-", "PEN-DIVERGENCIA_CHECKOUT-", "PEN-NOTA_BLOQUEADA-")
+                      "PEN-CONTESTACAO_PONTE-", "PEN-DIVERGENCIA_CHECKOUT-", "PEN-NOTA_BLOQUEADA-",
+                      "PEN-ALERTA_ANTECIPACAO-", "PEN-CADASTRO_REMESSA-")
 
 
 def _d(texto: str | None) -> Decimal:
@@ -168,10 +169,21 @@ def validar_saida(
 
     if "pendencias.csv" in dados:
         erros.extend(_refs_pendencias(dados))
+    for i, l in enumerate(dados.get("divergencias_taxa.csv", []), start=2):  # D63
+        nat = l.get("natureza") or ""
+        if nat not in _NATUREZA_POR_LINHA.get(l.get("linha_negocio"), ()):
+            erros.append(f"divergencias_taxa.csv:{i} {l['id_saida']}: natureza {nat!r} fora de "
+                         f"{list(_NATUREZA_POR_LINHA.get(l.get('linha_negocio'), ()))}")
+        if l.get("linha_negocio") == "CHECKOUT":  # D71: a devolver = cobrado pela Orbe − comissão contratada
+            if _d(l.get("valor_a_devolver_brl")) != _d(l.get("valor_taxa_orbe")) - _d(l.get("comissao_contratada"))                     or not _RE_DINHEIRO.match(l.get("valor_a_devolver_brl") or ""):
+                erros.append(f"divergencias_taxa.csv:{i} {l['id_saida']}: valor_a_devolver_brl {l.get('valor_a_devolver_brl')!r} ≠ "
+                             f"valor_taxa_orbe − comissao_contratada")
     if "notas_a_emitir.csv" in dados:
         erros.extend(_notas(dados))
     if (pasta / "contestacao_ponte.csv").exists():
         erros.extend(_contestacao(pasta / "contestacao_ponte.csv", dados))
+    if (pasta / "rascunhos").is_dir():
+        erros.extend(_rascunhos(pasta / "rascunhos", dados))
     if fonte_orbe:
         if modo_checkout is None:
             raise ValueError("fonte_orbe exige modo_checkout")
@@ -200,6 +212,11 @@ def validar_saida(
     return erros
 
 
+# D63: natureza da divergência, lista fechada por linha de negócio
+_NATUREZA_POR_LINHA = {
+    "CHECKOUT": ("contrato_orbe", "condicao_nao_informada"),
+    "REMESSA": ("spread_acima_contrato", "spread_abaixo_contrato", "spread_negativo"),
+}
 _RE_ID_PURO = re.compile(r"^[^\s,;()|]+$")
 
 
@@ -221,6 +238,35 @@ def _refs_pendencias(dados: dict[str, list[dict]]) -> list[str]:
             faltam = sorted(do_rastro[p["id_saida"]] - set(tokens))
             sobram = sorted(set(tokens) - do_rastro[p["id_saida"]])
             erros.append(f"{p['id_saida']}: ref_origem ≠ ids do rastro (faltam {faltam[:3]}, sobram {sobram[:3]})")
+    return erros
+
+
+_RE_TOTAL_RASCUNHO = re.compile(r"total_brl=(-?\d+\.\d{2})")
+
+
+def _rascunhos(pasta: Path, dados: dict[str, list[dict]]) -> list[str]:
+    """D68: cada rascunho `.md` tem o seu `.csv`; `total_brl=` do `.md` = Σ valor_brl do `.csv`; nenhuma linha de
+    divergência `condicao_nao_informada` (D63) em rascunho para a Orbe; toda linha existe na fonte do rascunho."""
+    erros: list[str] = []
+    nao_cobrar = {d["ref_origem"] for d in dados.get("divergencias_taxa.csv", []) if d.get("natureza") == "condicao_nao_informada"}
+    cobrar_orbe = {d["ref_origem"] for d in dados.get("divergencias_taxa.csv", []) if d.get("natureza") == "contrato_orbe"}
+    for md in sorted(pasta.glob("*.md")):
+        lista = md.with_suffix(".csv")
+        m = _RE_TOTAL_RASCUNHO.search(md.read_text(encoding="utf-8"))
+        if not lista.exists() or m is None:
+            erros.append(f"rascunhos/{md.name}: sem {lista.name} ou sem total_brl=")
+            continue
+        with open(lista, encoding="utf-8", newline="") as f:
+            linhas = list(csv.DictReader(f, delimiter=";"))
+        soma = sum((_d(l.get("valor_brl")) for l in linhas), Decimal("0"))
+        if soma != Decimal(m.group(1)):
+            erros.append(f"rascunhos/{md.name}: total {m.group(1)} ≠ Σ {lista.name} {soma}")
+        if md.name.startswith("orbe_"):
+            for l in linhas:
+                if l.get("id_transacao") in nao_cobrar:
+                    erros.append(f"rascunhos/{md.name}: {l['id_transacao']} é condicao_nao_informada e não se cobra da Orbe")
+                elif l.get("id_transacao") not in cobrar_orbe:
+                    erros.append(f"rascunhos/{md.name}: {l.get('id_transacao')} não é divergência contrato_orbe")
     return erros
 
 

@@ -155,3 +155,51 @@ def test_com_a_flag_a_pendencia_de_setembro_sai_resolvida(tmp_path_factory):
         "PEN-TRANSFERENCIA_EM_TRANSITO-AURORA-L92", "-300000.00", "LAN-MERIDIANO-MRD2026100001")
     assert res["motivo"].startswith("pendência de setembro resolvida")
 
+
+
+ATLAS = "39566044000119"
+
+
+def test_atlas_com_contrato_em_outubro_sem_pendencia(outubro):
+    """(vi) Com contrato na aba vigente, a regra 'sem contrato' deixa de valer (aviso para tirar o EC da regra)."""
+    resumo, ler = outubro
+    assert not any(p["tipo"] == "SEM_CONTRATO_VIGENTE" for p in ler("pendencias.csv"))
+    assert any("1076801732" in a.mensagem and "vale a planilha" in a.mensagem for a in resumo["avisos"])
+    (n,) = [n for n in ler("notas_a_emitir.csv") if n["tomador_cnpj"] == ATLAS]
+    assert "aguardavam contrato" not in n["discriminacao"]  # sem --orbe-anterior, só as linhas de outubro
+
+
+def test_atlas_setembro_entra_na_nota_de_outubro(tmp_path_factory):
+    """D67 (Q-Q): com --pendencias-anteriores e --orbe-anterior, as 57 linhas de setembro da Atlas entram na
+    comissão e na nota de outubro pela taxa confirmada (desde 10/09), com rastro para o arquivo de setembro;
+    a pendência de setembro sai em pendencias_resolvidas.csv."""
+    dados = _gerador().gerar(DADOS, tmp_path_factory.mktemp("dados_atlas"))
+    saida = tmp_path_factory.mktemp("saida_atlas")
+    orbe_set = next(DADOS.glob("01_orbe_*.csv"))
+    r = executar(dados, saida, RAIZ / "regras.yaml", pendencias_anteriores=RAIZ / "saida" / "pendencias.csv",
+                 orbe_anterior=orbe_set, sem_ia=True)
+    assert r["erros_validacao"] == []
+
+    def ler(nome):
+        with open(saida / nome, encoding="utf-8", newline="") as f:
+            return list(csv.DictReader(f, delimiter=";"))
+    rastro = [l for l in ler("rastro.csv") if l["id_saida"] == f"NF-{ATLAS}-CHECKOUT"]
+    de_setembro = [l for l in rastro if l["arquivo_origem"] == orbe_set.name]
+    assert len(de_setembro) == 57 and len(rastro) == 114
+    assert all("aguardava contrato (PEN-SEM_CONTRATO_VIGENTE-EC1076801732)" in l["nota"] for l in de_setembro)
+    taxas = {(l["tipo_lancamento"], l["taxa_contratada_pct"]) for l in de_setembro}
+    assert ("ANTECIPACAO", "2.1") in taxas and ("VENDA", "3.49") in taxas  # a taxa confirmada, desde 10/09
+    (n,) = [n for n in ler("notas_a_emitir.csv") if n["tomador_cnpj"] == ATLAS]
+    assert n["discriminacao"].endswith("(inclui 57 transações de 09/2026 que aguardavam contrato)")
+    assert Decimal(n["valor_brl"]) == sum(Decimal(l["valor"]) for l in rastro)
+    res = {x["id_pendencia_anterior"]: x for x in ler("pendencias_resolvidas.csv")}
+    a = res["PEN-SEM_CONTRATO_VIGENTE-EC1076801732"]
+    assert a["resolvida_por"] == f"COM-{ATLAS}-CHECKOUT" and len(a["ref_origem"].split("|")) == 57
+
+
+def test_atlas_sem_orbe_anterior_avisa_e_nao_puxa(tmp_path_factory):
+    dados = _gerador().gerar(DADOS, tmp_path_factory.mktemp("dados_atlas2"))
+    r = executar(dados, tmp_path_factory.mktemp("saida_atlas2"), RAIZ / "regras.yaml",
+                 pendencias_anteriores=RAIZ / "saida" / "pendencias.csv", sem_ia=True)
+    assert r["erros_validacao"] == []
+    assert any("rode com --orbe-anterior" in a.mensagem for a in r["avisos"])

@@ -185,3 +185,115 @@ Texto copiado do Slack sem edição em 16/10/2026. Horários em -03.
 
 **Mensagem da organização do hackathon** (não é resposta da Helena; texto como repassado pelo Lucca):
 > A banca vai rodar a solução com os arquivos do case e comparar com o saida/ entregue. O mínimo: (1) recebe a pasta do mês, nada fixo para setembro; (2) um comando; (3) mostra o resultado e gera os 6 arquivos; (4) o README explica como rodar e ONDE CONFIGURAR A CHAVE DE API.
+
+---
+
+# 17/10 (manhã): respostas Q-N a Q-Y
+
+Copiadas do `#duvidas-hackathon-ai` sem edição (incorporadas de `docs/_novas_respostas_17-10.md`, que foi apagado). Entre parênteses, quando houver, o resumo da pergunta como registrado na hora.
+
+## Q-N · Barteman (Mateus) · 09:09 · resposta 09:44
+**Pergunta (resumo das 7):** Casa × divergência; o que é divergência na remessa e spread negativo; venda cobrada a mais e estornada (Rota TX88446419); estorno TX88445133 da Casa de venda de 21/08; PIX de 18.240 da Ponte Aérea; antecipação da Atlas (R$ 179.592,82 em 15/09 com R$ 55.357,50 vendidos); Orbe cobrando abaixo do contrato.
+**Resposta:**
+> 1. É diferente de uma divergência comum. A Orbe cobrou certo pela planilha, porque ninguém avisou da isenção. Não há o que cobrar da Orbe: é devolução ao lojista, pendência minha com o comercial. Deixem separado das divergências de contrato, com o valor.
+> 2. A divergência na remessa é quando o lojista paga um spread diferente do contratado. O spread negativo eu respondi para a MN AI agora há pouco.
+> 3. A venda e o estorno se anulam. Cobro da Orbe só o que sobrou de diferença líquida.
+> 4. Vale a taxa da data da venda original, como já está no canal. Em 21/08 a isenção ainda não valia.
+> 5. É a Ponte Aérea mandando dinheiro de uma remessa que ainda não foi feita. A operação sai em outubro. A Ponte Aérea Estudantil é lojista e não tem nada a ver com a Ponte Câmbio.
+> 6. Isso não deveria acontecer. A antecipação é sobre o que o lojista já vendeu, e a gente não tem trava para isso. Coloquem como alerta: quem precisa saber sou eu e o comercial, e ainda mais com a Atlas sem contrato assinado.
+> 7. Também é divergência e eu decido caso a caso. Não aconteceu em setembro, então não gastem tempo nisso.
+
+---
+
+## Q-O · MN AI · 08:43 · resposta 09:44 (spread negativo)
+**Pergunta:** os 4 spreads negativos também entram em divergências de taxa, ou só como pendência de contestação?
+**Resposta:**
+> Para mim, divergência é quando o *lojista* pagou diferente do contrato. No spread negativo o lojista não pagou a mais. O prejuízo é nosso com a Ponte, então é pendência de contestação. Se quiserem listar também nas divergências, tudo bem, desde que fique claro que é outra natureza.
+
+---
+
+## Q-P · Desbravadores · 09:17 · resposta 09:45
+**Pergunta:** PIX de 18.240 sem operação; operação na Ponte de CNPJ fora da planilha.
+**Resposta:**
+> 1. Respondi agora para o Mateus: é dinheiro de uma remessa que sai em outubro.
+> 2. Não aconteceu em setembro. Se acontecer, o tratamento que vocês propuseram é razoável. Registrem como premissa.
+(Proposta deles no item 2: calcular a metade do spread mesmo assim e abrir pendência de cadastro para o comercial.)
+
+---
+
+## Q-Q · MN AI · 09:21 · resposta 09:47 (Atlas em outubro)
+**Pergunta:** quando o comercial confirmar a taxa da Atlas, as 57 transações de setembro são faturadas em outubro?
+**Resposta:**
+> Quando o comercial confirmar, a taxa vale desde o começo (10/09) e eu faturo setembro junto com outubro. Então sim, outubro precisa puxar as linhas da Atlas de setembro que ficaram pendentes.
+
+---
+
+## Q-R · Desbravadores · 09:29 · resposta 09:48
+**Pergunta:** negativos em divergência?; devolução do PIX de 12.400 em 2.1.01.001 ou 2.1.01.002?; folha e impostos sempre provisionados?
+**Resposta:**
+> 1. Já está no canal, na resposta para a MN AI das 8h43.
+> 2. As duas contas fazem sentido. Escolham uma, mantenham o mesmo critério e escrevam o motivo.
+> 3. Sempre. Todo mês a folha e os impostos do mês ficam provisionados no fechamento, e o pagamento no mês seguinte baixa a provisão.
+
+---
+
+## Q-S · MN AI · 09:35 · resposta 09:49 (quem aprova regra)
+> Taxa e condição comercial, quem aprova é o comercial, e eu registro. Regra de como fechar, aprovo eu. Nas minhas férias, hoje ninguém fecha. É exatamente por isso que vocês estão aqui. Registrar quem aprovou e quando é ótimo.
+
+---
+
+## Q-T · MN AI · 09:33 · resposta 09:53 (avisos e contestação)
+**Pergunta:** quem avisa a Orbe/Ponte quando o comercial fecha condição nova?; um rascunho de e-mail de contestação por contraparte serve?
+**Resposta:**
+> 1. Ninguém tem essa função hoje. O comercial fecha e, quando lembra, manda um e-mail para a Orbe ou a Ponte. A Bridge foi avisada alguns dias depois de 15/09, e a Casa do Estudante e a Mundo Aberto não foram avisadas.
+> 2. Serve, e muito. Um rascunho por contraparte, com as operações anexadas, eu reviso e envio. Quantas operações vão em cada um é com vocês.
+
+---
+
+## Q-U · Turma do Barulho · 10:32 · resposta 10:44 (como o financeiro trabalha)
+> *1.* A sequência é esta: baixar o relatório da Orbe e o e-mail da Ponte, e exportar os dois extratos; casar as transações da Orbe com a planilha de taxas e calcular a comissão por lojista; fazer o mesmo com a remessa; classificar os extratos no ERP; montar as notas. Quem executa são as duas analistas, e quem confere e aprova sou eu. O registro de que uma etapa terminou é uma aba de controle na mesma planilha, onde cada uma marca "ok" e a data. Não tem nada além disso.
+> *2.* A Bia cuida do checkout e da planilha de taxas. O Caio cuida dos bancos e das remessas. Eu confiro, decido as exceções e falo com o comercial, a Orbe e a Ponte. O que mais pesa nos 8 dias:
+> • *Comissão de checkout, uns 3 dias.* Metade é trabalho manual, casando nome com EC e CNPJ. A outra metade é retrabalho, quando a planilha está desatualizada.
+> • *Remessa e Ponte, uns 2 dias.* A maior parte é espera: perguntar à Ponte e ao comercial e aguardar a resposta.
+> • *Classificar os extratos, uns 2 dias.* Quase tudo manual, linha por linha.
+> O último dia é para as notas e a minha revisão.
+> *3.* Quase tudo que vocês já descobriram aqui no canal estava só na minha cabeça: as condições que o comercial combinou, quem é quem entre os nomes da Orbe e os CNPJs, o que aceito ou contesto da Ponte e o que já estava provisionado. Aparece na comissão, na remessa e na classificação. Se eu faltar, ninguém sabe essas regras.
+> *4.* A Orbe já liquida o líquido: a taxa é descontada na hora em que ela paga, e o lojista vê no extrato de repasse que a gente manda. A nota só documenta a taxa que já foi descontada e não gera cobrança nova. Por isso, quando a Orbe cobra a mais, o lojista já recebeu a menos e eu preciso devolver.
+> *5.* A gente repassa duas vezes por mês, perto do dia 10 e perto do dia 24, o que a Orbe já liquidou até ali. A regra está no contrato de adesão de cada lojista, que fica numa pasta do comercial.
+> *6.* A Ponte responde por e-mail e manda o ajuste no relatório do mês seguinte, como crédito ou débito. Eu confiro e registro no fechamento do mês em que o ajuste aparece.
+
+---
+
+## Q-V · Fox AI · 10:50 · resposta 10:58 (Casa do Estudante)
+**Pergunta:** Casa (R$ 15.397,42): (a) uma pendência para Helena e comercial com o total a devolver; (b) as linhas também em divergencias_taxa marcadas "isenção não informada à Orbe", sem entrar no total a cobrar da Orbe?
+**Resposta:**
+> Do jeito que vocês propuseram serve: uma pendência com o total e o detalhe por transação marcado. Só não pode entrar na cobrança da Orbe.
+
+---
+
+## Q-W · Turma do Barulho · 10:55 · resposta 10:59 (repasse e conta garantida)
+> Pela regra, o repasse é do que a Orbe já liquidou. Na prática, quando um lojista pressiona, a Bia às vezes paga antes de a Orbe liquidar, e aí entra a conta garantida. Isso não está escrito em lugar nenhum e não tem limite. É mais uma coisa que depende de quem está fazendo.
+
+---
+
+## Q-X · Casa Barton · 10:56 · resposta 11:01
+> 1. Para mim, uma pendência por contraparte e por lojista, com o detalhe das transações anexado. É o que vira o rascunho de contestação que a MN AI propôs. Cadastro e contrato quem decide é o comercial. A Bia mantém a planilha, mas não decide taxa.
+> 2. Conta por conta eu não valido. O critério está no canal, na resposta para a Fox AI sobre o plano de contas: se já estava registrado, baixa a conta onde estava, e o resto vai para a natureza.
+> 3. A gente não vende acima de 12x. Se aparecer, é pendência.
+> 4. São três centavos. Escolham um critério e escrevam qual.
+(O item 4 era: divergência da Mundo Aberto pelo Spread % (1.418,85) ou pelo Spread R$ (1.418,88).)
+
+---
+
+## Q-Y · Lucca Landeiro · 11:01 · resposta 11:03 (contas dos fluxos e Atlas)
+**Pergunta:** confirmar as contas dos fluxos do dia a dia (repasse 2.1.01.001; TED Orbe 1.1.03.001; aporte para remessa e TED à Ponte 2.1.02.001; transferência entre contas 1.1.09.001) e se o repasse à Atlas segue normal.
+**Resposta:**
+> Conta por conta eu não valido. Respondi isso para a Casa Barton agora há pouco, e o critério está na resposta para a Fox AI sobre o plano de contas.
+> Sobre a Atlas: o repasse não para. O dinheiro é do lojista, e o que fica suspenso é só o faturamento da nossa taxa.
+
+---
+
+## Ainda sem resposta (17/10 ~11h20, como registrado nessa hora)
+- Theo Garcia 11:16: (1) Bridge/Mundo Aberto — cobra-se da contraparte se a condição está na planilha mesmo sem aviso?; (2) critério do alerta de antecipação (só lojista sem vendas antes do mês?); (3) valor da contestação do spread negativo (Spread R$ −687,52 ou diferença até o contrato −1.351,87).
+- Desbravadores 11:07: como vem o ajuste de contestação no relatório da Ponte e como entra na nota.
+- Leandro (Barte) encaminhou 11:04: pacote de outubro; ref_origem com "|"; quem_decide comparado por texto?; pendência de acompanhamento conta como alarme falso?
