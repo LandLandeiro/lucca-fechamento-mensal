@@ -377,9 +377,23 @@ def _sugestoes(decisoes: list[Decisao], regras: dict, cadastro: Cadastro) -> lis
             "id_sugestao": f"SUG-{i:03d}", "tipo": g["tipo"], "banco": g["banco"], "padrao_ou_nome": g["padrao_ou_nome"],
             "regra_afetada": g["regra_afetada"], "conta_codigo": g["conta_codigo"], "lojista_cnpj": g["lojista_cnpj"],
             "lojista": g["lojista"], "qtd_lancamentos": g["qtd_lancamentos"], "valor_total": g["valor_total"],
-            "refs": ", ".join(g["refs"]), "evidencia": "; ".join(g["evidencias"]), "status": "PROPOSTA",
+            "refs": ", ".join(g["refs"]), "evidencia": "; ".join(g["evidencias"]), **_aprovacao(g, regras),
         })
     return linhas
+
+
+def _aprovacao(g: dict, regras: dict) -> dict:
+    """APROVADA se um alias de `classificacao_extratos.aliases_lojista` cobre a sugestão (mesmo CNPJ e banco,
+    nome por prefixo em fronteira de palavra); senão PROPOSTA."""
+    if g["tipo"] == "ALIAS_LOJISTA" and "classificacao_extratos.aliases_lojista" in regras:
+        alvo = normalizar_nome(g["padrao_ou_nome"])
+        for a in valor_da_regra(regras, "classificacao_extratos.aliases_lojista"):
+            nome = normalizar_nome(a["nome"])
+            casa = alvo == nome or nome.startswith(alvo) or (alvo.startswith(nome) and alvo[len(nome)] == " ")
+            if casa and str(a["cnpj"]) == g["lojista_cnpj"] and g["banco"] in a["bancos"]:
+                return {"status": "APROVADA",
+                        "aprovacao": f"classificacao_extratos.aliases_lojista {a['nome']!r}, vigência {a['vigencia_inicio']}"}
+    return {"status": "PROPOSTA", "aprovacao": ""}
 
 
 def aplicar(res: ResultadoIA, classif: list, prompt_versao: str) -> None:

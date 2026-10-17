@@ -1,9 +1,9 @@
 # Status
 
-> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 ~08h40 (E6b parte 2: IA nas sobras).
+> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 ~08h45 (decisões da E6b parte 2).
 
 **Nível atual:** **Alvo** (todos os 6 CSVs gerados e validados); lançamentos por REGRA e IA verificada, sobras recusadas em HUMANO
-**Próximo passo:** Lucca decide L28 e L69 (PIX ENVIADO EDU ABROAD, IA recusada) e aprova ou não a SUG-001 (alias para outubro); README (IA, outubro, limitações) e pitch.
+**Próximo passo:** README (outubro, limitações) e pitch.
 
 ## Mínimo
 
@@ -25,19 +25,19 @@
 - [x] `notas_a_emitir.csv` (E6a): 20 notas CHECKOUT (R$ 207.045,23) + 1 nota REMESSA para a Ponte (R$ 39.543,45)
 - [x] Leitores Aurora, Meridiano, plano de contas (com testes)
 - [x] `lancamentos_classificados.csv` parte 1 (REGRA): 184 lançamentos, 177 por regra, 7 HUMANO + pendência (só EduAbroad)
-- [x] `lancamentos_classificados.csv` parte 2 (IA nas sobras, D42): 7 sobras → 5 IA verificadas (aportes da EduAbroad), 2 HUMANO + IA_REPROVADA
-- [x] Extra `sugestoes_regra.csv`: 1 proposta (SUG-001, alias "EDU ABROAD CONSULTORIA L" → EduAbroad no Meridiano), status PROPOSTA
+- [x] `lancamentos_classificados.csv` parte 2 (IA nas sobras, D42): 7 sobras → 5 IA verificadas (aportes da EduAbroad), 2 por decisão humana (L28, L69 → 2.1.01.001 EduAbroad, D44)
+- [x] Extra `sugestoes_regra.csv`: SUG-001 (alias "EDU ABROAD CONSULTORIA" → EduAbroad) **APROVADA**, vira regra a partir de 2026-10-01 (`classificacao_extratos.aliases_lojista`)
 
 ## Extra
 
-- [x] `pendencias.csv` com motivo e quem decide: 13 pendências (checkout, remessa, notas, extratos)
+- [x] `pendencias.csv` com motivo e quem decide: 11 pendências (checkout, remessa, notas, extratos)
 - [x] Extra `contestacao_ponte.csv` (Q-L): 28 operações em 3 pendências CONTESTACAO_PONTE, pronto para a Helena mandar à Ponte
 - [ ] Rastro de 100% dos números
 - [ ] Roda em outubro sem mudar código: arquivos achados por prefixo, competência lida do relatório da Ponte, vigências e regras lidas do `regras.yaml`; falta testar com um arquivo de outro mês
 
 ## Regras (`regras.yaml`)
 
-- 84 regras: CONFIRMADO 44 · ASSUMO 27 · SEI 12 · PENDENTE 1 (`divergencias.data_referencia_vigencia`, sem uso). Novas: `classificacao.modelo_ia`, `classificacao.verificacao_ia`
+- 87 entradas: CONFIRMADO 44 · ASSUMO 30 · SEI 12 · PENDENTE 1 (`divergencias.data_referencia_vigencia`, sem uso). Novas: `classificacao.modelo_ia`, `classificacao.verificacao_ia`, `classificacao_extratos.aliases_lojista` e 2 `decisoes_humanas` (por linha, não são regras)
 - **Q-K (22:33):** a conferência do repasse não prevê desconto (D38). **Q-L (22:34):** contestação com a Ponte por motivo (D39). **Q-M (22:34):** `orbe_recebivel` CONFIRMADO; saldo negativo do Aurora (conta garantida) e conciliação da Orbe por parcela ficam de fora
 - **Q-H (21:13) corrigiu o ASSUMO de truncar (D09):** arredondamento comum (meio para longe do zero) por linha na comissão, nas divergências e nos 50% da remessa (D27). Q-I (21:14): contas das obrigações de agosto e despesas diretas CONFIRMADO. Q-J (21:45): nota de remessa pelo realizado + pendência da nossa metade do excesso
 - HIPOTESES com os textos literais do financeiro (Q-A…Q-M → P01–P17), fonte `docs/FINANCEIRO_SLACK.md`
@@ -95,13 +95,13 @@ Todos conferidos no centavo contra a previsão independente do Lucca antes do co
 
 ### Lançamentos classificados (E6b parte 1: só REGRA)
 
-- **AURORA: 84 linhas, 82 por regra, 2 HUMANO (IA recusada).** Σ −2.532.423,41 = saldo final − saldo anterior ✓. Regras: repasse_lojista 42 (inclui a Atlas, D35), orbe_recebivel 21, transferencia_meridiano 4, tarifa 2 e 1 cada (folha, ISS, INSS, FGTS, IRRF, PIS, COFINS, condomínio, cloud, assinatura, contabilidade, PIX sem identificação, devolução)
+- **AURORA: 84 linhas, 82 por regra, 2 HUMANO por decisão explícita (L28, L69 → 2.1.01.001, D44).** Σ −2.532.423,41 = saldo final − saldo anterior ✓. Regras: repasse_lojista 42 (inclui a Atlas, D35), orbe_recebivel 21, transferencia_meridiano 4, tarifa 2 e 1 cada (folha, ISS, INSS, FGTS, IRRF, PIS, COFINS, condomínio, cloud, assinatura, contabilidade, PIX sem identificação, devolução)
 - **MERIDIANO: 100 linhas, 95 por regra, 5 por IA verificada, 0 HUMANO.** Sem saldo inicial no OFX (inicial implícito 204.118,03, D34). Regras: aporte_lojista 59, liquidacao_ponte 21, mesma_titularidade 3, aplicação 3, resgate 3, tarifa 2, repasse_comissao_ponte 1, seguro 1, IOF 1, rendimento_aplicacao 1 (H37)
 - **Sem regra (7, só EduAbroad) → IA (D42), resposta real em `cache_ia/` (7 chamadas a `claude-haiku-5-5`, 18.118 tokens de entrada + 2.379 de saída, ~US$ 0,003; reexecução: 0 chamadas, hashes iguais):**
   - PIX RECEB EDU ABROAD (MRD…0036, 0180, 0340, 0484, 0636) → 2.1.02.001 EduAbroad, confiança 0,85–0,88; prova: Σ PIX RECEB 394.222,69 = Σ (Valor R$ + IOF) das operações da Ponte 394.222,69 → **IA**
-  - PIX ENVIADO EDU ABROAD (L28 −14.147,48; L69 −47.889,99) → a IA sugeriu 2.1.01.001 **sem lojista** ("CONSULTORIA LTD" não bate com o cadastro; pode ser fornecedor), confiança 0,5 e 0,4 → (b) e (d) falham → **HUMANO + IA_REPROVADA**. A prova do Aurora (EduAbroad tem vendas na Orbe) passaria; quem decide é o Lucca
+  - PIX ENVIADO EDU ABROAD (L28 −14.147,48; L69 −47.889,99) → a IA sugeriu 2.1.01.001 **sem lojista** ("CONSULTORIA LTD" não bate com o cadastro; pode ser fornecedor), confiança 0,5 e 0,4 → (b) e (d) falham → o código barrou → **decisão do Lucca** (D44): 2.1.01.001 EduAbroad, metodo HUMANO, confiança vazia, com a evidência da soma e das vendas na Orbe
 - **Transferências:** L12 → MRD2026090107, L44 → MRD2026090274, L58 → MRD2026090454 (mesmo dia); **L92 (−300.000,00) sem par → pendência em trânsito (cai em 01/10)**
 - **Aportes × Ponte:** 14 lojistas; Ponte Aérea com +18.240,00 = PIX MRD2026090425 sem operação → pendência; EduAbroad conferida: aportes pela IA verificada = operações (394.222,69); Bagagem fecha (duplicata conta uma vez)
 - **Aplicação × resgate (FIFO):** resgate MRD2026090254 (09/09, 162.128,00) excede em **392,00** a aplicação de 05/09 → saldo aplicado anterior a 01/09, linha inteira em 1.1.02.001, sem pendência (D36); os outros dois resgates cabem no saldo aplicado
-- **Pendências dos extratos: 6** (2 IA_REPROVADA da EduAbroad, L28 e L69, PIX sem identificação 7.350,00, devolução Mundo Aberto 12.400,00, transferência em trânsito −300.000,00, aporte sem operação 18.240,00). **Total no `pendencias.csv`: 13** (+ Atlas sem contrato, nota negativa da Casa, conferência do TED, excesso da Mundo Aberto, 3 contestações com a Ponte). Saldo negativo do Aurora: conta garantida, não é pendência (Q-M)
+- **Pendências dos extratos: 4** ( PIX sem identificação 7.350,00, devolução Mundo Aberto 12.400,00, transferência em trânsito −300.000,00, aporte sem operação 18.240,00). **Total no `pendencias.csv`: 11** (+ Atlas sem contrato, nota negativa da Casa, conferência do TED, excesso da Mundo Aberto, 3 contestações com a Ponte). Saldo negativo do Aurora: conta garantida, não é pendência (Q-M)
 

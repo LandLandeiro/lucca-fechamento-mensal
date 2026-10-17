@@ -148,21 +148,21 @@ def test_lado_pelo_sinal(saida):
 
 def test_sobras_com_o_cache_commitado_da_ia(saida):
     """E6b parte 2 (D42), resposta real em cache_ia/: os 5 aportes da EduAbroad passam na prova (Σ = Ponte) e
-    viram IA; os 2 PIX ENVIADO ficam HUMANO porque a própria IA não indicou lojista (b) e deu confiança baixa (d)."""
+    viram IA; os 2 PIX ENVIADO (a IA recusou o vínculo) têm decisão humana explícita do Lucca (D44)."""
     pasta, r = saida
     lan = {l["id_saida"]: l for l in _csv(pasta, "lancamentos_classificados.csv")}
     humanos = sorted(k for k, l in lan.items() if l["metodo"] == "HUMANO")
     assert humanos == ["LAN-AURORA-L28", "LAN-AURORA-L69"]
-    assert (lan["LAN-AURORA-L28"]["conta_codigo"], lan["LAN-AURORA-L28"]["confianca"]) == ("", "")
+    for h in humanos:
+        assert (lan[h]["conta_codigo"], lan[h]["confianca"], lan[h]["lado_contrapartida"]) == ("2.1.01.001", "", "D")
+        assert lan[h]["regra_aplicada"] == f"decisoes_humanas.aurora_{h[11:]}_2026_09"
     ia = sorted(k for k, l in lan.items() if l["metodo"] == "IA")
     assert ia == ["LAN-MERIDIANO-MRD2026090036", "LAN-MERIDIANO-MRD2026090180", "LAN-MERIDIANO-MRD2026090340",
                   "LAN-MERIDIANO-MRD2026090484", "LAN-MERIDIANO-MRD2026090636"]
     assert all(lan[k]["conta_codigo"] == "2.1.02.001" and Decimal(lan[k]["confianca"]) >= Decimal("0.8") for k in ia)
-    pend = {p["id_saida"]: p for p in _csv(pasta, "pendencias.csv")}
-    for h in humanos:
-        m = pend[f"PEN-IA_REPROVADA-{h[4:]}"]["motivo"]
-        assert "(b) conta 2.1.01.001 exige lojista" in m and "(d) confiança" in m
-    assert r["extratos"]["ia"].chamadas_api == 0  # testes: só cache
+    pend = {p["id_saida"] for p in _csv(pasta, "pendencias.csv")}
+    assert not any("AURORA-L28" in p or "AURORA-L69" in p for p in pend)
+    assert len(r["extratos"]["ia"].decisoes) == 5 and r["extratos"]["ia"].chamadas_api == 0  # decididas não vão à IA
     edu = next(a for a in r["extratos"]["conf"].aportes if a["cnpj"] == "16181276000153")
     assert edu["sobra"] == 0 and not edu["nao_conferido"]
 
@@ -272,5 +272,70 @@ def test_nomes_da_orbe_so_para_ec_sem_vinculo(cadastro, orbe, regras):
 
 def test_total_de_pendencias(saida):
     tipos = sorted(p["tipo"] for p in _csv(saida[0], "pendencias.csv"))
-    assert len(tipos) == 13 and tipos.count("IA_REPROVADA") == 2 and "SEM_REGRA" not in tipos
+    assert len(tipos) == 11 and "IA_REPROVADA" not in tipos and "SEM_REGRA" not in tipos
     assert tipos.count("CONTESTACAO_PONTE") == 3
+
+
+def _lan_edu(data, desc="PIX RECEB EDU ABROAD CONSULTORIA L", valor="1000.00", banco="MERIDIANO"):
+    from datetime import date as _date
+    from tarvo.modelo import LancamentoBancario
+    return LancamentoBancario(banco, "X1", _date.fromisoformat(data), desc, Decimal(valor), None, "teste")
+
+
+@pytest.mark.parametrize("data, banco, desc, valor, esperado", [
+    ("2026-10-02", "MERIDIANO", "PIX RECEB EDU ABROAD CONSULTORIA L", "1000.00", "REGRA"),
+    ("2026-10-15", "AURORA", "PIX ENVIADO EDU ABROAD CONSULTORIA LTD", "-1000.00", "REGRA"),
+    ("2026-09-30", "MERIDIANO", "PIX RECEB EDU ABROAD CONSULTORIA L", "1000.00", "HUMANO"),
+    ("2026-09-09", "AURORA", "PIX ENVIADO EDU ABROAD CONSULTORIA LTD", "-1000.00", "HUMANO"),
+])
+def test_alias_edu_abroad_so_a_partir_de_outubro(cadastro, regras, data, banco, desc, valor, esperado):
+    """D44: SUG-001 aprovada, alias com vigencia_inicio 2026-10-01; não muda setembro."""
+    from tarvo.classificacao.por_regra import classificar_por_regra
+    from tarvo.leitores.plano_contas import contas_lancaveis, ler_plano_contas
+    plano = contas_lancaveis(ler_plano_contas(next(DADOS.glob("04_*"))))
+    lan = _lan_edu(data, desc, valor, banco)
+    r = classificar_por_regra([lan], {"X1": 1}, plano, regras, cadastro, (int(data[:4]), int(data[5:7])))
+    assert r.linhas[0]["metodo"] == esperado
+    if esperado == "REGRA":
+        assert r.lojista_por_lancamento[(banco, "X1")] == "16181276000153"
+
+
+def test_sugestao_aprovada_no_csv(saida):
+    (s,) = _csv(saida[0], "sugestoes_regra.csv")
+    assert (s["id_sugestao"], s["status"]) == ("SUG-001", "APROVADA") and "vigência 2026-10-01" in s["aprovacao"]
+
+
+def test_decisao_humana_so_vale_para_a_linha_exata(cadastro, regras):
+    """Mesma ref e descrição, valor diferente (outro mês, outra linha): a decisão não se aplica."""
+    from tarvo.classificacao.decisoes import aplicar_decisoes_humanas
+    from tarvo.classificacao.por_regra import classificar_por_regra
+    from tarvo.leitores.plano_contas import contas_lancaveis, ler_plano_contas
+    from tarvo.modelo import LancamentoBancario
+    from datetime import date as _date
+    plano = contas_lancaveis(ler_plano_contas(next(DADOS.glob("04_*"))))
+    lan = LancamentoBancario("AURORA", "L28", _date(2026, 9, 9), "PIX ENVIADO EDU ABROAD CONSULTORIA LTD", Decimal("-1.00"), None, "t")
+    r = classificar_por_regra([lan], {"L28": 28}, plano, regras, cadastro, (2026, 9))
+    avisos = aplicar_decisoes_humanas([r], regras, (2026, 9))
+    assert r.linhas[0]["conta_codigo"] == "" and r.sem_regra
+    assert any("aurora_L28_2026_09" in a for a in avisos)
+
+
+def test_validador_recusa_humano_com_conta_sem_decisao(saida, tmp_path):
+    import csv as _csvmod
+    from tarvo.saida.validador import validar_saida
+    pasta, _ = saida
+    for p in pasta.iterdir():
+        (tmp_path / p.name).write_bytes(p.read_bytes())
+    caminho = tmp_path / "lancamentos_classificados.csv"
+    with open(caminho, encoding="utf-8", newline="") as f:
+        linhas = list(_csvmod.reader(f, delimiter=";"))
+    col = linhas[0].index("regra_aplicada")
+    for l in linhas[1:]:
+        if l[0] == "LAN-AURORA-L28":
+            l[col] = ""
+    with open(caminho, "w", encoding="utf-8", newline="") as f:
+        _csvmod.writer(f, delimiter=";", lineterminator="\n").writerows(linhas)
+    from tarvo.leitores.plano_contas import contas_lancaveis, ler_plano_contas
+    plano = set(contas_lancaveis(ler_plano_contas(next(DADOS.glob("04_*")))))
+    erros = validar_saida(tmp_path, contas_lancaveis=plano)
+    assert any("LAN-AURORA-L28" in e and "sem decisão explícita" in e for e in erros)

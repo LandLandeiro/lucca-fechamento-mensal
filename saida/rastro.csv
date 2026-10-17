@@ -4806,8 +4806,6 @@ PEN-EXCESSO_REMESSA-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;P
 PEN-EXCESSO_REMESSA-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0492;18.07;206;REMESSA;;;nossa metade da divergência da operação;180.75
 PEN-EXCESSO_REMESSA-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0516;11.64;217;REMESSA;;;nossa metade da divergência da operação;116.38
 PEN-EXCESSO_REMESSA-17217888000111;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0566;38.38;236;REMESSA;;;nossa metade da divergência da operação;383.68
-PEN-IA_REPROVADA-AURORA-L28;05a_extrato_banco_aurora_cc4471_set2026.csv;L28;-14147.48;28;EXTRATO AURORA;;;lançamento sem regra e sugestão da IA recusada;
-PEN-IA_REPROVADA-AURORA-L69;05a_extrato_banco_aurora_cc4471_set2026.csv;L69;-47889.99;69;EXTRATO AURORA;;;lançamento sem regra e sugestão da IA recusada;
 PEN-NF_NEGATIVA-00520815000100;01_orbe_relatorio_comissoes_set2026.csv;TX88410932;0.00;2;VENDA;608.88;0;regras.yaml cadastro.condicao_especial_casa_do_estudante (MDR, 2026-09-01–2026-12-31);
 PEN-NF_NEGATIVA-00520815000100;01_orbe_relatorio_comissoes_set2026.csv;TX88410975;0.00;3;VENDA;614.86;0;regras.yaml cadastro.condicao_especial_casa_do_estudante (MDR, 2026-09-01–2026-12-31);
 PEN-NF_NEGATIVA-00520815000100;01_orbe_relatorio_comissoes_set2026.csv;TX88410128;0.00;5;VENDA;5773.57;0;regras.yaml cadastro.condicao_especial_casa_do_estudante (MDR, 2026-09-01–2026-12-31);

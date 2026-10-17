@@ -581,6 +581,20 @@ classificacao_extratos:
       base: o extrato tem linha própria de rendimento (MRD2026090680) e o saldo inicial implícito é 204.118,03);
       Slack Helena 20:49 (Q-F 4c): 'A transferência saiu do Aurora em 30/09 e cai no Meridiano em 01/10'
     pergunta_ref: P09
+  aliases_lojista:          # D44: SUG-001 aprovada; vale só a partir da vigência (não muda setembro)
+    valor:
+      - nome: "EDU ABROAD CONSULTORIA"
+        cnpj: "16181276000153"
+        bancos: [AURORA, MERIDIANO]
+        vigencia_inicio: "2026-10-01"
+        sugestao: SUG-001
+    status: ASSUMO
+    autor: Lucca
+    fonte: >-
+      decisão Lucca 17/10: SUG-001 aprovada. Evidência: Σ PIX RECEB 'EDU ABROAD CONSULTORIA L' no Meridiano
+      394.222,69 = Σ (Valor R$ + IOF) das operações da EduAbroad na Ponte; EduAbroad com vendas na Orbe no mês.
+      Casa por prefixo exato em fronteira de palavra (D31), como os nomes da planilha
+    pergunta_ref: null
   lojistas_do_extrato:      # D35
     valor: "planilha vigente ∪ nomes da Orbe dos ECs sem vínculo na planilha (identificador EC<n>)"
     status: ASSUMO
@@ -599,4 +613,24 @@ classificacao_extratos:
     status: ASSUMO
     autor: Lucca
     fonte: "decisão Lucca ~23h30 (H36): não criar alias agora; pedido Lucca 17/10 (E6b parte 2): sugestões para outubro"
+    pergunta_ref: null
+
+# ---------------------------------------------------------------------------
+# DECISÕES HUMANAS POR LINHA (não são regras): valem só para a linha exata
+# (banco, ref_origem, data, descrição e valor iguais); fora disso não se aplicam.
+# Saem com metodo HUMANO, a conta decidida e confiança vazia.
+# ---------------------------------------------------------------------------
+
+decisoes_humanas:
+  aurora_L28_2026_09:       # D44
+    valor: {banco: AURORA, ref_origem: L28, data: "2026-09-09", descricao: "PIX ENVIADO EDU ABROAD CONSULTORIA LTD", valor: "-14147.48", conta: "2.1.01.001", lojista_cnpj: "16181276000153"}
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca 17/10; evidência: SUG-001 (Σ PIX RECEB = Σ Valor+IOF da Ponte, 394.222,69) + EduAbroad com vendas na Orbe no mês"
+    pergunta_ref: null
+  aurora_L69_2026_09:       # D44
+    valor: {banco: AURORA, ref_origem: L69, data: "2026-09-23", descricao: "PIX ENVIADO EDU ABROAD CONSULTORIA LTD", valor: "-47889.99", conta: "2.1.01.001", lojista_cnpj: "16181276000153"}
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca 17/10; evidência: SUG-001 (Σ PIX RECEB = Σ Valor+IOF da Ponte, 394.222,69) + EduAbroad com vendas na Orbe no mês"
     pergunta_ref: null

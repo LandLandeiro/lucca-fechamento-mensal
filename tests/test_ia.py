@@ -39,9 +39,17 @@ def _csv(pasta, nome):
         return list(csv.DictReader(f, delimiter=";"))
 
 
+def _regras_sem_decisoes(tmp_path):
+    """regras.yaml sem `decisoes_humanas` (última seção): as 7 linhas da EduAbroad voltam a ser sobras da IA."""
+    texto = (RAIZ / "regras.yaml").read_text(encoding="utf-8")
+    caminho = tmp_path / "regras_sem_decisoes.yaml"
+    caminho.write_text(texto[:texto.index("\ndecisoes_humanas:")] + "\n", encoding="utf-8")
+    return caminho
+
+
 def _rodar(tmp_path, nome, cliente, cache=None):
     pasta = tmp_path / nome
-    r = executar(DADOS, pasta, RAIZ / "regras.yaml", cliente_ia=cliente, cache_ia=cache or (tmp_path / "cache"))
+    r = executar(DADOS, pasta, _regras_sem_decisoes(tmp_path), cliente_ia=cliente, cache_ia=cache or (tmp_path / "cache"))
     lan = {f"{l['banco']}-{l['ref_origem']}": l for l in _csv(pasta, "lancamentos_classificados.csv")}
     pend = {p["id_saida"]: p for p in _csv(pasta, "pendencias.csv")}
     return r, pasta, lan, pend
@@ -64,8 +72,8 @@ def test_i_sugestao_valida_vira_ia_e_vai_para_o_cache(tmp_path):
     # aprendizado: alias proposto, não aplicado
     sug = _csv(pasta, "sugestoes_regra.csv")
     assert {(s["tipo"], s["banco"], s["padrao_ou_nome"], s["lojista_cnpj"], s["status"]) for s in sug} == {
-        ("ALIAS_LOJISTA", "AURORA", "EDU ABROAD CONSULTORIA LTD", EDU, "PROPOSTA"),
-        ("ALIAS_LOJISTA", "MERIDIANO", "EDU ABROAD CONSULTORIA L", EDU, "PROPOSTA"),
+        ("ALIAS_LOJISTA", "AURORA", "EDU ABROAD CONSULTORIA LTD", EDU, "APROVADA"),  # alias de outubro (D44)
+        ("ALIAS_LOJISTA", "MERIDIANO", "EDU ABROAD CONSULTORIA L", EDU, "APROVADA"),
     }
     assert len(list((tmp_path / "cache").glob("*.json"))) == 7
     # reexecução sem cliente: tudo do cache, mesmo resultado, zero chamadas
@@ -119,7 +127,7 @@ def test_sem_chave_e_sem_cache_vira_humano_com_aviso(tmp_path):
 def test_cli_sem_ia_sai_com_zero(tmp_path):
     assert main(["--dados", str(DADOS), "--saida", str(tmp_path / "s"), "--sem-ia"]) == 0
     pend = _csv(tmp_path / "s", "pendencias.csv")
-    assert sum(1 for p in pend if p["tipo"] == "SEM_REGRA") == 7
+    assert sum(1 for p in pend if p["tipo"] == "SEM_REGRA") == 5  # L28 e L69 têm decisão humana (D44)
 
 
 def test_chave_vem_do_env_local_e_nunca_aparece(tmp_path, monkeypatch, capsys):

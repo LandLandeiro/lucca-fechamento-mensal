@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from datetime import date
 from decimal import Decimal
 
 from tarvo.cadastro import Cadastro, lojista_por_nome_bancario, normalizar_nome
@@ -41,6 +42,14 @@ def _mes_anterior(competencia: tuple[int, int]) -> str:
     ano, mes = competencia
     ano, mes = (ano - 1, 12) if mes == 1 else (ano, mes - 1)
     return f"{mes:02d}/{ano}"
+
+
+def aliases_vigentes(regras: dict, banco: str, data: date) -> list[tuple[str, str]]:
+    """(cnpj, nome) dos aliases aprovados para o banco com vigência até a data do lançamento (D44)."""
+    if "classificacao_extratos.aliases_lojista" not in regras:
+        return []
+    return [(str(a["cnpj"]), a["nome"]) for a in valor_da_regra(regras, "classificacao_extratos.aliases_lojista")
+            if banco in a["bancos"] and data >= date.fromisoformat(str(a["vigencia_inicio"]))]
 
 
 def classificar_por_regra(
@@ -77,7 +86,7 @@ def classificar_por_regra(
                 continue
             cnpj = None
             if v.get("lojista"):
-                cnpj, motivo = lojista_por_nome_bancario(cadastro, m.group("lojista"))
+                cnpj, motivo = lojista_por_nome_bancario(cadastro, m.group("lojista"), aliases_vigentes(regras, banco, lan.data))
                 if cnpj is None:
                     motivos.append(f"{chave.rsplit('.', 1)[1]}: {motivo}")
                     continue

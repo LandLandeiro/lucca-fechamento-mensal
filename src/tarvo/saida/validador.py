@@ -361,8 +361,10 @@ def _extratos(
             erros.append(f"{l['id_saida']}: método {metodo} sem conta")
         if metodo == "IA" and not _RE_DINHEIRO.match(l.get("confianca") or ""):
             erros.append(f"{l['id_saida']}: método IA sem confiança")
-        if metodo == "HUMANO" and conta:
-            erros.append(f"{l['id_saida']}: método HUMANO com conta {conta} (conta humana vem da decisão, não do código)")
+        if metodo == "HUMANO" and conta and not (l.get("regra_aplicada") or "").startswith("decisoes_humanas."):
+            erros.append(f"{l['id_saida']}: método HUMANO com conta {conta} sem decisão explícita (decisoes_humanas no regras.yaml)")
+        if metodo == "HUMANO" and l.get("confianca"):
+            erros.append(f"{l['id_saida']}: método HUMANO com confiança {l['confianca']}")
         if conta and contas is not None and conta not in contas:
             erros.append(f"{l['id_saida']}: conta {conta} não existe ou não aceita lançamento (ANALITICA e ACEITA_LANCTO=S)")
     return erros

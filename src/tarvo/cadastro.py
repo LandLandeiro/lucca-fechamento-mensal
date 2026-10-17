@@ -130,14 +130,15 @@ def normalizar_nome(texto: str) -> str:
     return " ".join(sem_acento.upper().split())
 
 
-def lojista_por_nome_bancario(cadastro: Cadastro, texto: str) -> tuple[str | None, str]:
+def lojista_por_nome_bancario(cadastro: Cadastro, texto: str, aliases=()) -> tuple[str | None, str]:
     """CNPJ do lojista cujo nome no extrato casa por PREFIXO EXATO com um nome da planilha (D31).
 
     Casa se, normalizados, o texto do extrato é prefixo do nome da planilha (o banco corta o
     nome: "ROTA GLOBAL INTERCAMBIO LT" → "ROTA GLOBAL INTERCAMBIO LTDA") ou o nome da planilha
     é prefixo do texto terminando em fronteira de palavra ("KIWI EXPERIENCE" → "KIWI EXPERIENCE
     TURISMO LT"). Não há similaridade nem distância de edição: "EDU ABROAD" não casa com
-    "EDUABROAD". Zero ou mais de um CNPJ → None com o motivo.
+    "EDUABROAD". Zero ou mais de um CNPJ → None com o motivo. `aliases` = (cnpj, nome) aprovados e
+    vigentes na data do lançamento (`classificacao_extratos.aliases_lojista`, D44), com a mesma regra de prefixo.
     """
     alvo = normalizar_nome(texto)
     if not alvo:
@@ -145,6 +146,7 @@ def lojista_por_nome_bancario(cadastro: Cadastro, texto: str) -> tuple[str | Non
     achados: dict[str, str] = {}
     candidatos = [(cnpj, l.lojista) for cnpj, linhas in cadastro.linhas_por_cnpj.items() for l, _ in linhas]
     candidatos += [(ident, nome) for ident, nomes in cadastro.nomes_extras.items() for nome in sorted(nomes)]
+    candidatos += list(aliases)
     for ident, nome_original in candidatos:
         nome = normalizar_nome(nome_original)
         if nome.startswith(alvo) or (alvo.startswith(nome) and (len(alvo) == len(nome) or alvo[len(nome)] == " ")):

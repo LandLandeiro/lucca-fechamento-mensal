@@ -111,3 +111,8 @@ Log cronológico: hora, etapa, o que foi feito, como foi verificado, commit.
 - **Execução real (uma vez):** 7 chamadas, 18.118 + 2.379 tokens, ~US$ 0,003. 5 aportes EduAbroad aceitos (Σ 394.222,69 = Ponte); L28 e L69 recusados: a IA não ligou "EDU ABROAD CONSULTORIA LTD" à EduAbroad (confiança 0,5 e 0,4). Não mexi no prompt para forçar outra resposta.
 - **Verificado:** segunda execução 0 chamadas (cache), SHA-256 dos 8 CSVs iguais; a chave não aparece em `cache_ia/` nem em `saida/`; validador OK (agora também exige confiança em linha IA); pendências 18 → 13; `pytest`: 161 passed.
 - **Commit:** `E6b parte 2: IA nas sobras, verificada pelo código, com cache`.
+
+### 17/10 ~08h40–08h50 · Decisões da E6b parte 2
+- **Feito:** L28 e L69 por decisão humana do Lucca (`decisoes_humanas` no `regras.yaml`, uma por linha, aplicadas só à linha exata e antes da IA): 2.1.01.001 EduAbroad, metodo HUMANO, confiança vazia; pendências IA_REPROVADA saíram. SUG-001 aprovada: `classificacao_extratos.aliases_lojista` "EDU ABROAD CONSULTORIA" → 16181276000153, Aurora e Meridiano, vigência 2026-10-01; `sugestoes_regra.csv` marca APROVADA. Validador: HUMANO com conta só com decisão explícita; HUMANO sem confiança (D44).
+- **Verificado:** alias casa por REGRA com data de outubro (Aurora e Meridiano) e não casa em setembro; decisão com valor diferente não se aplica (vira aviso); validador recusa HUMANO com conta sem decisão. Setembro: 5 IA + 2 decisão humana; pendências 13 → 11; IA com 5 sobras, 0 chamadas. Reexecução: SHA-256 dos 8 CSVs iguais. `pytest`: 168 passed.
+- **Commit:** `decisões da E6b parte 2: L28/L69 por decisão humana e alias da EduAbroad para outubro`.

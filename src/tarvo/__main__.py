@@ -21,6 +21,7 @@ from tarvo.calculos.notas import conferencia_repasse, notas_a_emitir
 from tarvo.calculos.remessa import classificar_remessa, comissao_remessa
 from tarvo.classificacao.conferencias import conferir
 from tarvo.classificacao import por_ia
+from tarvo.classificacao.decisoes import aplicar_decisoes_humanas
 from tarvo.classificacao.por_regra import classificar_por_regra
 from tarvo.formatos import fmt_dinheiro, modo_arredondamento
 from tarvo.leitores.extrato_aurora import ler_extrato_aurora
@@ -147,7 +148,9 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     adicionar_nomes_orbe(cadastro, orbe.transacoes, regras)  # D35: ex.: Atlas
     classif = [classificar_por_regra(ext.lancamentos, ext.linhas_arquivo, plano, regras, cadastro, competencia)
                for ext in (aurora, meridiano)]
-    # E6b parte 2: IA só nas sobras; o código verifica antes de aceitar (D42)
+    # decisões humanas por linha antes da IA (D44); IA só nas sobras, o código verifica antes de aceitar (D42)
+    avisos_extra += [Aviso("regras.yaml", "decisoes_humanas", a)
+                     for a in aplicar_decisoes_humanas(classif, regras, competencia)]
     aporte = valor_da_regra(regras, "classificacao_extratos.meridiano.aporte_lojista")
     aportes_por_regra: dict[str, Decimal] = {}
     for c in classif:
