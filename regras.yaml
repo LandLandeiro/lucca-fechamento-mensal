@@ -478,6 +478,13 @@ cadastro:
     aprovado_por: "comercial (registro: Helena)"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
     fonte: "Slack Helena 20:24 ('Não fatura a Atlas até o comercial confirmar')"
     pergunta_ref: P04
+  identificacao_sem_contrato:   # D82 (Q-AC 1): só identidade; a taxa da aba antiga não vale
+    valor:
+      "1076801732": {nome: "Atlas Idiomas Ltda", cnpj: "39566044000119", origem: "02_taxas, aba 'ANTIGO 2025 - nao usar', A8:B8"}
+    status: CONFIRMADO
+    aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
+    fonte: "Slack Helena 11:41 (Q-AC 1): 'Sim, o CNPJ é da Atlas, é a mesma empresa. Podem usar para identificar. Só a taxa daquela aba é que não vale.' Apuração (Q-AC 2): fora do arquivo de comissões, com pendência (D82)"
+    pergunta_ref: null
   # D61: condições comerciais fora da planilha, uma por item. Uma condição nova = um item novo (o código não muda).
   # Campos: id, cnpj, linhas_negocio (CHECKOUT e/ou REMESSA), taxa (fração por grupo: MDR = débito, crédito,
   # parcelado e Pix; ANTECIPACAO; REMESSA = spread contratado), vigencia {inicio, fim}, fonte; opcionais para a

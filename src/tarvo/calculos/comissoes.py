@@ -145,6 +145,8 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
     sem_contrato = {str(k): v for k, v in valor_da_regra(regras, "cadastro.lojista_sem_contrato_vigente").items()
                     if str(k) not in cadastro.por_ec}  # D67: com contrato na aba vigente, vale a planilha
     mapa_colunas = valor_da_regra(regras, "taxas.coluna_por_produto")
+    identificacao = {str(k): v for k, v in (valor_da_regra(regras, "cadastro.identificacao_sem_contrato")
+                                           if "cadastro.identificacao_sem_contrato" in regras else {}).items()}
 
     res = ResultadoCheckout()
     for ec in sorted(str(k) for k in valor_da_regra(regras, "cadastro.lojista_sem_contrato_vigente")):
@@ -171,9 +173,13 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
     def cnpj_da(t: TransacaoOrbe) -> str | None:
         ec = t.cod_estabelecimento
         if ec in sem_contrato:
+            ident = identificacao.get(ec)  # D82: identidade da aba antiga (a taxa de lá não vale, Q-AC 1)
+            quem_e = (f"{ident['nome']}, CNPJ {ident['cnpj']} (identificação: {ident['origem']}; só a identidade, a taxa "
+                      f"daquela aba não vale)" if ident else t.nome_estabelecimento)
             pendente_grupo(t, "SEM_CONTRATO_VIGENTE", f"EC{ec}",
-                           f"EC {ec} sem contrato na aba vigente; 'Não fatura a Atlas até o comercial confirmar' "
-                           f"(Helena 20:24). valor_brl = taxa cobrada pela Orbe, informativo",
+                           f"EC {ec}, {quem_e}: sem contrato na aba vigente; 'Não fatura a Atlas até o comercial confirmar' "
+                           f"(Helena 20:24). Fora de comissoes_por_lojista.csv e de notas, com as transações aqui (Q-AC 2). "
+                           f"valor_brl = taxa cobrada pela Orbe, informativo",
                            "comercial")
             return None
         cnpj = cadastro.por_ec.get(ec)
