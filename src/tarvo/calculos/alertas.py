@@ -78,7 +78,8 @@ def alerta_antecipacao(transacoes: list[TransacaoOrbe], cadastro: Cadastro, comp
             f"{fmt_dinheiro(antecipado)} − revertido {fmt_dinheiro(revertido)} − vendido líquido de estornos "
             f"{fmt_dinheiro(vendido)}, acumulados até a data; lojista sem histórico antes do mês). Reversões no mês: "
             f"{', '.join(reversoes) or 'nenhuma'}; no fim do mês a exposição é {fmt_dinheiro(serie[-1][1])}. Alerta, não "
-            f"muda nenhum valor. {cfg['citacao_fonte']}: '{cfg['citacao']}' valor_brl = exposição no pico",
+            f"muda nenhum valor. {cfg['citacao_fonte']}: '{cfg['citacao']}' Critério (ASSUMO, {cfg['criterio_fonte']}): "
+            f"'{cfg['criterio_citacao']}'. valor_brl = exposição no pico",
             cfg["quem_decide"],
         ))
         for t in ate:

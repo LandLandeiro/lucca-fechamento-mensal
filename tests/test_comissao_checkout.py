@@ -221,3 +221,12 @@ def test_alerta_usa_o_pico_da_exposicao(cadastro, regras):
     (p,) = alerta_antecipacao(ts, cadastro, (2026, 9), regras).pendencias
     assert p.valor_brl == Decimal("150") and "em 2026-09-12" in p.motivo  # 150 + 100 − 100; depois da reversão, 30
     assert "A2 revertida em 13/09 (R1)" in p.motivo and "no fim do mês a exposição é 30" in p.motivo
+
+
+def test_alerta_cita_o_criterio_da_helena(orbe, cadastro, regras):
+    """D81 (Q-AA 2): o critério segue ASSUMO, com a frase dela no motivo e o aceite na regra."""
+    from tarvo.calculos.alertas import alerta_antecipacao
+    (p,) = alerta_antecipacao(orbe.transacoes, cadastro, (2026, 9), regras).pendencias
+    assert "O que me preocupa é lojista novo, sem histórico, antecipando alto" in p.motivo
+    r = regras["checkout.alerta_antecipacao"]
+    assert r["status"] == "ASSUMO" and "Q-AA 2" in r["aceite"] and "Q-AG" in r["aceite"]

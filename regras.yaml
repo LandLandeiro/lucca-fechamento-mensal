@@ -203,8 +203,11 @@ checkout:
       quem_decide: "Helena + comercial"
       citacao: "Isso não deveria acontecer. A antecipação é sobre o que o lojista já vendeu, e a gente não tem trava para isso. Coloquem como alerta: quem precisa saber sou eu e o comercial, e ainda mais com a Atlas sem contrato assinado."
       citacao_fonte: "Helena 09:44, Q-N 6"
+      criterio_citacao: "O que me preocupa é lojista novo, sem histórico, antecipando alto. Não temos um limite definido. O critério é de vocês"
+      criterio_fonte: "Helena 11:37, Q-AA 2"
     status: ASSUMO
     autor: Lucca
+    aceite: "Helena 11:37 (Q-AA 2): 'O que me preocupa é lojista novo, sem histórico, antecipando alto ... O critério é de vocês: escrevam no HIPOTESES.md'; 11:49 (Q-AE 3): 'Esse critério é de vocês. O alerta é para mim e para o comercial e não muda nenhum número'; 12:50 (Q-AG, alerta pelo pico): 'A proposta é razoável: registrem no HIPOTESES.md e sigam'"
     fonte: >-
       decisão Lucca 17/10 (D66) sobre a Q-N 6. Motivo do recorte: para lojista com histórico a antecipação cobre
       recebíveis de meses anteriores, que não estão nos dados; o critério do mês inteiro daria alarme falso em 5
