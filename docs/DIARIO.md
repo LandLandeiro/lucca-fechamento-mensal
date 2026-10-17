@@ -158,3 +158,8 @@ Log cronológico: hora, etapa, o que foi feito, como foi verificado, commit.
 - **Feito:** `docs/CAUSA_RAIZ.md` (para o CFO: Casa, Rota, Bridge, Mundo Aberto, Atlas e a planilha, com as frases da Helena; por que o processo não pega; o que a solução muda; proposta de processo em 3 itens). `PROMPTS/MOMENTOS.md` reescrito com os 4 momentos mais fortes e os demais em resumo. README: tabela "Para a banca: onde ver cada critério". Cálculo e saída não mudaram.
 - **Verificado:** todo número da causa raiz recalculado de `saida/` (Casa 116 · 15.397,42; Rota 79 · 1.546,28; Bridge 5 · 29,95; Mundo Aberto 23 · 1.418,85; metade 709,46; Atlas 7.876,05 e 57 transações; repasses L34 e L60) e os 9 `id_saida` citados existem; commits citados no MOMENTOS conferidos.
 - **Commit:** `documentação para a banca: causa raiz, momentos e onde ver cada critério`.
+
+### 17/10 ~10h40 · Resumo das hipóteses
+- **Feito:** seção "Resumo" no topo do `HIPOTESES.md` (premissas por status, as 5 ASSUMO de maior impacto em R$ com o que muda se estiverem erradas, perguntas feitas × respostas de outros times aproveitadas); a H30 (substituída) foi para "Histórico (substituídas)" no fim, sem apagar nada.
+- **Verificado:** 43 linhas H continuam no arquivo (26 CONFIRMADO, 15 ASSUMO, 1 SEI, 1 substituída); valores tirados de `docs/AUDITORIA.md` item 4. Cálculo e saída não mudaram.
+- **Commit:** `HIPOTESES: resumo no topo e histórico das substituídas`.

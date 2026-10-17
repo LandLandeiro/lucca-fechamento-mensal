@@ -3,6 +3,17 @@
 Convenção: **SEI** = está nos dados · **ASSUMO** = premissa minha, sem confirmação · **CONFIRMADO** = o financeiro respondeu · **PENDENTE** = ninguém decidiu ainda (o cálculo dependente vira pendência).
 Espelho executável: `regras.yaml` (mesmo status, mesma fonte). Evidências: `docs/EXPLORACAO.md`.
 
+## Resumo
+
+- **43 premissas:** 26 CONFIRMADO, 15 ASSUMO, 1 SEI e 1 substituída (H30, em [Histórico](#histórico-substituídas)). Nenhuma PENDENTE.
+- **As 5 ASSUMO de maior impacto em R$** (medido em `docs/AUDITORIA.md` item 4, trocando só a regra):
+  1. **H35 · contrapartidas dos extratos:** decide a conta de 140 lançamentos (os maiores: liquidação da Ponte R$ 5.611.447,12, aportes R$ 5.235.464,43, repasses R$ 4.168.230,14). Se errada, muda a conta, não o valor, que vem do banco.
+  2. **H43 · EduAbroad no extrato:** R$ 456.260,16 (5 PIX por IA verificada, 394.222,69; 2 por decisão humana, 62.037,47). Se errada, esses lançamentos vão para outra conta; com limiar 0,9 em vez de 0,8, os 5 da IA viram decisão humana.
+  3. **H23 e H38 · conferências do extrato:** R$ 318.632,00 dependem do critério (300.000,00 em trânsito e 18.240,00 de aporte sem operação viram pendência; 392,00 de resgate acima do aplicado não vira). Se errada, muda a lista de pendências, não os números do fechamento.
+  4. **H39 · repasse à Atlas:** R$ 249.301,77 em 2.1.01.001 por regra, mesmo sem nota. Se errada, os 2 repasses vão para decisão humana junto com a pendência do comercial.
+  5. **H26 · spread negativo na divergência:** R$ 1.731,93 de diferença (−3.565,98 contra o contrato × −1.834,05 pelo Spread R$ do relatório, que é o valor contestado na H41). Se errada, muda o valor dessas 4 linhas em `divergencias_taxa.csv`.
+- **Perguntas:** 2 feitas por mim (Q-F, com 4 itens, e Q-K); 11 respostas a perguntas de outros times aproveitadas (Q-A a Q-E, Q-G a Q-J, Q-L e Q-M). Antes de perguntar, conferimos o canal para não repetir pergunta já respondida.
+
 ## Premissas
 
 | # | Tema | Premissa | Status | Base (arquivo/linha ou resposta) | Impacto se estiver errada | O que mudou |
@@ -35,7 +46,6 @@ Espelho executável: `regras.yaml` (mesmo status, mesma fonte). Evidências: `do
 | H27 | Arredondamento da divergência | Arredondamento comum por linha/operação | CONFIRMADO (Helena 21:13, Q-H; D27) | Q-H (a), (d) | Centavos | Era ASSUMO HALF_EVEN (D20) |
 | H28 | Reversão de antecipação na divergência | Líquida com a antecipação que ela anula (`id_referencia`), como o estorno | ASSUMO (Lucca, confirmada ~22h20, D17) | Helena 20:47: "a reversão só anula a taxa da antecipação que ela reverte" | Zero em set/2026 | — |
 | H29 | Discriminação das notas | CHECKOUT: "Serviço de intermediação de pagamentos (checkout) - competência MM/AAAA"; REMESSA: "Intermediação de operações de câmbio - participação de 50% do spread realizado - competência MM/AAAA" | ASSUMO (redação Lucca) | Helena 20:47 (d): "Algo simples com o serviço e a competência resolve" | Texto das 21 notas | — |
-| H30 | Conferência do repasse da Ponte | ~~Participação × "Spread total R$" declarado × nota REMESSA; a diferença vira pendência CONFERENCIA_REPASSE para a Helena, decomposta em negativos (contestar) e duplicata (avisar)~~ **Substituída pela H40 (Q-K, D38):** a pendência não prevê desconto | SUBSTITUÍDA (era ASSUMO Lucca ~22h20) | E-mail Ponte: crédito em 06/10, contestação em até 5 dias úteis | Era R$ 506,65 = 917,03 − 410,94 + 0,56; hoje a pendência vale o faturado, 39.543,45 (H40) | Q-K (Helena 22:33): "Não conte que ela vai descontar nada do repasse" |
 | H31 | Divergência de checkout × centavo de truncamento | Divergência só quando a taxa aplicada ≠ contratada, valor = round(bruto × (aplicada − contratada)); o centavo de truncamento da Orbe é resíduo, nunca divergência | CONFIRMADO (Helena 21:13, Q-H c; D27) | "Diferença de centavo por causa do truncamento da Orbe não é divergência" | Resíduo −9,07 em 969 linhas | Tolerância 0 do checkout removida |
 | H32 | Resíduo por linha | No máximo 1 centavo onde as taxas são iguais; até 2 onde diferem | ASSUMO (D29) | Truncar × arredondar dá 0 ou 1 centavo por linha | Critério do validador | O pedido dizia "< 0,01" estrito, que reprovaria 969 linhas corretas |
 | H33 | Contas: baixa e despesa direta | Obrigações de agosto e repasse da Ponte de 04/09 baixam a conta onde estavam; tarifas, aluguel, cloud, assinaturas e serviços entram direto na despesa do mês; sem clareza no extrato, premissa no HIPOTESES | CONFIRMADO (Helena 21:14, Q-I) | Q-I (a), (b) | Classificação dos extratos (E6b) | H24 (contas das obrigações) passou de ASSUMO a CONFIRMADO |
@@ -260,3 +270,11 @@ Fonte única dos textos: `docs/FINANCEIRO_SLACK.md` (copiado do Slack sem ediç�
 ## Origem do código
 
 - Alguns utilitários (parsers de valor/data em pt-BR, OFX, XLSX, camada de IA com saída estruturada e cache) vieram do ensaio de preparação de 16/10 à tarde, registrado em `PROMPTS/`.
+
+## Histórico (substituídas)
+
+Premissas que deixaram de valer, mantidas como estavam. A que vale hoje está indicada em cada linha.
+
+| # | Tema | Premissa | Status | Base (arquivo/linha ou resposta) | Impacto se estiver errada | O que mudou |
+|---|---|---|---|---|---|---|
+| H30 | Conferência do repasse da Ponte | ~~Participação × "Spread total R$" declarado × nota REMESSA; a diferença vira pendência CONFERENCIA_REPASSE para a Helena, decomposta em negativos (contestar) e duplicata (avisar)~~ **Substituída pela H40 (Q-K, D38):** a pendência não prevê desconto | SUBSTITUÍDA (era ASSUMO Lucca ~22h20) | E-mail Ponte: crédito em 06/10, contestação em até 5 dias úteis | Era R$ 506,65 = 917,03 − 410,94 + 0,56; hoje a pendência vale o faturado, 39.543,45 (H40) | Q-K (Helena 22:33): "Não conte que ela vai descontar nada do repasse" |
