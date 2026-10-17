@@ -7,6 +7,14 @@ name = "tarvo"
 version = "0.0.1"
 description = "Fechamento mensal da Tarvo Pagamentos (Desafio Barte AI)"
 requires-python = ">=3.12"
+# as mesmas do requirements.txt (mantido para quem instala por ele): `pip install -e .` instala tudo
+dependencies = [
+    "openpyxl>=3.1",
+    "pyyaml>=6.0",
+    "anthropic>=0.40",
+    "pydantic>=2.6",
+    "pytest>=8.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -36,8 +36,7 @@ cd tarvo-fechamento
 # 1. ambiente (troque o caminho se instalou o Python em outro lugar; com o "py launcher": py -3.12 -m venv .venv)
 & "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe" -m venv .venv
 
-# 2. dependências + o próprio pacote (o código fica em src/; sem o "-e ." o "python -m tarvo" não acha o módulo)
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+# 2. o pacote e as dependências (declaradas no pyproject.toml; o requirements.txt traz as mesmas)
 .\.venv\Scripts\python.exe -m pip install -e .
 
 # 3. fechamento (comando único) e testes

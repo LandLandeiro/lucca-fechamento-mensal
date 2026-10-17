@@ -130,5 +130,10 @@ Log cronológico: hora, etapa, o que foi feito, como foi verificado, commit.
 
 ### 17/10 ~09h30 · CI no GitHub Actions (D46)
 - **Feito:** `.github/workflows/ci.yml` (push; Ubuntu e Windows × Python 3.12 e 3.14; instala, testa, roda o fechamento sem chave com `TARVO_SEM_REDE=1`, `git diff --exit-code saida/`); selo e o que o CI garante no topo do README.
-- **Verificado:** ver o resultado das 4 execuções no próximo registro.
+- **Verificado:** as 4 execuções do `34b84fd` ficaram verdes (Ubuntu e Windows, Python 3.12 e 3.14; de 27 s a 1 min), conferido pelo Lucca na aba Actions.
 - **Commit:** `CI no GitHub Actions: Windows e Linux, 3.12 e 3.14, saída idêntica sem chave`.
+
+### 17/10 ~09h45 · Dependências no pyproject (D47)
+- **Feito:** `dependencies` no `pyproject.toml` (iguais ao `requirements.txt`, mantido); README e CI só com `pip install -e .`.
+- **Verificado:** venv novo, só `pip install -e .`: dependências importam e `pytest` 172 passed.
+- **Commit:** `dependências no pyproject: pip install -e . instala tudo`.
