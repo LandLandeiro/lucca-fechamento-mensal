@@ -101,19 +101,24 @@ def contestacao_ponte(cls: ClassificacaoRemessa, divergencias_remessa: list[dict
     # (b) spreads negativos
     negativos = sorted(cls.negativos, key=lambda x: x[0].linha_planilha)
     if negativos:
+        # D80 (Q-AA 3): o valor contestado é a diferença até o spread do contrato (o que pedir à Ponte); o Spread R$
+        # do relatório (o que aconteceu) fica ao lado, rotulado
         itens = []
         for op, cnpj in negativos:
             div = div_por_ref.get(op.ref_origem)
-            itens.append((op, cnpj, div["lojista"] if div else None, div, op.spread_brl,
-                          f"spread negativo no relatório; {op.observacao or 'sem observação'}"))
-        contra = sum((i[3]["diferenca_brl"] for i in itens if i[3]), ZERO)
-        total = sum((op.spread_brl for op, _ in negativos), ZERO)
+            pedir = div["diferenca_brl"] if div else op.spread_brl
+            itens.append((op, cnpj, div["lojista"] if div else None, div, pedir,
+                          f"spread negativo do relatório (o que aconteceu) {fmt_dinheiro(op.spread_brl)}; diferença até o "
+                          f"spread do contrato (o que pedir à Ponte) {fmt_dinheiro(pedir)}; {op.observacao or 'sem observação'}"))
+        pedir = sum((i[4] for i in itens), ZERO)
+        aconteceu = sum((op.spread_brl for op, _ in negativos), ZERO)
         registrar(
             f"PEN-{TIPO}-SPREAD_NEGATIVO", "SPREAD_NEGATIVO", itens,
             ", ".join(op.ref_origem for op, _ in negativos),
-            f"{len(negativos)} operações com spread negativo (trava de 2 horas vencida): Spread R$ "
-            f"{fmt_dinheiro(total)} no relatório ({fmt_dinheiro(contra)} contra o contrato). Fora da comissão e da nota; "
-            f"contestar com a Ponte (Helena 20:48 e 22:34)",
+            f"{len(negativos)} operações com spread negativo (trava de 2 horas vencida). Spread negativo do relatório "
+            f"(o que aconteceu): {fmt_dinheiro(aconteceu)}. Diferença até o spread do contrato (o que pedir à Ponte, "
+            f"valor desta pendência): {fmt_dinheiro(pedir)}. Fora da comissão e da nota (Helena 20:48, 22:34; "
+            f"Q-AA 3: 'Coloquem os dois na pendência, deixando claro qual é qual')",
         )
 
     # (c) duplicatas: conta uma vez no fechamento e entra na lista para a Ponte corrigir o relatório

@@ -446,7 +446,7 @@ remessa:
   valor_contestado:         # D39
     valor:
       SPREAD_ACIMA_DO_CONTRATADO: "Σ divergência COBROU_A_MAIS (valor cheio, remessa.formula_divergencia)"
-      SPREAD_NEGATIVO: "Σ Spread R$ do relatório (a divergência contra o contrato vai na lista, por operação)"
+      SPREAD_NEGATIVO: "Σ diferença até o spread do contrato (o que pedir à Ponte, D80/Q-AA 3); o Spread R$ do relatório (o que aconteceu) vai ao lado, rotulado"
       DUPLICATA: "Σ Spread R$ das cópias que ficaram fora"
     status: ASSUMO
     autor: Lucca

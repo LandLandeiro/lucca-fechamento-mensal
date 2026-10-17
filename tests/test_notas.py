@@ -93,7 +93,7 @@ def test_contestacao_ponte_uma_pendencia_por_motivo(saida):
     pend = {p["id_saida"]: p for p in _csv(pasta, "pendencias.csv") if p["tipo"] == "CONTESTACAO_PONTE"}
     assert {k: v["valor_brl"] for k, v in pend.items()} == {
         "PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111": "1418.85",
-        "PEN-CONTESTACAO_PONTE-SPREAD_NEGATIVO": "-1834.05",
+        "PEN-CONTESTACAO_PONTE-SPREAD_NEGATIVO": "-3565.98",  # D80: o que pedir à Ponte (até o contrato)
         "PEN-CONTESTACAO_PONTE-DUPLICATA": "821.88",
     }
     assert all(p["quem_decide"] == "Helena" for p in pend.values())
@@ -227,7 +227,7 @@ def test_rascunhos_de_contestacao(saida):
         "orbe_escola_bridge.md", "orbe_rota_global.md", "ponte_duplicata.md", "ponte_mundo_aberto.md", "ponte_spreads_negativos.md"]
     totais = {p.stem: re.search(r"total_brl=(-?\d+\.\d{2})", p.read_text(encoding="utf-8")).group(1) for p in pasta.glob("*.md")}
     assert totais == {"orbe_rota_global": "1545.86", "orbe_escola_bridge": "29.94",  # D74, D76: recuperar = a devolver
-                       "ponte_mundo_aberto": "1418.85", "ponte_spreads_negativos": "-1834.05",
+                       "ponte_mundo_aberto": "1418.85", "ponte_spreads_negativos": "-3565.98",
                       "ponte_duplicata": "821.88"}
     for nome, total in totais.items():
         assert sum(Decimal(l["valor_brl"]) for l in _csv(pasta, f"{nome}.csv")) == Decimal(total)
@@ -256,3 +256,18 @@ def test_rascunhos_deterministicos(tmp_path):
     executar(DADOS, b, RAIZ / "regras.yaml")
     for p in (a / "rascunhos").iterdir():
         assert p.read_bytes() == (b / "rascunhos" / p.name).read_bytes(), p.name
+
+
+def test_spread_negativo_com_os_dois_valores_rotulados(saida):
+    """D80 (Q-AA 3): 'o spread negativo do relatório, que é o que aconteceu, e a diferença até o spread do contrato,
+    que é o que eu vou pedir à Ponte'."""
+    pasta, _ = saida
+    (p,) = [p for p in _csv(pasta, "pendencias.csv") if p["id_saida"] == "PEN-CONTESTACAO_PONTE-SPREAD_NEGATIVO"]
+    assert p["valor_brl"] == "-3565.98"
+    assert "Spread negativo do relatório (o que aconteceu): -1834.05" in p["motivo"]
+    assert "o que pedir à Ponte, valor desta pendência): -3565.98" in p["motivo"]
+    md = (pasta / "rascunhos" / "ponte_spreads_negativos.md").read_text(encoding="utf-8")
+    assert "(o que aconteceu):** -R$ 1.834,05" in md and "(o que pedimos à Ponte):** -R$ 3.565,98" in md
+    lista = _csv(pasta / "rascunhos", "ponte_spreads_negativos.csv")
+    assert sum(Decimal(l["spread_brl"]) for l in lista) == Decimal("-1834.05")
+    assert sum(Decimal(l["valor_brl"]) for l in lista) == Decimal("-3565.98")
