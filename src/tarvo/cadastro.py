@@ -13,6 +13,7 @@ Fontes do vínculo EC → CNPJ, nesta ordem, sempre por igualdade exata:
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
@@ -108,6 +109,39 @@ def montar_cadastro(taxas: list[TaxaContratada], regras: dict, arquivo: str = ""
         ecs = tuple(sorted(e for e, c in cad.por_ec.items() if c == cnpj))
         cad.lojistas[cnpj] = Lojista(cnpj=cnpj, nome=lj.nome, ecs_orbe=ecs)
     return cad
+
+
+def normalizar_nome(texto: str) -> str:
+    """Maiúsculas, sem acento, espaços simples (para comparar nomes por igualdade/prefixo exato)."""
+    sem_acento = unicodedata.normalize("NFD", texto or "")
+    sem_acento = "".join(ch for ch in sem_acento if unicodedata.category(ch) != "Mn")
+    return " ".join(sem_acento.upper().split())
+
+
+def lojista_por_nome_bancario(cadastro: Cadastro, texto: str) -> tuple[str | None, str]:
+    """CNPJ do lojista cujo nome no extrato casa por PREFIXO EXATO com um nome da planilha (D31).
+
+    Casa se, normalizados, o texto do extrato é prefixo do nome da planilha (o banco corta o
+    nome: "ROTA GLOBAL INTERCAMBIO LT" → "ROTA GLOBAL INTERCAMBIO LTDA") ou o nome da planilha
+    é prefixo do texto terminando em fronteira de palavra ("KIWI EXPERIENCE" → "KIWI EXPERIENCE
+    TURISMO LT"). Não há similaridade nem distância de edição: "EDU ABROAD" não casa com
+    "EDUABROAD". Zero ou mais de um CNPJ → None com o motivo.
+    """
+    alvo = normalizar_nome(texto)
+    if not alvo:
+        return None, "nome vazio"
+    achados: dict[str, str] = {}
+    for cnpj, linhas in cadastro.linhas_por_cnpj.items():
+        for linha, _ in linhas:
+            nome = normalizar_nome(linha.lojista)
+            if nome.startswith(alvo) or (alvo.startswith(nome) and (len(alvo) == len(nome) or alvo[len(nome)] == " ")):
+                achados[cnpj] = linha.lojista
+    if len(achados) == 1:
+        cnpj, nome = next(iter(achados.items()))
+        return cnpj, f"prefixo exato de {nome!r}"
+    if not achados:
+        return None, f"{alvo!r} não é prefixo exato de nenhum lojista da planilha (nem o contrário)"
+    return None, f"{alvo!r} casa com mais de um lojista: {sorted(achados.values())}"
 
 
 def lojista_por_ec(cadastro: Cadastro, ec: str) -> Lojista | None:

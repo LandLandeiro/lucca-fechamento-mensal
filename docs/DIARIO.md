@@ -78,3 +78,9 @@ Log cronológico: hora, etapa, o que foi feito, como foi verificado, commit.
 - **Ponto levado ao Lucca:** o pedido dizia "|resíduo por linha| < 0,01"; truncar × arredondar dá exatamente 0,01 em 969 linhas, então o critério implementado é ≤ 0,01 (D29). Um teste novo errou o exemplo (escolhi uma linha da Casa, que tem taxa 0) e foi corrigido para a L6 TX88410316.
 - **Commit:** `Q-H/Q-I/Q-J: arredondamento comum, resíduo de truncamento e excesso da remessa`.
 
+### ~23h00–23h15 · E6b parte 1: extratos classificados só por regra
+- **Feito:** leitores do Aurora (UTF-8 com fallback Latin-1, linhas de dado pelo conteúdo, saldos e saldo corrido), do Meridiano (OFX pelo CHARSET do cabeçalho, FITID e linha física) e do plano de contas (lançáveis = ANALITICA + ACEITA_LANCTO=S). `classificacao_extratos` no `regras.yaml`: 26 regras por padrão de descrição, com sinal, sem número de linha (D32); as regras antigas por linha saíram. Lojista no extrato por prefixo exato (D31). Conferências: transferências entre contas, aportes × Ponte, aplicação × resgate em FIFO. Validador: cada lançamento uma vez, Σ Aurora = final − inicial, contas lançáveis, HUMANO sem conta.
+- **Verificado:** 184 lançamentos (84 + 100), 174 por regra, 10 HUMANO; Σ Aurora −2.532.423,41 = saldo final − saldo anterior; 3 transferências casadas no mesmo dia e L92 sem par; Ponte Aérea 18.240,00 sem operação; resgate de 09/09 com excesso de 392,00. `pytest`: 143 passed (cada regra com um caso de setembro).
+- **Alarme falso evitado:** a 1ª execução acusou divergência de aportes de −394.222,69 da EduAbroad, mas os aportes dela só não tinham sido identificados (nome do banco "EDU ABROAD"); somados à mão, batem com as operações. Lojista sem aporte identificado, havendo PIX RECEB sem regra, agora fica "não conferido" (D33).
+- **Commit:** `E6b parte 1: extratos classificados por regra, com conferências`.
+

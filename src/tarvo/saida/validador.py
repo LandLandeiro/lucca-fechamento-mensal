@@ -60,7 +60,7 @@ def _ler(caminho: Path, erros: list[str]) -> list[dict] | None:
 PREFIXOS_COBERTURA = ("COM-", "PEN-", "EXC-")
 PREFIXO_EXCLUSAO = "EXC-"
 # pendências derivadas de um número já calculado: reapontam linhas que já têm destino
-PREFIXOS_DERIVADOS = ("PEN-NF_NEGATIVA-", "PEN-CONFERENCIA_REPASSE-", "PEN-EXCESSO_REMESSA-")
+PREFIXOS_DERIVADOS = ("PEN-NF_NEGATIVA-", "PEN-CONFERENCIA_REPASSE-", "PEN-EXCESSO_REMESSA-", "PEN-APORTE_")
 
 
 def _d(texto: str | None) -> Decimal:
@@ -79,6 +79,9 @@ def validar_saida(
     modo_checkout: str | None = None,
     spread_ponte: dict[str, dict[tuple[str, int], Decimal]] | None = None,
     spread_declarado: Decimal | None = None,
+    refs_extratos: dict[str, set[tuple[str, int]]] | None = None,
+    saldos_extratos: dict[str, tuple[Decimal | None, Decimal | None]] | None = None,
+    contas_lancaveis: set[str] | None = None,
 ) -> list[str]:
     """Devolve a lista de erros encontrados (vazia = saída válida).
 
@@ -152,6 +155,8 @@ def validar_saida(
         erros.extend(_conservacao_checkout(dados, fonte_orbe, modo_checkout))
     if spread_ponte:
         erros.extend(_conservacao_remessa(dados, spread_ponte, spread_declarado))
+    if refs_extratos is not None or saldos_extratos is not None or contas_lancaveis is not None:
+        erros.extend(_extratos(dados, refs_extratos or {}, saldos_extratos or {}, contas_lancaveis))
 
     if refs_esperadas:
         for arquivo, esperadas in refs_esperadas.items():
@@ -292,3 +297,46 @@ def _conservacao_remessa(
                 f" + exclusões {partes['exclusões']} + pendências {partes['pendências']}"
             )
     return erros
+
+
+def _extratos(
+    dados: dict[str, list[dict]],
+    refs: dict[str, set[tuple[str, int]]],
+    saldos: dict[str, tuple[Decimal | None, Decimal | None]],
+    contas: set[str] | None,
+) -> list[str]:
+    """Lançamentos dos extratos: cada linha exatamente uma vez (LAN-…); Σ valor por banco = saldo
+    final − saldo inicial do próprio extrato (quando o extrato traz os dois); conta usada existe e é
+    lançável; REGRA/IA com conta, HUMANO sem."""
+    erros: list[str] = []
+    lan = dados.get("lancamentos_classificados.csv")
+    if lan is None:
+        return ["lancamentos_classificados.csv ausente"]
+    rastro = dados["rastro.csv"]
+    for arquivo, esperadas in refs.items():
+        esperadas = {(r, str(n)) for r, n in esperadas}
+        vistas = Counter((l["ref_origem"], l.get("linha_arquivo", "")) for l in rastro
+                         if l.get("arquivo_origem") == arquivo and l["id_saida"].startswith("LAN-"))
+        faltando = sorted(esperadas - set(vistas))
+        repetidas = sorted(r for r, n in vistas.items() if n > 1)
+        estranhas = sorted(set(vistas) - esperadas)
+        if faltando:
+            erros.append(f"{arquivo}: {len(faltando)} lançamentos sem classificação (ex.: {faltando[:5]})")
+        if repetidas:
+            erros.append(f"{arquivo}: {len(repetidas)} lançamentos classificados mais de uma vez (ex.: {repetidas[:5]})")
+        if estranhas:
+            erros.append(f"{arquivo}: {len(estranhas)} ref_origem que não existem no extrato (ex.: {estranhas[:5]})")
+    for banco, (inicial, final) in saldos.items():
+        soma = sum((_d(l["valor"]) for l in lan if l["banco"] == banco), Decimal("0"))
+        if inicial is not None and final is not None and soma != final - inicial:
+            erros.append(f"{banco}: Σ lançamentos {soma} ≠ saldo final {final} − saldo inicial {inicial} ({final - inicial})")
+    for l in lan:
+        conta, metodo = l.get("conta_codigo", ""), l.get("metodo", "")
+        if metodo in ("REGRA", "IA") and not conta:
+            erros.append(f"{l['id_saida']}: método {metodo} sem conta")
+        if metodo == "HUMANO" and conta:
+            erros.append(f"{l['id_saida']}: método HUMANO com conta {conta} (conta humana vem da decisão, não do código)")
+        if conta and contas is not None and conta not in contas:
+            erros.append(f"{l['id_saida']}: conta {conta} não existe ou não aceita lançamento (ANALITICA e ACEITA_LANCTO=S)")
+    return erros
+

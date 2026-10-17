@@ -110,6 +110,11 @@ extratos:
     status: SEI
     fonte: "docs/case.md (ref_origem); 05b: FITID único em 100/100"
     pergunta_ref: null
+  conta_banco:
+    valor: {AURORA: "1.1.01.001", MERIDIANO: "1.1.01.002"}
+    status: SEI
+    fonte: "04_plano: 1.1.01.001 'Banco Aurora C/C 4471-0' e 1.1.01.002 'Banco Meridiano C/C 90233-5 (Câmbio)' = conta dos extratos 05a (4471-0) e 05b (90233-5)"
+    pergunta_ref: null
 
 # ---------------------------------------------------------------------------
 # REGRAS DE NEGÓCIO
@@ -314,21 +319,6 @@ contabil:
     status: CONFIRMADO
     fonte: "Slack Helena 20:49"
     pergunta_ref: P02
-  obrigacoes_mes_anterior_contas:   # contrapartida de cada lançamento; a Helena devolveu a escolha ("me diga como você lançaria")
-    valor:
-      AURORA:
-        L15: "2.1.04.001"   # PAGTO SALARIOS - FOLHA 08/2026
-        L42: "2.1.03.003"   # PAGTO ISS SAO PAULO DAMSP 08/2026
-        L54: "2.1.04.002"   # GPS INSS 08/2026
-        L55: "2.1.04.003"   # GRF FGTS 08/2026
-        L57: "2.1.03.004"   # DEBITO DARF 0561 IRRF
-        L86: "2.1.03.001"   # DEBITO DARF 8109 PIS
-        L87: "2.1.03.002"   # DEBITO DARF 2172 COFINS
-      MERIDIANO:
-        MRD2026090132: {D: "1.1.01.002", C: "1.1.03.002"}   # TED RECEB PONTE CAMBIO SA REPASSE COMISSAO 08/2026
-    status: CONFIRMADO
-    fonte: "Slack Helena 21:14 (Q-I a): 'Se o valor já estava registrado, o pagamento ou recebimento baixa a conta onde ele estava, e não vira receita ou despesa de novo. Como respondi ao Lucca, a folha, os tributos de agosto e o repasse da Ponte de 04/09 já estavam registrados.' Contas: escolha do Lucca no plano de contas"
-    pergunta_ref: P02
   despesas_diretas:         # Q-I b; usado na E6b
     valor:
       categorias: [tarifas, aluguel, cloud, assinaturas, servicos]
@@ -337,21 +327,6 @@ contabil:
     status: CONFIRMADO
     fonte: "Slack Helena 21:14 (Q-I b): 'Além desses, nada estava provisionado: tarifas, aluguel, cloud, assinaturas e serviços entram direto na despesa do mês. Quando o extrato não deixar claro, declarem a premissa no HIPOTESES.md e sigam.'"
     pergunta_ref: P14
-  creditos_sem_origem:      # a Helena devolveu a decisão (20:49); decisão do Lucca
-    valor:
-      AURORA:
-        L50: {C: "1.1.09.002", pendencia: "PIX recebido sem identificação (CNPJ com DV inválido)"}
-        L65: {C: "2.1.01.001", pendencia: "motivo da devolução do PIX da Mundo Aberto"}
-        L92: {D: "1.1.09.001", nota: "cai no Meridiano em 01/10"}
-    status: ASSUMO
-    autor: Lucca
-    fonte: "decisão Lucca; a Helena devolveu a decisão (Slack Helena 20:49)"
-    pergunta_ref: P09
-  padroes_de_descricao:     # descrição → conta (preenchido na E6, cada padrão com fonte)
-    valor: null
-    status: PENDENTE
-    fonte: null
-    pergunta_ref: null
 
 classificacao:
   uso_ia:
@@ -375,3 +350,170 @@ classificacao:
     autor: Lucca
     fonte: "decisão Lucca 16/10 ~20h55 (D11): confiança ≥ 0,8, senão pendência"
     pergunta_ref: null
+
+# ---------------------------------------------------------------------------
+# CLASSIFICAÇÃO DOS EXTRATOS POR REGRA (E6b)
+# Cada regra: padrao (regex sobre a descrição normalizada: maiúsculas, sem acento, espaços
+# simples), sinal (+ entrada, − saída), conta (contrapartida analítica), e opcionalmente
+# lojista: true (o nome depois do padrão tem que ser um lojista do cadastro, por prefixo exato),
+# mes_anterior: true (o grupo `mes` tem que ser o mês anterior à competência do extrato) e
+# pendencia (texto: a linha é classificada e também vira pendência).
+# Avaliadas na ordem abaixo; a primeira que casa vale. Nunca citam número de linha.
+# ---------------------------------------------------------------------------
+
+classificacao_extratos:
+  aurora:
+    orbe_recebivel:
+      valor: {padrao: "^TED RECEBIDA .*ORBE ADQUIRENCIA", sinal: "+", conta: "1.1.03.001"}
+      status: ASSUMO
+      autor: Lucca
+      fonte: "baixa de recebível de adquirente (plano 1.1.03.001 'Recebíveis de adquirente - Orbe'); caso: 05a L9"
+      pergunta_ref: null
+    folha_mes_anterior:
+      valor: {padrao: "^PAGTO SALARIOS - FOLHA (?P<mes>\\d{2}/\\d{4})", sinal: "-", conta: "2.1.04.001", mes_anterior: true}
+      status: CONFIRMADO
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a): folha de agosto já provisionada → baixa; caso: 05a L15"
+      pergunta_ref: P02
+    iss:
+      valor: {padrao: "^PAGTO ISS", sinal: "-", conta: "2.1.03.003"}
+      status: CONFIRMADO
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a): tributos de agosto provisionados → baixa; caso: 05a L42"
+      pergunta_ref: P02
+    inss:
+      valor: {padrao: "^GPS INSS", sinal: "-", conta: "2.1.04.002"}
+      status: CONFIRMADO
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a); caso: 05a L54"
+      pergunta_ref: P02
+    fgts:
+      valor: {padrao: "^GRF FGTS", sinal: "-", conta: "2.1.04.003"}
+      status: CONFIRMADO
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a); caso: 05a L55"
+      pergunta_ref: P02
+    irrf:
+      valor: {padrao: "DARF 0561", sinal: "-", conta: "2.1.03.004"}
+      status: CONFIRMADO
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a); caso: 05a L57"
+      pergunta_ref: P02
+    pis:
+      valor: {padrao: "DARF 8109", sinal: "-", conta: "2.1.03.001"}
+      status: CONFIRMADO
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a); caso: 05a L86"
+      pergunta_ref: P02
+    cofins:
+      valor: {padrao: "DARF 2172", sinal: "-", conta: "2.1.03.002"}
+      status: CONFIRMADO
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a); caso: 05a L87"
+      pergunta_ref: P02
+    tarifa:
+      valor: {padrao: "^TAR |TARIFA", sinal: "-", conta: "4.2.01"}
+      status: CONFIRMADO
+      fonte: "Slack Helena 21:14 (Q-I b): tarifas = despesa direta do mês; casos: 05a L10, L90"
+      pergunta_ref: P14
+    condominio:
+      valor: {padrao: "BOLETO CONDOMINIO", sinal: "-", conta: "4.2.02"}
+      status: CONFIRMADO
+      fonte: "Slack Helena 21:14 (Q-I b): aluguel = despesa direta; caso: 05a L16"
+      pergunta_ref: P14
+    cloud:
+      valor: {padrao: "AMAZON WEB SERVICES", sinal: "-", conta: "4.2.03"}
+      status: CONFIRMADO
+      fonte: "Slack Helena 21:14 (Q-I b): cloud = despesa direta; caso: 05a L47"
+      pergunta_ref: P14
+    assinatura:
+      valor: {padrao: "GOOGLE WORKSPACE", sinal: "-", conta: "4.2.04"}
+      status: CONFIRMADO
+      fonte: "Slack Helena 21:14 (Q-I b): assinaturas = despesa direta; caso: 05a L48"
+      pergunta_ref: P14
+    servicos_contabeis:
+      valor: {padrao: "CONTABILIDADE", sinal: "-", conta: "4.2.06"}
+      status: CONFIRMADO
+      fonte: "Slack Helena 21:14 (Q-I b): serviços = despesa direta; caso: 05a L53"
+      pergunta_ref: P14
+    transferencia_meridiano:
+      valor: {padrao: "^TRANSF ENTRE CONTAS P/ BCO MERIDIANO", sinal: "-", conta: "1.1.09.001"}
+      status: ASSUMO
+      autor: Lucca
+      fonte: "transitória entre contas próprias (plano 1.1.09.001); casamento com o TED de mesma titularidade no Meridiano; casos: 05a L12, L44, L58, L92"
+      pergunta_ref: P09
+    pix_sem_identificacao:
+      valor: {padrao: "^PIX RECEBIDO .*SEM IDENTIFICACAO", sinal: "+", conta: "1.1.09.002",
+              pendencia: "PIX recebido sem identificação: não é receita até alguém identificar (Helena 20:49, Q-F 4a)"}
+      status: ASSUMO
+      autor: Lucca
+      fonte: "decisão Lucca; Slack Helena 20:49 (Q-F 4a): 'Não sei de quem é o Pix ... Não é receita até alguém identificar'; caso: 05a L50"
+      pergunta_ref: P09
+    devolucao_pix_lojista:
+      valor: {padrao: "^DEVOLUCAO PIX - (?P<lojista>.+)$", sinal: "+", conta: "2.1.01.001", lojista: true,
+              pendencia: "PIX de repasse que voltou; motivo ainda desconhecido (Helena 20:49, Q-F 4b)"}
+      status: ASSUMO
+      autor: Lucca
+      fonte: "decisão Lucca; Slack Helena 20:49 (Q-F 4b): 'A devolução é um Pix de repasse que voltou, e ainda não sei o motivo'; caso: 05a L65"
+      pergunta_ref: P09
+    repasse_lojista:
+      valor: {padrao: "^PIX ENVIADO (?P<lojista>.+)$", sinal: "-", conta: "2.1.01.001", lojista: true}
+      status: ASSUMO
+      autor: Lucca
+      fonte: "repasse a lojista (plano 2.1.01.001 'Repasses a lojistas a pagar'); casos: 05a L18–L41, L60–L84"
+      pergunta_ref: null
+  meridiano:
+    repasse_comissao_ponte:
+      valor: {padrao: "^TED RECEB PONTE CAMBIO .*REPASSE COMISSAO", sinal: "+", conta: "1.1.03.002"}
+      status: CONFIRMADO
+      fonte: "Slack Helena 20:49 (Q-F 3) e 21:14 (Q-I a): o repasse de 04/09 é o spread de agosto, já registrado como comissão a receber; caso: 05b MRD2026090132"
+      pergunta_ref: P02
+    liquidacao_ponte:
+      valor: {padrao: "^TED ENVIADA PONTE CAMBIO .*LIQ OPERACOES", sinal: "-", conta: "2.1.02.001"}
+      status: ASSUMO
+      autor: Lucca
+      fonte: "liquidação das remessas com recursos dos lojistas (plano 2.1.02.001); caso: 05b MRD2026090094"
+      pergunta_ref: null
+    mesma_titularidade:
+      valor: {padrao: "^TED RECEBIDA TARVO PAGAMENTOS .*MESMA TITULARIDADE", sinal: "+", conta: "1.1.09.001"}
+      status: ASSUMO
+      autor: Lucca
+      fonte: "transitória entre contas próprias (plano 1.1.09.001), contrapartida da transferência do Aurora; caso: 05b MRD2026090107"
+      pergunta_ref: null
+    tarifa:
+      valor: {padrao: "TARIFA", sinal: "-", conta: "4.2.01"}
+      status: CONFIRMADO
+      fonte: "Slack Helena 21:14 (Q-I b): tarifas = despesa direta; casos: 05b MRD2026090103, MRD2026090696"
+      pergunta_ref: P14
+    seguro:
+      valor: {padrao: "SEGURO", sinal: "-", conta: "4.2.05"}
+      status: ASSUMO
+      autor: Lucca
+      fonte: "Slack Helena 21:14 (Q-I b): 'nada estava provisionado' → despesa direta (seguro não citado nominalmente); caso: 05b MRD2026090292"
+      pergunta_ref: P14
+    iof:
+      valor: {padrao: "IOF", sinal: "-", conta: "4.3.01"}
+      status: ASSUMO
+      autor: Lucca
+      fonte: "plano 4.3.01 'IOF'; caso: 05b MRD2026090586"
+      pergunta_ref: null
+    aplicacao_automatica:
+      valor: {padrao: "^APLICACAO AUTOMATICA", sinal: "-", conta: "1.1.02.001"}
+      status: ASSUMO
+      autor: Lucca
+      fonte: "plano 1.1.02.001 'Aplicação automática Meridiano'; caso: 05b MRD2026090143"
+      pergunta_ref: null
+    resgate_automatico:
+      valor: {padrao: "^RESGATE AUTOMATICO", sinal: "+", conta: "1.1.02.001"}
+      status: ASSUMO
+      autor: Lucca
+      fonte: "plano 1.1.02.001; resgate acima do saldo aplicado (FIFO) vira pendência com proposta, sem dividir a linha; caso: 05b MRD2026090254"
+      pergunta_ref: null
+    aporte_lojista:
+      valor: {padrao: "^PIX RECEB (?P<lojista>.+)$", sinal: "+", conta: "2.1.02.001", lojista: true}
+      status: ASSUMO
+      autor: Lucca
+      fonte: "recursos de lojistas para remessas (plano 2.1.02.001); conferido contra as operações da Ponte; caso: 05b MRD2026090003"
+      pergunta_ref: null
+  conferencias:
+    valor:
+      transferencia_entre_contas: "cada TRANSF Aurora→Meridiano casa com um TED de mesma titularidade de mesmo valor em até 1 dia útil; sem par → pendência (em trânsito)"
+      aportes_ponte: "por lojista, Σ PIX RECEB no Meridiano × Σ (Valor R$ + IOF) das operações únicas da Ponte; a sobra igual a um aporte → pendência daquele aporte; outra sobra → pendência do lojista"
+      aplicacao_resgate: "FIFO entre aplicações e resgates; resgate acima do saldo aplicado → pendência com proposta (excesso como rendimento 3.2.01?), sem dividir a linha"
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca ~23h (E6b); Slack Helena 20:49 (Q-F 4c): 'A transferência saiu do Aurora em 30/09 e cai no Meridiano em 01/10'"
+    pergunta_ref: P09

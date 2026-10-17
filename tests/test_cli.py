@@ -23,7 +23,8 @@ def test_roda_o_minimo_e_valida(tmp_path, capsys):
     assert "VALIDADOR: OK" in out
     assert "conservação do checkout e da remessa fecha" in out
     assert {p.name for p in (tmp_path / "saida").iterdir()} == {
-        "comissoes_por_lojista.csv", "divergencias_taxa.csv", "notas_a_emitir.csv", "pendencias.csv", "rastro.csv"
+        "comissoes_por_lojista.csv", "divergencias_taxa.csv", "lancamentos_classificados.csv", "notas_a_emitir.csv",
+        "pendencias.csv", "rastro.csv",
     }
 
 

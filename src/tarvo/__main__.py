@@ -13,13 +13,18 @@ import sys
 from decimal import Decimal
 from pathlib import Path
 
-from tarvo.cadastro import montar_cadastro
+from tarvo.cadastro import montar_cadastro, normalizar_nome
 from tarvo.calculos.comissoes import comissao_checkout, ordem_comissao
 from tarvo.calculos.divergencias import divergencias_checkout, divergencias_remessa
 from tarvo.calculos.notas import conferencia_repasse, notas_a_emitir
 from tarvo.calculos.remessa import classificar_remessa, comissao_remessa
+from tarvo.classificacao.conferencias import conferir
+from tarvo.classificacao.por_regra import classificar_por_regra
 from tarvo.formatos import fmt_dinheiro, modo_arredondamento
+from tarvo.leitores.extrato_aurora import ler_extrato_aurora
+from tarvo.leitores.extrato_meridiano import ler_extrato_meridiano
 from tarvo.leitores.orbe import ErroLeitura, ler_orbe
+from tarvo.leitores.plano_contas import contas_lancaveis, ler_plano_contas
 from tarvo.leitores.ponte_email import ler_email, ler_operacoes
 from tarvo.leitores.taxas import ler_taxas_vigentes
 from tarvo.modelo import Aviso, Pendencia
@@ -31,6 +36,9 @@ from tarvo.saida.validador import validar_saida
 PADRAO_ORBE = "01_orbe_relatorio_comissoes_*.csv"
 PADRAO_TAXAS = "02_tabela_taxas_contratadas*.xlsx"
 PADRAO_PONTE = "03_email_ponte_cambio_*.eml"
+PADRAO_PLANO = "04_plano_de_contas*.csv"
+PADRAO_AURORA = "05a_extrato_banco_aurora_*.csv"
+PADRAO_MERIDIANO = "05b_extrato_banco_meridiano_*.ofx"
 ZERO = Decimal("0")
 
 
@@ -109,14 +117,41 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
     pend_repasse, rastro_repasse = conferencia_repasse(
         nf_remessa, ponte.totais_declarados.get("Spread total R$:"), cls_remessa, mail.corpo, ponte.arquivo, regras
     )
+    # extratos (E6b): classificação por regra + conferências entre fontes
+    competencia = next(iter(meses_orbe))
+    plano = contas_lancaveis(ler_plano_contas(achar_unico(dados, PADRAO_PLANO)))
+    aurora = ler_extrato_aurora(achar_unico(dados, PADRAO_AURORA))
+    meridiano = ler_extrato_meridiano(achar_unico(dados, PADRAO_MERIDIANO))
+    for ext in (aurora, meridiano):
+        meses = {(l.data.year, l.data.month) for l in ext.lancamentos}
+        if meses and meses != {competencia}:
+            avisos_extra.append(Aviso(ext.arquivo, "-", f"lançamentos em {sorted(meses)}; competência {competencia}"))
+        for li in ext.linhas_invalidas:
+            pend_leitura.append(Pendencia(f"PEN-LEITURA_INVALIDA-{ext.banco}-{li.ref_origem}", "LEITURA_INVALIDA",
+                                          f"{ext.arquivo}:L{li.linha_arquivo}", None, f"lançamento não lido: {li.motivo}",
+                                          "analista (conferir o extrato com o banco)"))
+    classif = [classificar_por_regra(ext.lancamentos, ext.linhas_arquivo, plano, regras, cadastro, competencia)
+               for ext in (aurora, meridiano)]
+    regra_por_lanc = {(l["banco"], l["ref_origem"]): l["regra_aplicada"] for c in classif for l in c.linhas}
+    linhas_por_lanc = {(ext.banco, ref): n for ext in (aurora, meridiano) for ref, n in ext.linhas_arquivo.items()}
+    conf = conferir(
+        regra_por_lanc, aurora.lancamentos + meridiano.lancamentos, linhas_por_lanc,
+        {k: v for c in classif for k, v in c.lojista_por_lancamento.items()},
+        cls_remessa.elegiveis + cls_remessa.negativos,
+        {cnpj: lj.nome for cnpj, lj in cadastro.lojistas.items()},
+        [lan for c in classif for lan, _ in c.sem_regra if normalizar_nome(lan.descricao).startswith("PIX RECEB ")],
+    )
+    lancamentos = [l for c in classif for l in c.linhas]
+
     pendencias = consolidar_pendencias(
         checkout.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura, notas.pendencias, pend_repasse,
-        div_remessa.pendencias_derivadas,
+        div_remessa.pendencias_derivadas, *[c.pendencias for c in classif], conf.pendencias,
     )
     divs = divergencias.linhas + div_remessa.linhas
     rastro = sorted(
         checkout.rastro + divergencias.rastro + remessa.rastro + div_remessa.rastro
-        + notas.rastro + notas.rastro_pendencias + rastro_repasse + div_remessa.rastro_pendencias,
+        + notas.rastro + notas.rastro_pendencias + rastro_repasse + div_remessa.rastro_pendencias
+        + [l for c in classif for l in c.rastro + c.rastro_pendencias] + conf.rastro_pendencias,
         key=lambda l: (l["id_saida"], l["linha_arquivo"], l["ref_origem"]),
     )
     escrever_saida(
@@ -124,6 +159,7 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
             "comissoes_por_lojista.csv": comissoes,
             "divergencias_taxa.csv": divs,
             "notas_a_emitir.csv": notas.linhas,
+            "lancamentos_classificados.csv": lancamentos,
             "pendencias.csv": [pendencia_para_linha(p) for p in pendencias],
             "rastro.csv": rastro,
         },
@@ -139,13 +175,23 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
         modo_checkout=modo_arredondamento(valor_da_regra(regras, "checkout.arredondamento_comissao_contratada")),
         spread_ponte={ponte.arquivo: {(o.ref_origem, o.linha_planilha): o.spread_brl for o in ponte.operacoes}},
         spread_declarado=ponte.totais_declarados.get("Spread total R$:"),
+        refs_extratos={ext.arquivo: {(l.ref_origem, ext.linhas_arquivo[l.ref_origem]) for l in ext.lancamentos}
+                       for ext in (aurora, meridiano)},
+        saldos_extratos={ext.banco: (ext.saldo_inicial, ext.saldo_final) for ext in (aurora, meridiano)},
+        contas_lancaveis=set(plano),
     )
     excl: dict[str, list] = {}
     for op, motivo, _ in cls_remessa.excluidas:
         excl.setdefault(motivo, []).append(op)
     return {
         "arquivos": [arq_orbe.name, arq_taxas.name, f"{arq_ponte.name} (anexo {mail.nome_anexo})"],
-        "avisos": orbe.avisos + taxas.avisos + cadastro.avisos + ponte.avisos + avisos_extra,
+        "avisos": orbe.avisos + taxas.avisos + cadastro.avisos + ponte.avisos + aurora.avisos + meridiano.avisos + avisos_extra,
+        "extratos": {
+            "leituras": (aurora, meridiano),
+            "classif": classif,
+            "conf": conf,
+            "pendencias": [p for c in classif for p in c.pendencias] + conf.pendencias,
+        },
         "remessa": {
             "comissoes": remessa.comissoes,
             "total": sum((c["comissao_brl"] for c in remessa.comissoes), ZERO),
@@ -244,6 +290,42 @@ def _imprimir_notas(r: dict) -> None:
         print(f"  pendência {p.id_saida} ({fmt_dinheiro(p.valor_brl)}), quem decide: {p.quem_decide}\n    {p.motivo}")
 
 
+def _imprimir_extratos(r: dict) -> None:
+    e = r["extratos"]
+    print("\nLançamentos classificados (por regra):")
+    for ext, c in zip(e["leituras"], e["classif"]):
+        soma = sum((l["valor"] for l in c.linhas), ZERO)
+        saldo = (f"saldo final − inicial {fmt_dinheiro(ext.saldo_final - ext.saldo_inicial)}"
+                 if ext.saldo_inicial is not None and ext.saldo_final is not None
+                 else f"sem saldo inicial no extrato (saldo final {fmt_dinheiro(ext.saldo_final)}; "
+                      f"inicial implícito {fmt_dinheiro(ext.saldo_final - soma)})")
+        print(f"  {ext.banco:<9} {len(c.linhas):>4} linhas: {len(c.linhas) - len(c.sem_regra)} por regra, "
+              f"{len(c.sem_regra)} sem regra; Σ {fmt_dinheiro(soma)} ({saldo})")
+        for regra, n in sorted(c.por_regra.items()):
+            print(f"      {regra:<40} {n:>3}")
+        for lan, motivo in c.sem_regra:
+            print(f"    SEM REGRA {lan.ref_origem} {lan.data.isoformat()} {fmt_dinheiro(lan.valor):>12}  {lan.descricao!r}: {motivo}")
+    conf = e["conf"]
+    print("  transferências Aurora → Meridiano:")
+    for saida, par in conf.transferencias:
+        print(f"    {saida.ref_origem} {saida.data.isoformat()} {fmt_dinheiro(saida.valor):>12} → "
+              + (f"{par.ref_origem} {par.data.isoformat()}" if par else "SEM PAR (pendência)"))
+    print("  aplicação × resgate (FIFO):")
+    for x in conf.resgates:
+        orig = ", ".join(f"{a.ref_origem} {fmt_dinheiro(u)}" for a, u in x["consumidas"])
+        print(f"    resgate {x['resgate'].ref_origem} {x['resgate'].data.isoformat()} {fmt_dinheiro(x['resgate'].valor):>11}"
+              f" ← {orig}" + (f"  EXCESSO {fmt_dinheiro(x['excesso'])}" if x["excesso"] else ""))
+    diverg = [a for a in conf.aportes if a["sobra"] != 0]
+    print(f"  aportes × operações da Ponte: {len(conf.aportes)} lojistas, {len(diverg)} com diferença")
+    for a in diverg:
+        print(f"    {a['cnpj']} {a['lojista'][:30]:<30} aportes {fmt_dinheiro(a['aportes'])} × operações "
+              f"{fmt_dinheiro(a['operacoes'])} → sobra {fmt_dinheiro(a['sobra'])}"
+              + ("  (NÃO CONFERIDO: nenhum aporte identificado; há PIX RECEB sem regra)" if a["nao_conferido"] else ""))
+    print(f"  pendências novas dos extratos: {len(e['pendencias'])}")
+    for p in e["pendencias"]:
+        print(f"    {p.id_saida} ({fmt_dinheiro(p.valor_brl) if p.valor_brl is not None else '-'}) → {p.quem_decide}")
+
+
 def main(argv: list[str] | None = None) -> int:
     for stream in (sys.stdout, sys.stderr):  # console cp1252 (Windows): troca o que não sabe mostrar
         if hasattr(stream, "reconfigure"):
@@ -275,6 +357,7 @@ def main(argv: list[str] | None = None) -> int:
     _imprimir_divergencias(r)
     _imprimir_remessa(r)
     _imprimir_notas(r)
+    _imprimir_extratos(r)
     if r["erros_validacao"]:
         print(f"\nVALIDADOR: {len(r['erros_validacao'])} ERRO(S)", file=sys.stderr)
         for e in r["erros_validacao"]:
@@ -282,7 +365,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     print(f"\nVALIDADOR: OK (rastro fecha com todos os totais; as {r['transacoes_lidas']} linhas da Orbe aparecem uma vez;"
           f" as {r['remessa']['linhas']} linhas do anexo da Ponte também; conservação do checkout e da remessa fecha;"
-          " notas = comissões)")
+          " notas = comissões; extratos: cada lançamento uma vez, Σ Aurora = saldo final − inicial, contas lançáveis)")
     print(f"saída: {args.saida}")
     return 0
 
