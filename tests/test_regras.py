@@ -54,11 +54,18 @@ def test_aprovado_por_em_toda_regra_confirmada(regras):
     """Q-S (Helena 09:49): taxa e condição comercial quem aprova é o comercial (ela registra); regra de fechamento, ela."""
     confirmadas = {k: r for k, r in regras.items() if r["status"] == "CONFIRMADO"}
     assert confirmadas and all("aprovado_por" in r for r in confirmadas.values())
-    assert all(r["aprovado_por"].startswith("comercial") for k, r in confirmadas.items() if k.startswith("cadastro."))
-    assert all(r["aprovado_por"] == "Helena" for k, r in confirmadas.items() if not k.startswith("cadastro."))
+    excecoes = {"cadastro.identificacao_sem_contrato"}  # identidade, não taxa: aprovada pela Helena (Q-AC 1)
+    assert all(r["aprovado_por"].startswith("comercial") for k, r in confirmadas.items() if k.startswith("cadastro.") and k not in excecoes)
+    assert all(r["aprovado_por"] == "Helena" for k, r in confirmadas.items() if not k.startswith("cadastro.") or k in excecoes)
 
 
 def test_venda_e_estorno_se_anulam_confirmado(regras):
     """Q-N 3 (Helena 09:44) confirma a D10."""
     r = regras["divergencias.estorno_de_venda_divergente"]
     assert r["status"] == "CONFIRMADO" and "Q-N 3" in r["fonte"]
+
+
+def test_valor_a_devolver_confirmado(regras):
+    """D79 (Q-AH, Helena 12:50): 'Devolvo o que saiu do bolso do lojista, o que foi descontado de fato.'"""
+    r = regras["divergencias.valor_a_devolver"]
+    assert r["status"] == "CONFIRMADO" and r["aprovado_por"] == "Helena" and "Q-AH" in r["fonte"]

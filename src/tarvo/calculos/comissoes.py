@@ -64,6 +64,38 @@ def id_comissao(cnpj: str, linha: str = LINHA) -> str:
 
 
 @dataclass
+class JuncaoOrbe:
+    transacoes: list[TransacaoOrbe]
+    pendencias: list[Pendencia] = field(default_factory=list)
+    rastro: list[dict] = field(default_factory=list)
+
+
+def juntar_relatorios_orbe(leituras: list) -> JuncaoOrbe:
+    """D75 (`orbe.ajustes_tardios`): o relatório da Orbe do mês e os ajustes tardios (06, opcional) formam um só conjunto de
+    transações; cada linha leva o seu arquivo no rastro. `id_transacao` repetido entre arquivos (uma correção?)
+    não conta em lugar nenhum: as linhas vão para uma pendência ID_REPETIDO_ORBE para a Helena (ASSUMO,
+    `orbe.id_repetido_entre_arquivos`; pergunta do Lucca 13:19 sem resposta)."""
+    por_id: dict[str, list[TransacaoOrbe]] = {}
+    for leitura in leituras:
+        for t in leitura.transacoes:
+            por_id.setdefault(t.ref_origem, []).append(t)
+    res = JuncaoOrbe([t for ts in por_id.values() if len({x.arquivo_origem for x in ts}) == 1 for t in ts])
+    for ref, ts in sorted(por_id.items()):
+        if len({x.arquivo_origem for x in ts}) == 1:
+            continue
+        pid = f"PEN-ID_REPETIDO_ORBE-{ref}"
+        onde = ", ".join(f"{x.arquivo_origem} linha {x.linha_arquivo}" for x in ts)
+        res.pendencias.append(Pendencia(
+            pid, "ID_REPETIDO_ORBE", ref, sum((x.valor_taxa for x in ts), Decimal("0")),
+            f"id_transacao {ref} aparece em mais de um arquivo da Orbe ({onde}): pode ser correção de uma linha. "
+            f"Nenhuma das linhas entra na comissão até a Helena dizer qual vale. valor_brl = taxa cobrada, informativo",
+            "Helena",
+        ))
+        res.rastro.extend(_linha_rastro(pid, x, x.valor_taxa, None, "id repetido entre arquivos da Orbe") for x in ts)
+    return res
+
+
+@dataclass
 class SeparacaoCompetencia:
     competencia: tuple[int, int]
     dentro: list[TransacaoOrbe]
@@ -113,6 +145,8 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
     sem_contrato = {str(k): v for k, v in valor_da_regra(regras, "cadastro.lojista_sem_contrato_vigente").items()
                     if str(k) not in cadastro.por_ec}  # D67: com contrato na aba vigente, vale a planilha
     mapa_colunas = valor_da_regra(regras, "taxas.coluna_por_produto")
+    identificacao = {str(k): v for k, v in (valor_da_regra(regras, "cadastro.identificacao_sem_contrato")
+                                           if "cadastro.identificacao_sem_contrato" in regras else {}).items()}
 
     res = ResultadoCheckout()
     for ec in sorted(str(k) for k in valor_da_regra(regras, "cadastro.lojista_sem_contrato_vigente")):
@@ -139,9 +173,13 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
     def cnpj_da(t: TransacaoOrbe) -> str | None:
         ec = t.cod_estabelecimento
         if ec in sem_contrato:
+            ident = identificacao.get(ec)  # D82: identidade da aba antiga (a taxa de lá não vale, Q-AC 1)
+            quem_e = (f"{ident['nome']}, CNPJ {ident['cnpj']} (identificação: {ident['origem']}; só a identidade, a taxa "
+                      f"daquela aba não vale)" if ident else t.nome_estabelecimento)
             pendente_grupo(t, "SEM_CONTRATO_VIGENTE", f"EC{ec}",
-                           f"EC {ec} sem contrato na aba vigente; 'Não fatura a Atlas até o comercial confirmar' "
-                           f"(Helena 20:24). valor_brl = taxa cobrada pela Orbe, informativo",
+                           f"EC {ec}, {quem_e}: sem contrato na aba vigente; 'Não fatura a Atlas até o comercial confirmar' "
+                           f"(Helena 20:24). Fora de comissoes_por_lojista.csv e de notas, com as transações aqui (Q-AC 2). "
+                           f"valor_brl = taxa cobrada pela Orbe, informativo",
                            "comercial")
             return None
         cnpj = cadastro.por_ec.get(ec)

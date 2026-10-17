@@ -20,6 +20,20 @@ orbe:
     status: SEI
     fonte: "01_orbe: 1.001 linhas só fecham truncando, 0 arredondando (ex.: TX88410128 5.773,57 × 3,79% = 218,818 → 218,81)"
     pergunta_ref: null
+  ajustes_tardios:          # D75
+    valor: >-
+      06_orbe_ajustes_tardios_<mês>.csv, mesmo formato do 01, é parte do relatório da Orbe do mês: lido junto, com o
+      próprio arquivo no rastro; opcional (se faltar, segue sem aviso). Cada linha passa pelas mesmas regras (estorno,
+      reversão, venda)
+    status: SEI
+    fonte: "mensagem da organização 17/10 13:10: 'A Orbe mandou os ajustes de setembro que ficaram fora do relatório ... no mesmo formato do arquivo 01 ... O fechamento entregue às 18h30 precisa considerar esse arquivo.' Opcional: decisão Lucca 17/10"
+    pergunta_ref: null
+  id_repetido_entre_arquivos:   # D75
+    valor: "id_transacao em mais de um arquivo da Orbe (01 e 06): nenhuma das linhas conta; pendência ID_REPETIDO_ORBE para a Helena"
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca 17/10 (D75); pergunta ao financeiro 13:19 (se o ajuste corrige uma linha, vale o ajuste?) sem resposta. Não acontece em setembro"
+    pergunta_ref: null
   liquido_igual_bruto_menos_taxa:
     valor: true
     status: SEI
@@ -189,8 +203,11 @@ checkout:
       quem_decide: "Helena + comercial"
       citacao: "Isso não deveria acontecer. A antecipação é sobre o que o lojista já vendeu, e a gente não tem trava para isso. Coloquem como alerta: quem precisa saber sou eu e o comercial, e ainda mais com a Atlas sem contrato assinado."
       citacao_fonte: "Helena 09:44, Q-N 6"
+      criterio_citacao: "O que me preocupa é lojista novo, sem histórico, antecipando alto. Não temos um limite definido. O critério é de vocês"
+      criterio_fonte: "Helena 11:37, Q-AA 2"
     status: ASSUMO
     autor: Lucca
+    aceite: "Helena 11:37 (Q-AA 2): 'O que me preocupa é lojista novo, sem histórico, antecipando alto ... O critério é de vocês: escrevam no HIPOTESES.md'; 11:49 (Q-AE 3): 'Esse critério é de vocês. O alerta é para mim e para o comercial e não muda nenhum número'; 12:50 (Q-AG, alerta pelo pico): 'A proposta é razoável: registrem no HIPOTESES.md e sigam'"
     fonte: >-
       decisão Lucca 17/10 (D66) sobre a Q-N 6. Motivo do recorte: para lojista com histórico a antecipação cobre
       recebíveis de meses anteriores, que não estão nos dados; o critério do mês inteiro daria alarme falso em 5
@@ -255,9 +272,9 @@ divergencias:
     pergunta_ref: P03
   estorno_de_venda_divergente:
     valor: >-
-      divergência calculada por transação e líquida com os estornos dela (id_referencia) no mesmo mês;
-      só vai para divergencias_taxa.csv se o líquido ≠ 0; venda e estorno continuam no rastro com a nota
-      "estornada em <data> por <id>"; estorno parcial ou estorno em mês seguinte: a divergência é listada
+      divergencias_taxa.csv lista transação por transação: a venda e o estorno dela (id_referencia) no mesmo mês
+      entram as duas, o estorno com valor negativo (D77, Q-AB 3); pendências, devolução e cobrança da Orbe seguem
+      pelo líquido do grupo (Q-N 3), então um par que se anula não cobra nem devolve nada
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
     fonte: "Slack Helena 09:44 (Q-N 3): 'A venda e o estorno se anulam. Cobro da Orbe só o que sobrou de diferença líquida.' Era decisão Lucca 16/10 ~20h55 (D10). Caso real: 4 estornos da Rota Global, −R$ 98,44"
@@ -276,33 +293,32 @@ divergencias:
       e as transações no rastro (detalhe em divergencias_taxa.csv). Base: Slack Helena 20:05 ('Isso eu decido, não
       vai automático. Preciso ver cada caso com transação e valor') e 20:49 (Q-F 2, Casa: 'junto com o comercial')
     pergunta_ref: P03
-  valor_a_devolver:         # D71: separado do valor da divergência (Q-H c), que não muda
+  valor_a_devolver:         # D71, CONFIRMADO (D79): separado do valor da divergência (Q-H c), que não muda
     valor: >-
       checkout: valor_a_devolver_brl = Σ por grupo (venda + estornos/reversões dela) de (valor_taxa cobrado pela Orbe −
       comissão contratada, bruto × taxa contratada arredondado meio para cima, Q-H a), só nas transações divergentes.
       É o que as pendências, os rascunhos e os totais de devolver/recuperar usam; diferenca_brl segue a Q-H c
-    status: ASSUMO
-    autor: Lucca
+    status: CONFIRMADO
+    aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
     fonte: >-
-      decisão Lucca 17/10 (D71). Q-U 4 (Helena 10:44): 'A Orbe já liquida o líquido ... quando a Orbe cobra a mais, o
+      Slack Helena 12:50 (Q-AH): 'Devolvo o que saiu do bolso do lojista, o que foi descontado de fato. A diferença para a
+      fórmula é centavo: segue como você fez.' Proposta Lucca 17/10 (D71, CONFIRMADO na D79). Q-U 4 (Helena 10:44): 'A Orbe já liquida o líquido ... quando a Orbe cobra a mais, o
       lojista já recebeu a menos e eu preciso devolver' → não se devolve nem se cobra mais do que foi descontado.
       Q-H c (21:13) continua valendo para diferenca_brl: 'O valor da divergência eu quero como valor bruto × (taxa
       aplicada − contratada)'. Diferença em setembro: o centavo de truncamento da Orbe (Casa −0,65, Rota −0,42, Bridge −0,01)
     pergunta_ref: P12
   natureza:                 # D63: coluna `natureza` de divergencias_taxa.csv (lista fechada)
     valor:
-      contrato_orbe: "checkout: a Orbe aplicou taxa diferente do contrato que ela conhecia; devolver ao lojista E recuperar o mesmo valor da Orbe (Helena 20:05; Q-U 4: a Orbe liquida o líquido); D74"
+      contrato_orbe: "checkout: a Orbe aplicou taxa diferente de uma condição contratada (com ou sem aviso: 'O que decide é o contrato, não o aviso', Helena 11:37, Q-AA 1); devolver ao lojista E recuperar o mesmo valor da Orbe (Helena 20:05; Q-U 4); D74, D76"
       condicao_nao_informada:
         definicao: >-
-          checkout: a taxa contratada vem de uma condição que a Orbe não recebeu: condição especial do regras.yaml,
-          ou a Orbe aplicou exatamente a taxa da linha anterior da planilha (vigência já encerrada na data).
-          Só devolver ao lojista (o lojista recebeu o líquido, Q-U 4); nada a recuperar da Orbe; sem rascunho para a
-          Orbe. Devolver − recuperar = este valor: o custo para a Tarvo de a Orbe não ter sido avisada (D74)
+          checkout: a taxa contratada vem de uma condição especial do comercial (cadastro.condicoes_especiais), fora do
+          contrato com a Orbe. Só devolver ao lojista (o lojista recebeu o líquido, Q-U 4); nada a recuperar da Orbe;
+          sem rascunho para a Orbe. Devolver − recuperar = este valor: o custo para a Tarvo (D74). D76: a Bridge saiu
+          daqui ("O que decide é o contrato, não o aviso", Q-AA 1)
         quem_decide: "Helena + comercial"
-        citacao: "A Orbe cobrou certo pela planilha, porque ninguém avisou da isenção. Não há o que cobrar da Orbe: é devolução ao lojista, pendência minha com o comercial."
-        citacao_fonte: "Helena 09:44, Q-N 1"
-        avisos_conhecidos:   # por CNPJ: o que se sabe do aviso à Orbe
-          "22224579000109": "Helena 09:53, Q-T 1: 'A Bridge foi avisada alguns dias depois de 15/09'"
+        citacao: "A Casa é outra coisa. É uma concessão do comercial, fora do contrato, para segurar o cliente. A Orbe cobrou o que estava contratado. Quem abriu mão da receita fomos nós, então a devolução sai do nosso bolso."
+        citacao_fonte: "Helena 11:37, Q-AA 1"
       spread_acima_contrato: "remessa: o lojista pagou spread acima do contratado; a Helena contesta com a Ponte (Helena 20:48, 20:58)"
       spread_abaixo_contrato: "remessa: o lojista pagou spread abaixo do contratado (não aconteceu em setembro)"
       spread_negativo: "remessa: spread negativo; o lojista não pagou a mais, o prejuízo é da Tarvo com a Ponte (Helena 09:44, Q-O); contestação"
@@ -336,6 +352,16 @@ remessa:
     autor: Lucca
     aceite: "Slack Helena 09:45 (Q-P 2): 'Não aconteceu em setembro. Se acontecer, o tratamento que vocês propuseram é razoável. Registrem como premissa.'"
     fonte: "proposta dos Desbravadores (Q-P 2), aceita pela Helena como premissa; cadastro e contrato quem decide é o comercial (Q-X 1). Não acontece em setembro"
+    pergunta_ref: null
+  ajuste_contestacao:       # D83 (Q-Z): regra registrada; o abatimento ainda não é calculado (vira pendência AJUSTE_PONTE)
+    valor:
+      identificacao: "linha nova do relatório, Nº de Operação próprio, Spread R$ negativo, observação 'AJUSTE REF PC-…' com a operação original"
+      tratamento: "entra no mês em que aparece; abate a nossa participação daquele mês dentro da nota única da Ponte; rastro para a operação original; sem nota complementar; mês zerado ou negativo: não emite e vira pendência para a Helena"
+      em_aberto: "se o Spread R$ do ajuste é o spread inteiro (a participação cai pela metade) ou já é a participação: pergunta dos Desbravadores 12:04, sem resposta"
+      hoje: "a linha vira pendência AJUSTE_PONTE para a Helena, fora da comissão (não é tratada como spread negativo)"
+    status: CONFIRMADO
+    aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
+    fonte: "Slack Helena 11:33 (Q-Z): 'A Ponte manda o ajuste como uma linha nova, com Nº de Operação próprio e o Spread R$ negativo. A observação traz o número da operação original (“AJUSTE REF PC-…”). Ele entra no mês em que aparece. Abate a nossa participação daquele mês, dentro da nota única para a Ponte, e o rastro aponta para a operação original. Nota complementar não fazemos.' Setembro não tem ajuste"
     pergunta_ref: null
   spread_negativo_por_observacao:   # D60: a coluna Observação do anexo decide
     valor:
@@ -433,7 +459,7 @@ remessa:
   valor_contestado:         # D39
     valor:
       SPREAD_ACIMA_DO_CONTRATADO: "Σ divergência COBROU_A_MAIS (valor cheio, remessa.formula_divergencia)"
-      SPREAD_NEGATIVO: "Σ Spread R$ do relatório (a divergência contra o contrato vai na lista, por operação)"
+      SPREAD_NEGATIVO: "Σ diferença até o spread do contrato (o que pedir à Ponte, D80/Q-AA 3); o Spread R$ do relatório (o que aconteceu) vai ao lado, rotulado"
       DUPLICATA: "Σ Spread R$ das cópias que ficaram fora"
     status: ASSUMO
     autor: Lucca
@@ -462,6 +488,13 @@ cadastro:
     aprovado_por: "comercial (registro: Helena)"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
     fonte: "Slack Helena 20:24 ('Não fatura a Atlas até o comercial confirmar')"
     pergunta_ref: P04
+  identificacao_sem_contrato:   # D82 (Q-AC 1): só identidade; a taxa da aba antiga não vale
+    valor:
+      "1076801732": {nome: "Atlas Idiomas Ltda", cnpj: "39566044000119", origem: "02_taxas, aba 'ANTIGO 2025 - nao usar', A8:B8"}
+    status: CONFIRMADO
+    aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
+    fonte: "Slack Helena 11:41 (Q-AC 1): 'Sim, o CNPJ é da Atlas, é a mesma empresa. Podem usar para identificar. Só a taxa daquela aba é que não vale.' Apuração (Q-AC 2): fora do arquivo de comissões, com pendência (D82)"
+    pergunta_ref: null
   # D61: condições comerciais fora da planilha, uma por item. Uma condição nova = um item novo (o código não muda).
   # Campos: id, cnpj, linhas_negocio (CHECKOUT e/ou REMESSA), taxa (fração por grupo: MDR = débito, crédito,
   # parcelado e Pix; ANTECIPACAO; REMESSA = spread contratado), vigencia {inicio, fim}, fonte; opcionais para a
@@ -492,14 +525,11 @@ cadastro:
     pergunta_ref: P08
 
 contabil:
-  provisao_do_mes:          # D72 (Q-R 3)
-    valor:
-      fato: "todo mês a folha e os impostos do mês ficam provisionados no fechamento; o pagamento no mês seguinte baixa a provisão"
-      pacote: "o pacote do mês não traz folha nem apuração de impostos do próprio mês: pendência para a Helena, sem valor"
-      referencia: [aurora.folha_mes_anterior, aurora.iss, aurora.inss, aurora.fgts, aurora.irrf, aurora.pis, aurora.cofins]
+  provisao_do_mes:          # D72, retirada na D78 (Q-AE 2)
+    valor: "fora do fechamento: a provisão de folha e impostos do mês é feita pela contabilidade com a Helena, com a folha e as guias (fora do pacote); o fechamento classifica o que passou nos extratos"
     status: CONFIRMADO
     aprovado_por: "Helena"   # Q-S: taxa e condição comercial = comercial; regra de fechamento = Helena
-    fonte: "Slack Helena 09:48 (Q-R 3): 'Sempre. Todo mês a folha e os impostos do mês ficam provisionados no fechamento, e o pagamento no mês seguinte baixa a provisão.' Pendência sem valor: decisão Lucca 17/10 (D72), nada estimado"
+    fonte: "Slack Helena 11:49 (Q-AE 2): 'Fica fora do fechamento de vocês. A provisão de setembro quem faz é a contabilidade, comigo, com a folha e as guias, e isso não está no pacote. O fechamento de vocês classifica o que passou nos extratos.' Antes (D72): pendência sem valor, pela Q-R 3"
     pergunta_ref: null
   obrigacoes_mes_anterior_fatos:
     valor: >-

@@ -61,10 +61,10 @@ def test_resumo_para_o_financeiro(tmp_path, capsys):
     assert main(["--dados", str(RAIZ / "data"), "--saida", str(tmp_path / "saida")]) == 0
     out = capsys.readouterr().out
     resumo = out[out.index("RESUMO DO FECHAMENTO"):]
-    for trecho in ("RESUMO DO FECHAMENTO - setembro de 2026", "R$ 207.039,73", "R$ 39.543,45", "R$ 246.588,68  (21 notas)",
-                   "checkout, devolver aos lojistas:          R$ 16.972,57  (200 transações)",
-                   "recuperar da Orbe (contrato):            R$ 1.545,86",
-                   "custo para a Tarvo (Orbe não avisada):    R$ 15.426,71", "por regra 184, por IA conferida 0, por decisão de uma pessoa 0",
-                   "Pendências: 16", "os 6 do fechamento: comissoes_por_lojista.csv"):
+    for trecho in ("RESUMO DO FECHAMENTO - setembro de 2026", "R$ 203.735,34", "R$ 39.543,45", "R$ 243.284,29  (21 notas)",
+                   "checkout, devolver aos lojistas:          R$ 16.972,57  (210 transações)",
+                   "recuperar da Orbe (contrato):            R$ 1.575,80",
+                   "custo para a Tarvo (condição especial):    R$ 15.396,77", "por regra 184, por IA conferida 0, por decisão de uma pessoa 0",
+                   "Pendências: 15", "os 6 do fechamento: comissoes_por_lojista.csv"):
         assert trecho in resumo, trecho
     assert "−" not in resumo  # console cp1252 do Windows não tem o sinal de menos tipográfico

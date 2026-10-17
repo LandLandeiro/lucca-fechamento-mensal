@@ -3,11 +3,14 @@
 **Para:** Ponte Câmbio S.A.
 **Assunto:** Spreads negativos - trava vencida - setembro de 2026
 
-Em 4 operações de setembro de 2026, o relatório traz spread negativo com a observação de taxa travada no pedido. Pelo contrato, a trava vale 2 horas, e essas operações passaram do prazo. Não aceitamos esses spreads; o total abaixo é o Spread R$ do relatório. Subtotais por lojista: Canguru -R$ 509,22; Dublin Hub Intercâmbio Ltda -R$ 292,28; Novo Horizonte Intercambio -R$ 345,03; Ponte Aérea Estudantil Ltda -R$ 687,52.
+Em 4 operações de setembro de 2026, o relatório traz spread negativo com a observação de taxa travada no pedido. Pelo contrato, a trava vale 2 horas, e essas operações passaram do prazo: a trava deveria ter sido honrada.
 
-Pedimos a revisão dessas operações. A lista anexa traz cada uma, com o valor contra o contrato.
+- **Spread negativo do relatório (o que aconteceu):** -R$ 1.834,05
+- **Diferença até o spread do contrato (o que pedimos à Ponte):** -R$ 3.565,98, por lojista: Canguru -R$ 1.001,30; Dublin Hub Intercâmbio Ltda -R$ 574,90; Novo Horizonte Intercambio -R$ 637,91; Ponte Aérea Estudantil Ltda -R$ 1.351,87.
 
-**Total:** -R$ 1.834,05 (`total_brl=-1834.05`)
+Pedimos a revisão dessas operações pelo spread do contrato. A lista anexa traz cada uma, com os dois valores.
+
+**Total:** -R$ 3.565,98 (`total_brl=-3565.98`)
 
 **Anexo:** `ponte_spreads_negativos.csv` (uma linha por transação/operação).
 

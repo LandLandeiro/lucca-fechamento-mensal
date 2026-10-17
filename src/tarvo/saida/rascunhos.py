@@ -114,11 +114,14 @@ def gerar_rascunhos(saida: Path, divergencias: list[dict], contestacao: list[dic
         "SPREAD_NEGATIVO": lambda ls: (
             "ponte_spreads_negativos", f"Spreads negativos - trava vencida - {mes}",
             [f"Em {len(ls)} operações de {mes}, o relatório traz spread negativo com a observação de taxa travada no pedido. "
-             f"Pelo contrato, a trava vale 2 horas, e essas operações passaram do prazo. Não aceitamos esses spreads; o "
-             f"total abaixo é o Spread R$ do relatório. Subtotais por lojista: "
+             f"Pelo contrato, a trava vale 2 horas, e essas operações passaram do prazo: a trava deveria ter sido honrada.",
+             "",
+             f"- **Spread negativo do relatório (o que aconteceu):** {fmt_brl(sum((l['spread_brl'] for l in ls), ZERO))}",
+             f"- **Diferença até o spread do contrato (o que pedimos à Ponte):** "
+             f"{fmt_brl(sum((l['valor_contestado_brl'] for l in ls), ZERO))}, por lojista: "
              + "; ".join(f"{n} {fmt_brl(sum((l['valor_contestado_brl'] for l in ls if l['lojista'] == n), ZERO))}"
                          for n in sorted({l['lojista'] for l in ls})) + ".",
-             "", "Pedimos a revisão dessas operações. A lista anexa traz cada uma, com o valor contra o contrato."]),
+             "", "Pedimos a revisão dessas operações pelo spread do contrato. A lista anexa traz cada uma, com os dois valores."]),
         "DUPLICATA": lambda ls: (
             "ponte_duplicata", f"Operação repetida no relatório - {mes}",
             [f"O relatório de {mes} traz {len(ls)} operação(ões) repetida(s) com o mesmo número "

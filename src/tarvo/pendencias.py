@@ -63,21 +63,3 @@ def ler_pendencias_anteriores(caminho: Path) -> list[dict]:
         raise ValueError(f"{caminho}: não parece um pendencias.csv (faltam {faltando})")
     return linhas
 
-
-def pendencia_provisao(competencia: tuple[int, int], lancamentos: list[dict], regras: dict) -> Pendencia:
-    """D72 (Q-R 3, `contabil.provisao_do_mes`): a provisão de folha e impostos do mês é sempre feita no fechamento,
-    mas os valores não vêm no pacote. Pendência para a Helena, sem valor (nada é estimado). ref_origem = os pagamentos
-    das obrigações do mês anterior no extrato, que mostram o que se repete (e que no mês seguinte baixam a provisão)."""
-    from tarvo.formatos import nome_mes
-    from tarvo.regras import valor_da_regra
-    cfg = valor_da_regra(regras, "contabil.provisao_do_mes")
-    refs = [l["ref_origem"] for l in lancamentos if l["regra_aplicada"] in cfg["referencia"]]
-    ano, mes = competencia
-    return Pendencia(
-        f"PEN-PROVISAO_DO_MES-{ano}-{mes:02d}", "PROVISAO_DO_MES", "|".join(refs), None,
-        f"provisão de folha e impostos de {nome_mes(mes)}: valores fora do pacote. Helena 09:48 (Q-R 3): 'Sempre. Todo mês "
-        f"a folha e os impostos do mês ficam provisionados no fechamento, e o pagamento no mês seguinte baixa a provisão.' "
-        f"Nenhum valor estimado. ref_origem = os {len(refs)} pagamentos das obrigações do mês anterior neste extrato "
-        f"(o mesmo conjunto que a provisão de {nome_mes(mes)} deve cobrir)",
-        "Helena",
-    )

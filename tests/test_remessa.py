@@ -223,3 +223,16 @@ def test_cnpj_fora_da_planilha_calcula_e_abre_pendencia_de_cadastro(ponte, cadas
     (p,) = [p for p in rem.pendencias if p.id_saida == f"PEN-CADASTRO_REMESSA-{nordica}"]
     assert (p.valor_brl, p.quem_decide) == (com["comissao_brl"], "comercial") and "Q-P 2" in p.motivo
     assert sum(l["valor"] for l in rem.rastro if l["id_saida"] == p.id_saida) == p.valor_brl
+
+
+def test_ajuste_da_ponte_vira_pendencia_explicita(ponte, cadastro, regras):
+    """D83 (Q-Z): a regra do ajuste está registrada; o abatimento ainda não é calculado, então a linha
+    "AJUSTE REF PC-…" vira pendência AJUSTE_PONTE (e não spread negativo genérico), fora da comissão."""
+    from dataclasses import replace
+    ops = [replace(o, observacao="AJUSTE REF PC-0826-0099") if o.ref_origem == "PC-0926-0011" else o for o in ponte.operacoes]
+    ops = [replace(o, spread_brl=-abs(o.spread_brl)) if o.ref_origem == "PC-0926-0011" else o for o in ops]
+    c = classificar_remessa(ops, ponte.competencia, cadastro, regras)
+    pend = {o.ref_origem: (tipo, motivo) for o, tipo, motivo in c.pendentes}
+    assert pend["PC-0926-0011"][0] == "AJUSTE_PONTE" and "PC-0826-0099" in pend["PC-0926-0011"][1]
+    assert "PC-0926-0011" not in {o.ref_origem for o, _ in c.elegiveis + c.negativos}
+    assert regras["remessa.ajuste_contestacao"]["status"] == "CONFIRMADO"

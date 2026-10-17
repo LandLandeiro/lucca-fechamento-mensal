@@ -26,11 +26,13 @@ def _rastro(divs, ref):
     return [r for r in divs.rastro if r["id_saida"] == f"DIV-{ref}"]
 
 
-def test_venda_divergente_estornada_no_mes_nao_lista(divs):
-    # L1056 TX88428676: round(10.420,13 × (4,09% − 3,59%)) = 52,10
-    # L1471 TX88446419 (estorno da mesma venda): round(−10.420,13 × 0,50%) = −52,10 → líquido 0
-    assert _div(divs, "TX88428676") is None
-    assert _div(divs, "TX88446419") is None
+def test_venda_divergente_estornada_no_mes_lista_as_duas_com_sinal(divs):
+    """D77 (Q-AB 3): transação por transação; o estorno de uma venda com taxa errada entra com valor negativo.
+    L1056 TX88428676: round(10.420,13 × (4,09% − 3,59%)) = 52,10; L1471 TX88446419 (estorno): −52,10 → líquido 0."""
+    venda, estorno = _div(divs, "TX88428676"), _div(divs, "TX88446419")
+    assert (venda["diferenca_brl"], estorno["diferenca_brl"]) == (Decimal("52.10"), Decimal("-52.10"))
+    assert estorno["direcao"] == "COBROU_A_MENOS" and "o líquido é 0" in estorno["motivo"]
+    assert estorno["liquida_com"] == "TX88428676" and venda["liquida_com"] == "TX88446419"
 
 
 def test_rota_depois_de_12_09(divs):
@@ -58,16 +60,16 @@ def test_casa_do_estudante_tudo_que_a_orbe_cobrou(divs):
     assert "condicoes_especiais[casa_do_estudante_2026]" in d["motivo"]
 
 
-def test_casa_estorno_de_agosto_e_par_de_setembro_nao_listam(divs):
-    # L433 TX88445133: estorno de venda de 21/08 (fora da condição): aplicada 1,49% = contratada → 0
+def test_casa_estorno_de_agosto_nao_lista_e_par_de_setembro_lista(divs):
+    # L433 TX88445133: estorno de venda de 21/08 (fora da condição): aplicada 1,49% = contratada → 0, não lista
     assert _div(divs, "TX88445133") is None
-    # L1779 TX88441917 + L1835 TX88446763 (estorno integral em setembro): +x − x → líquido 0
-    assert _div(divs, "TX88441917") is None and _div(divs, "TX88446763") is None
+    # L1779 TX88441917 + L1835 TX88446763 (estorno integral em setembro): +x e −x, as duas listadas (D77)
+    assert _div(divs, "TX88441917")["diferenca_brl"] == -_div(divs, "TX88446763")["diferenca_brl"] != 0
 
 
 def test_casa_total(divs):
     casa = [d for d in divs.linhas if d["cnpj"] == "00520815000100"]
-    assert len(casa) == 116
+    assert len(casa) == 118  # 113 vendas, 4 antecipações e 1 estorno de venda de setembro (D77)
     assert sum(d["diferenca_brl"] for d in casa) == Decimal("15397.42")
 
 
@@ -98,7 +100,7 @@ def test_conservacao_prevista(divs, checkout):
         Decimal("224004.31"), Decimal("207039.73"), Decimal("16973.65"), Decimal("-9.07")
     )
     assert fonte == com + div + divs.residuo
-    assert len(divs.linhas) == 200
+    assert len(divs.linhas) == 210  # D77: + os 5 pares venda/estorno, cada um com o seu sinal
     assert divs.grupos_zerados == 5  # 4 vendas da Rota + 1 da Casa, estornadas por inteiro no mês
 
 
@@ -127,7 +129,7 @@ def test_uma_pendencia_por_lojista_para_decidir(divs):
     assert {(k, p.valor_brl, p.quem_decide) for k, p in pend.items()} == {
         ("PEN-DIVERGENCIA_CHECKOUT-00520815000100", Decimal("15396.77"), "Helena + comercial"),  # D71: valor a devolver
         ("PEN-DIVERGENCIA_CHECKOUT-95927868000148", Decimal("1545.86"), "Helena"),
-        ("PEN-DIVERGENCIA_CHECKOUT-22224579000109", Decimal("29.94"), "Helena + comercial"),  # D63: condição não informada
+        ("PEN-DIVERGENCIA_CHECKOUT-22224579000109", Decimal("29.94"), "Helena"),  # D76: contrato (aditivo assinado)  # D63: condição não informada
     }
     casa = pend["PEN-DIVERGENCIA_CHECKOUT-00520815000100"]
     assert "O que foi cobrado eu devolvo ao lojista, junto com o comercial." in casa.motivo
@@ -199,11 +201,12 @@ def test_natureza_de_cada_divergencia(divs):
     por_lojista = {}
     for d in divs.linhas:
         por_lojista.setdefault(d["cnpj"], set()).add(d["natureza"])
-    assert por_lojista == {"00520815000100": {"condicao_nao_informada"}, "22224579000109": {"condicao_nao_informada"},
-                           "95927868000148": {"contrato_orbe"}}
+    assert por_lojista == {"00520815000100": {"condicao_nao_informada"}, "22224579000109": {"contrato_orbe"},
+                           "95927868000148": {"contrato_orbe"}}  # D76: "O que decide é o contrato, não o aviso" (Q-AA 1)
     bridge = {p.id_saida: p for p in divs.pendencias}["PEN-DIVERGENCIA_CHECKOUT-22224579000109"]
-    assert "A Bridge foi avisada alguns dias depois de 15/09" in bridge.motivo and "Não há o que cobrar da Orbe" in bridge.motivo
-    assert "Devolver 29.94 ao lojista" in bridge.motivo and "data do aviso em aberto" in bridge.motivo.lower()
+    assert "Devolver 29.94 ao lojista" in bridge.motivo and "recuperar o mesmo valor da Orbe" in bridge.motivo
+    casa = {p.id_saida: p for p in divs.pendencias}["PEN-DIVERGENCIA_CHECKOUT-00520815000100"]
+    assert "Quem abriu mão da receita fomos nós" in casa.motivo
 
 
 def test_natureza_da_remessa(divr_saida):
@@ -279,8 +282,8 @@ def test_valor_a_devolver_separado_da_diferenca_da_q_h(divs):
         a = tot.setdefault(d["cnpj"], [0, Decimal(0), Decimal(0)])
         a[0] += 1; a[1] += d["diferenca_brl"]; a[2] += d["valor_a_devolver_brl"]
         assert d["valor_a_devolver_brl"] == d["valor_taxa_orbe"] - d["comissao_contratada"]
-    assert tot == {"00520815000100": [116, Decimal("15397.42"), Decimal("15396.77")],
-                   "95927868000148": [79, Decimal("1546.28"), Decimal("1545.86")],
+    assert tot == {"00520815000100": [118, Decimal("15397.42"), Decimal("15396.77")],
+                   "95927868000148": [87, Decimal("1546.28"), Decimal("1545.86")],
                    "22224579000109": [5, Decimal("29.95"), Decimal("29.94")]}
 
 
@@ -289,7 +292,7 @@ def test_devolver_e_recuperar(divs):
     Orbe (o mesmo valor); condicao_nao_informada não. Devolver − recuperar = Casa + Bridge (Orbe não avisada)."""
     devolver = sum(d["valor_a_devolver_brl"] for d in divs.linhas)
     recuperar = sum(d["valor_a_devolver_brl"] for d in divs.linhas if d["natureza"] == "contrato_orbe")
-    assert (devolver, recuperar, devolver - recuperar) == (Decimal("16972.57"), Decimal("1545.86"), Decimal("15426.71"))
+    assert (devolver, recuperar, devolver - recuperar) == (Decimal("16972.57"), Decimal("1575.80"), Decimal("15396.77"))
     pend = {p.id_saida: p for p in divs.pendencias}
     rota = pend["PEN-DIVERGENCIA_CHECKOUT-95927868000148"].motivo
     assert "Devolver 1545.86 ao lojista" in rota and "recuperar o mesmo valor da Orbe" in rota and "Q-U 4" in rota

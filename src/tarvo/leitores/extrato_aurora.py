@@ -42,6 +42,9 @@ class LeituraExtrato:
     data_saldo_final: date | None = None
 
 
+CABECALHO_ESPERADO = ["Data", "Lançamento", "Documento", "Valor (R$)", "Saldo (R$)"]
+
+
 def ler_extrato_aurora(caminho: Path) -> LeituraExtrato:
     """Lê os lançamentos (sem saldos nem cabeçalhos) e os saldos declarados."""
     nome = caminho.name
@@ -55,8 +58,15 @@ def ler_extrato_aurora(caminho: Path) -> LeituraExtrato:
     texto = texto.lstrip("﻿")
 
     saldo_corrido: Decimal | None = None
+    cabecalho_visto = False
     for n, linha in enumerate(texto.splitlines(), start=1):
         c = [x.strip() for x in linha.split(";")]
+        if c and c[0] == "Data" and not cabecalho_visto:  # D84: lido por posição; o cabeçalho é conferido e avisa
+            cabecalho_visto = True
+            if c[:5] != CABECALHO_ESPERADO:
+                res.avisos.append(Aviso(nome, f"L{n}", f"cabeçalho de colunas diferente do esperado: {c[:5]} × "
+                                                     f"{CABECALHO_ESPERADO}; o leitor usa a posição das colunas, confira o layout"))
+            continue
         if len(c) < 5:
             continue
         data_txt, historico, documento, valor_txt, saldo_txt = c[:5]
@@ -93,6 +103,8 @@ def ler_extrato_aurora(caminho: Path) -> LeituraExtrato:
                 saldo_corrido = saldo
         if saldo is not None:
             res.data_saldo_final = lan.data
+    if not cabecalho_visto:
+        res.avisos.append(Aviso(nome, "-", f"cabeçalho de colunas {CABECALHO_ESPERADO} não encontrado; confira o layout"))
     return res
 
 

@@ -30,7 +30,7 @@ def test_uma_nota_por_lojista_checkout_positivo(saida):
     notas = [n for n in _csv(pasta, "notas_a_emitir.csv") if n["linha_negocio"] == "CHECKOUT"]
     com = {c["cnpj"]: Decimal(c["comissao_brl"]) for c in _csv(pasta, "comissoes_por_lojista.csv") if c["linha_negocio"] == "CHECKOUT"}
     assert len(notas) == 20 == sum(1 for v in com.values() if v > 0)
-    assert sum(Decimal(n["valor_brl"]) for n in notas) == Decimal("207045.23")  # 207.039,73 + 5,50 (Casa fora)
+    assert sum(Decimal(n["valor_brl"]) for n in notas) == Decimal("203740.84")  # 203.735,34 (com o 06, D75) + 5,50 (Casa fora)
     rota = next(n for n in notas if n["tomador_cnpj"] == "95927868000148")
     assert rota["id_saida"] == "NF-95927868000148-CHECKOUT" and rota["valor_brl"] == "15621.27"
     assert rota["discriminacao"] == "Serviço de intermediação de pagamentos (checkout) - competência 09/2026"
@@ -93,7 +93,7 @@ def test_contestacao_ponte_uma_pendencia_por_motivo(saida):
     pend = {p["id_saida"]: p for p in _csv(pasta, "pendencias.csv") if p["tipo"] == "CONTESTACAO_PONTE"}
     assert {k: v["valor_brl"] for k, v in pend.items()} == {
         "PEN-CONTESTACAO_PONTE-SPREAD_ACIMA_DO_CONTRATADO-17217888000111": "1418.85",
-        "PEN-CONTESTACAO_PONTE-SPREAD_NEGATIVO": "-1834.05",
+        "PEN-CONTESTACAO_PONTE-SPREAD_NEGATIVO": "-3565.98",  # D80: o que pedir à Ponte (até o contrato)
         "PEN-CONTESTACAO_PONTE-DUPLICATA": "821.88",
     }
     assert all(p["quem_decide"] == "Helena" for p in pend.values())
@@ -224,14 +224,14 @@ def test_rascunhos_de_contestacao(saida):
     import re
     pasta = saida[0] / "rascunhos"
     assert sorted(p.name for p in pasta.glob("*.md")) == [
-        "orbe_rota_global.md", "ponte_duplicata.md", "ponte_mundo_aberto.md", "ponte_spreads_negativos.md"]
+        "orbe_escola_bridge.md", "orbe_rota_global.md", "ponte_duplicata.md", "ponte_mundo_aberto.md", "ponte_spreads_negativos.md"]
     totais = {p.stem: re.search(r"total_brl=(-?\d+\.\d{2})", p.read_text(encoding="utf-8")).group(1) for p in pasta.glob("*.md")}
-    assert totais == {"orbe_rota_global": "1545.86",  # D74: recuperar = valor a devolver
-                       "ponte_mundo_aberto": "1418.85", "ponte_spreads_negativos": "-1834.05",
+    assert totais == {"orbe_rota_global": "1545.86", "orbe_escola_bridge": "29.94",  # D74, D76: recuperar = a devolver
+                       "ponte_mundo_aberto": "1418.85", "ponte_spreads_negativos": "-3565.98",
                       "ponte_duplicata": "821.88"}
     for nome, total in totais.items():
         assert sum(Decimal(l["valor_brl"]) for l in _csv(pasta, f"{nome}.csv")) == Decimal(total)
-    assert len(_csv(pasta, "orbe_rota_global.csv")) == 79
+    assert len(_csv(pasta, "orbe_rota_global.csv")) == 87  # D77: os 4 pares venda/estorno entram, com sinal
     assert "RASCUNHO para a Helena revisar" in (pasta / "orbe_rota_global.md").read_text(encoding="utf-8")
 
 
@@ -256,3 +256,18 @@ def test_rascunhos_deterministicos(tmp_path):
     executar(DADOS, b, RAIZ / "regras.yaml")
     for p in (a / "rascunhos").iterdir():
         assert p.read_bytes() == (b / "rascunhos" / p.name).read_bytes(), p.name
+
+
+def test_spread_negativo_com_os_dois_valores_rotulados(saida):
+    """D80 (Q-AA 3): 'o spread negativo do relatório, que é o que aconteceu, e a diferença até o spread do contrato,
+    que é o que eu vou pedir à Ponte'."""
+    pasta, _ = saida
+    (p,) = [p for p in _csv(pasta, "pendencias.csv") if p["id_saida"] == "PEN-CONTESTACAO_PONTE-SPREAD_NEGATIVO"]
+    assert p["valor_brl"] == "-3565.98"
+    assert "Spread negativo do relatório (o que aconteceu): -1834.05" in p["motivo"]
+    assert "o que pedir à Ponte, valor desta pendência): -3565.98" in p["motivo"]
+    md = (pasta / "rascunhos" / "ponte_spreads_negativos.md").read_text(encoding="utf-8")
+    assert "(o que aconteceu):** -R$ 1.834,05" in md and "(o que pedimos à Ponte):** -R$ 3.565,98" in md
+    lista = _csv(pasta / "rascunhos", "ponte_spreads_negativos.csv")
+    assert sum(Decimal(l["spread_brl"]) for l in lista) == Decimal("-1834.05")
+    assert sum(Decimal(l["valor_brl"]) for l in lista) == Decimal("-3565.98")

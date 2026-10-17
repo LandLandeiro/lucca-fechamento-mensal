@@ -221,3 +221,25 @@ def test_alerta_usa_o_pico_da_exposicao(cadastro, regras):
     (p,) = alerta_antecipacao(ts, cadastro, (2026, 9), regras).pendencias
     assert p.valor_brl == Decimal("150") and "em 2026-09-12" in p.motivo  # 150 + 100 − 100; depois da reversão, 30
     assert "A2 revertida em 13/09 (R1)" in p.motivo and "no fim do mês a exposição é 30" in p.motivo
+
+
+def test_alerta_cita_o_criterio_da_helena(orbe, cadastro, regras):
+    """D81 (Q-AA 2): o critério segue ASSUMO, com a frase dela no motivo e o aceite na regra."""
+    from tarvo.calculos.alertas import alerta_antecipacao
+    (p,) = alerta_antecipacao(orbe.transacoes, cadastro, (2026, 9), regras).pendencias
+    assert "O que me preocupa é lojista novo, sem histórico, antecipando alto" in p.motivo
+    r = regras["checkout.alerta_antecipacao"]
+    assert r["status"] == "ASSUMO" and "Q-AA 2" in r["aceite"] and "Q-AG" in r["aceite"]
+
+
+def test_atlas_identificada_pelo_cnpj_da_aba_antiga(regras, checkout):
+    """D82 (Q-AC 1): o CNPJ da aba de 2025 só identifica a Atlas; a regra bate com a célula da planilha e tem DV válido."""
+    import openpyxl
+    from tarvo.formatos import cnpj_valido
+    from conftest import TAXAS
+    ident = regras["cadastro.identificacao_sem_contrato"]["valor"]["1076801732"]
+    ws = openpyxl.load_workbook(TAXAS)["ANTIGO 2025 - nao usar"]
+    assert (ws["A8"].value, str(ws["B8"].value)) == (ident["nome"], ident["cnpj"]) and cnpj_valido(ident["cnpj"])
+    (p,) = [p for p in checkout.pendencias if p.id_saida == "PEN-SEM_CONTRATO_VIGENTE-EC1076801732"]
+    assert "CNPJ 39566044000119" in p.motivo and "a taxa daquela aba não vale" in p.motivo
+    assert not any(c["cnpj"] == "39566044000119" for c in checkout.comissoes)  # fora do arquivo de comissões (Q-AC 2)
