@@ -39,6 +39,7 @@ from tarvo.pendencias import (consolidar_pendencias, ler_pendencias_anteriores, 
                               refs_das_pendencias)
 from tarvo.regras import RegraInvalida, RegraPendente, carregar_regras, valor_da_regra
 from tarvo.saida.escritor import escrever_saida
+from tarvo.saida.manifesto import escrever_manifesto, linhas_manifesto, registrar_execucao
 from tarvo.painel import gerar_painel
 from tarvo.saida.rascunhos import gerar_rascunhos
 from tarvo.saida.validador import validar_saida
@@ -198,7 +199,9 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     )
     contestacao = contestacao_ponte(cls_remessa, div_remessa.linhas, regras)
     # extratos (E6b): classificação por regra + conferências entre fontes
-    plano = contas_lancaveis(ler_plano_contas(achar_unico(dados, PADRAO_PLANO)))
+    arq_plano = achar_unico(dados, PADRAO_PLANO)
+    plano_lido = ler_plano_contas(arq_plano)
+    plano = contas_lancaveis(plano_lido)
     aurora = ler_extrato_aurora(achar_unico(dados, PADRAO_AURORA))
     meridiano = ler_extrato_meridiano(achar_unico(dados, PADRAO_MERIDIANO))
     for ext in (aurora, meridiano):
@@ -288,6 +291,22 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         },
         saida,
     )
+    # D95 (Q-AM): manifesto determinístico do que entrou (data e hora vão para o log da CLI, fora da saída)
+    lidos = {
+        arq_orbe.name: ("relatório da Orbe (checkout)", orbe.total_linhas_dados),
+        **({arq_ajustes.name: ("ajustes tardios da Orbe", leituras_orbe[1].total_linhas_dados)} if arq_ajustes else {}),
+        arq_taxas.name: (f"taxas contratadas (aba {valor_da_regra(regras, 'taxas.aba_vigente')!r})", len(taxas.linhas)),
+        arq_ponte.name: (f"relatório da Ponte (anexo {mail.nome_anexo}, operações)", ponte.total_linhas_dados),
+        arq_plano.name: ("plano de contas", len(plano_lido)),
+        aurora.arquivo: ("extrato Aurora (lançamentos)", len(aurora.lancamentos) + len(aurora.linhas_invalidas)),
+        meridiano.arquivo: ("extrato Meridiano (lançamentos)", len(meridiano.lancamentos) + len(meridiano.linhas_invalidas)),
+    }
+    extras_manifesto = {
+        **({orbe_anterior: ("relatório da Orbe do mês anterior (--orbe-anterior)", orbe_ant.total_linhas_dados)} if orbe_ant else {}),
+        **({pendencias_anteriores: ("pendências do mês anterior (--pendencias-anteriores)", len(pend_ant))} if pend_ant is not None else {}),
+    }
+    manifesto = linhas_manifesto(dados, lidos, regras_path, regras, extras_manifesto)
+    escrever_manifesto(saida, manifesto)
     rascunhos = gerar_rascunhos(saida, divs, contestacao.linhas, competencia,  # D68 (Q-T 2, Q-X 1)
                                 valor_da_regra(regras, "ponte.tomador_nf_remessa")["nome"])
     refs_esperadas = {
@@ -348,6 +367,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         "transacoes_em_pendencia": len(checkout.em_pendencia) + len(sep.pendencias) + sum(len(lo.linhas_invalidas) for lo in leituras_orbe)
         + len(juncao.rastro),
         "transacoes_lidas": sum(lo.total_linhas_dados for lo in leituras_orbe),
+        "manifesto": manifesto,
         "divergencias": divergencias.linhas,
         "divergencias_zeradas": divergencias.grupos_zerados,
         "conservacao": (
@@ -529,6 +549,14 @@ def main(argv: list[str] | None = None) -> int:
           f" as {r['remessa']['linhas']} linhas do anexo da Ponte também; conservação do checkout e da remessa fecha;"
           " notas = comissões; extratos: cada lançamento uma vez, Σ Aurora = saldo final − inicial, contas lançáveis)")
     painel, _ = gerar_painel(args.saida, args.dados, args.regras)  # só sobre saída validada; lê os CSVs que acabaram de sair
+    log = registrar_execucao(args.saida.resolve().parent / "logs", r["manifesto"], ["python", "-m", "tarvo", *(argv or sys.argv[1:])], {
+        "competência": f"{r['competencia'][1]:02d}/{r['competencia'][0]}",
+        "notas a emitir": f"{sum((n['valor_brl'] for n in r['notas']), ZERO)} ({len(r['notas'])} notas)",
+        "comissão de checkout": str(r["total_checkout"]),
+        "comissão de remessa": str(r["remessa"]["total"]),
+        "pendências": str(len(r["pendencias"])),
+        "validador": "OK",
+    })  # D95: data e hora só aqui, nunca na saida/
     _imprimir_resumo(r, args.saida, painel)
     return 0
 

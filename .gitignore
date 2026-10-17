@@ -19,3 +19,6 @@ __pycache__/
 # scripts de exploração local
 scratch/
 saida_outubro/
+
+# log de cada execução (D95): data e hora ficam aqui, fora da saida/
+logs/
