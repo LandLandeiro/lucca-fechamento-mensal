@@ -25,7 +25,7 @@ from decimal import ROUND_DOWN, Decimal
 
 from tarvo.cadastro import Cadastro, coluna_do_produto, taxa_contratada
 from tarvo.formatos import CENTAVO
-from tarvo.modelo import ItemRastro, OperacaoPonte, Pendencia, TransacaoOrbe
+from tarvo.modelo import ItemRastro, Pendencia, TransacaoOrbe
 from tarvo.regras import valor_da_regra
 
 LINHA = "CHECKOUT"
@@ -195,8 +195,8 @@ def _agregar(res: ResultadoCheckout, cadastro: Cadastro) -> None:
 
 
 def ordem_comissao(linha: dict) -> tuple:
-    """Ordem determinística da saída: comissão decrescente, depois CNPJ."""
-    return (-linha["comissao_brl"], linha["cnpj"])
+    """Ordem determinística da saída: linha de negócio, comissão decrescente, CNPJ."""
+    return (linha["linha_negocio"], -linha["comissao_brl"], linha["cnpj"])
 
 
 def _linha_rastro(id_saida: str, t: TransacaoOrbe, valor: Decimal, taxa: Decimal | None, nota: str) -> dict:
@@ -213,9 +213,4 @@ def _linha_rastro(id_saida: str, t: TransacaoOrbe, valor: Decimal, taxa: Decimal
         "nota": nota,
     }
 
-
-def comissao_remessa(
-    operacoes: list[OperacaoPonte], cadastro: dict, regras: dict
-) -> tuple[list[dict], list[ItemRastro]]:
-    """Comissão REMESSA por lojista, com rastro."""
-    raise NotImplementedError
+# Comissão REMESSA: tarvo.calculos.remessa

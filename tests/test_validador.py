@@ -1,6 +1,7 @@
 """Validador: a saída real passa; total que não fecha, linha perdida e formato errado falham."""
 
 import csv
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -69,7 +70,7 @@ def test_linha_da_orbe_sumida_e_erro(saida, tmp_path, orbe):
 
     pasta = _copia(saida, tmp_path)
     _reescrever(pasta / "rastro.csv", lambda ls: [l for l in ls if l[2] != "TX88444848"])
-    erros = validar_saida(pasta, {orbe.arquivo: {t.ref_origem for t in orbe.transacoes}})
+    erros = validar_saida(pasta, {orbe.arquivo: {(t.ref_origem, t.linha_arquivo) for t in orbe.transacoes}})
     assert any("sem rastro nem pendência" in e for e in erros)
 
 
@@ -102,6 +103,44 @@ def test_divergencia_de_linha_pendente_e_erro(saida, tmp_path, orbe):
     _reescrever(pasta / "rastro.csv", apontar_atlas)
     erros = validar_saida(pasta, valor_taxa_orbe=_conservacao(orbe))
     assert any("não está em nenhuma comissão" in e for e in erros)
+
+
+def _spread_ponte():
+    from tarvo.leitores.ponte_email import ler_email, ler_operacoes
+
+    eml = DADOS / "03_email_ponte_cambio_relatorio_set2026.eml"
+    mail = ler_email(eml)
+    p = ler_operacoes(mail.anexo_xlsx, eml.name, mail.nome_anexo, ["Total de operações:", "Spread total R$:"])
+    return {p.arquivo: {(o.ref_origem, o.linha_planilha): o.spread_brl for o in p.operacoes}}, p
+
+
+def test_remessa_exclusao_sumida_e_erro(saida, tmp_path):
+    from tarvo.saida.validador import validar_saida
+
+    pasta = _copia(saida, tmp_path)
+    spread, p = _spread_ponte()
+    _reescrever(pasta / "rastro.csv", lambda ls: [l for l in ls if l[0] != "EXC-REMESSA-DUPLICATA"])
+    erros = validar_saida(pasta, refs_esperadas={p.arquivo: {(o.ref_origem, o.linha_planilha) for o in p.operacoes}},
+                          spread_ponte=spread, spread_declarado=Decimal("78073.59"))
+    assert any("conservação REMESSA" in e for e in erros)
+    assert any("sem rastro nem pendência" in e for e in erros)
+
+
+def test_remessa_comissao_que_nao_e_metade_e_erro(saida, tmp_path):
+    from tarvo.saida.validador import validar_saida
+
+    pasta = _copia(saida, tmp_path)
+    spread, _ = _spread_ponte()
+
+    def adulterar(linhas):
+        for l in linhas[1:]:
+            if l[0] == "COM-17217888000111-REMESSA" and l[2] == "PC-0926-0011":
+                l[3] = "80.00"  # metade de 147,53 é 73,76/73,77
+        return linhas
+
+    _reescrever(pasta / "rastro.csv", adulterar)
+    erros = validar_saida(pasta, spread_ponte=spread)
+    assert any("não é metade do spread" in e for e in erros)
 
 
 def test_cnpj_e_decimal_fora_do_formato_sao_erro(saida, tmp_path):

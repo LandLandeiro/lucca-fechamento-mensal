@@ -21,7 +21,7 @@ def test_roda_o_minimo_e_valida(tmp_path, capsys):
     assert codigo == 0
     assert "01_orbe_relatorio_comissoes_set2026.csv" in out
     assert "VALIDADOR: OK" in out
-    assert "conservação do checkout fecha" in out
+    assert "conservação do checkout e da remessa fecha" in out
     assert {p.name for p in (tmp_path / "saida").iterdir()} == {
         "comissoes_por_lojista.csv", "divergencias_taxa.csv", "pendencias.csv", "rastro.csv"
     }

@@ -141,19 +141,26 @@ def taxa_contratada(cadastro: Cadastro, cnpj: str, coluna: str, data_ref: date, 
     if especial is not None:
         return especial
 
-    candidatas = [(l, v) for l, v in cadastro.linhas_por_cnpj.get(cnpj, []) if v is not None and v.contem(data_ref)]
-    if not candidatas:
-        return TaxaEncontrada(None, f"nenhuma linha da planilha vigente em {data_ref.isoformat()}")
-    if len(candidatas) > 1:
-        rs = ", ".join(f"R{l.linha_planilha}" for l, _ in candidatas)
-        return TaxaEncontrada(None, f"mais de uma linha vigente em {data_ref.isoformat()} ({rs})")
-    linha, _ = candidatas[0]
+    linha, motivo = linha_vigente(cadastro, cnpj, data_ref)
+    if linha is None:
+        return TaxaEncontrada(None, motivo)
     valor = linha.taxas.get(coluna)
     if isinstance(valor, Decimal):
         return TaxaEncontrada(valor, f"planilha R{linha.linha_planilha} col. {coluna!r}")
     if valor is None:
         return TaxaEncontrada(None, f"planilha R{linha.linha_planilha} col. {coluna!r} vazia")
     return TaxaEncontrada(None, f"planilha R{linha.linha_planilha} col. {coluna!r} em texto: {valor!r}")
+
+
+def linha_vigente(cadastro: Cadastro, cnpj: str, data_ref: date) -> tuple[TaxaContratada | None, str]:
+    """A única linha da planilha do CNPJ cuja vigência contém a data; senão (None, motivo)."""
+    candidatas = [(l, v) for l, v in cadastro.linhas_por_cnpj.get(cnpj, []) if v is not None and v.contem(data_ref)]
+    if not candidatas:
+        return None, f"nenhuma linha da planilha vigente em {data_ref.isoformat()}"
+    if len(candidatas) > 1:
+        rs = ", ".join(f"R{l.linha_planilha}" for l, _ in candidatas)
+        return None, f"mais de uma linha vigente em {data_ref.isoformat()} ({rs})"
+    return candidatas[0][0], f"planilha R{candidatas[0][0].linha_planilha}"
 
 
 def _condicao_especial(cnpj: str, coluna: str, data_ref: date, regras: dict) -> TaxaEncontrada | None:
@@ -165,6 +172,8 @@ def _condicao_especial(cnpj: str, coluna: str, data_ref: date, regras: dict) -> 
     if not vig.contem(data_ref):
         return None
     mapa = valor_da_regra(regras, "taxas.coluna_por_produto")
+    if coluna == mapa.get("REMESSA"):
+        return None  # "Remessa segue normal" (Helena 20:49): a condição vale só para MDR e antecipação
     grupo = "ANTECIPACAO" if coluna == mapa.get("ANTECIPACAO") else "MDR"
     taxas = cond["taxa_contratada"]
     if grupo not in taxas:

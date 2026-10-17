@@ -215,11 +215,29 @@ remessa:
     status: CONFIRMADO
     fonte: "Slack Helena 20:48 (caso: anexo R76/R77 PC-0926-0162; 05b MRD2026090550 pagou uma vez)"
     pergunta_ref: null
-  arredondamento_participacao:  # meio centavo no 50%: por operação ou no total do lojista
-    valor: null
-    status: PENDENTE
-    fonte: null
+  arredondamento_participacao:  # meio centavo no 50%
+    valor: ROUND_HALF_EVEN_POR_OPERACAO   # 50% × Spread R$ arredondado no centavo por operação (meio → par), depois soma
+    status: ASSUMO
+    autor: Lucca
+    fonte: "decisão Lucca 16/10 ~22h (D19): sem viés sistemático e o rastro fecha exato"
     pergunta_ref: null
+  formula_divergencia:
+    valor: "(spread % aplicado − contratado) × PTAX × Valor ME, valor cheio; aplicado = ponte.formula_spread_pct sobre Taxa Cliente e PTAX"
+    status: ASSUMO
+    autor: Lucca
+    fonte: "proposta da Fox AI (Q-G, 20:52), 'É o valor cheio' (Slack Helena 20:58); contratado em branco/'padrão' = remessa.spread_padrao"
+    pergunta_ref: P11
+  arredondamento_divergencia:   # não definido pelo Lucca: mesma regra da participação, a confirmar (D20)
+    valor: ROUND_HALF_EVEN_POR_OPERACAO
+    status: ASSUMO
+    autor: Lucca
+    fonte: "extensão de remessa.arredondamento_participacao à divergência (D20); a confirmar"
+    pergunta_ref: null
+  motivo_spread_negativo:
+    valor: "trava vencida (2h), Helena contesta"
+    status: CONFIRMADO
+    fonte: "Slack Helena 20:48 ('A trava vale 2 horas pelo contrato, e essas passaram do prazo. Fica fora da comissão e da nota, e eu contesto.')"
+    pergunta_ref: P01
 
 cadastro:
   mapeamento_ec_confirmado: # EC Orbe sem EC na planilha → linha da aba "Taxas vigentes" (vínculo explícito do cliente, não semelhança)

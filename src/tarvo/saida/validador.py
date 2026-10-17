@@ -55,21 +55,29 @@ def _ler(caminho: Path, erros: list[str]) -> list[dict] | None:
         return list(leitor)
 
 
-PREFIXOS_COBERTURA = ("COM-", "PEN-")  # onde cada linha de origem tem que aparecer exatamente uma vez
+# onde cada linha de origem tem que aparecer exatamente uma vez: comissão, pendência ou
+# exclusão anotada (EXC-…, sem número reportado). DIV-… reaponta linhas e não conta.
+PREFIXOS_COBERTURA = ("COM-", "PEN-", "EXC-")
+PREFIXO_EXCLUSAO = "EXC-"
 
 
 def validar_saida(
     pasta: Path,
-    refs_esperadas: dict[str, set[str]] | None = None,
+    refs_esperadas: dict[str, set[tuple[str, int]]] | None = None,
     valor_taxa_orbe: dict[str, dict[str, Decimal]] | None = None,
+    spread_ponte: dict[str, dict[tuple[str, int], Decimal]] | None = None,
+    spread_declarado: Decimal | None = None,
 ) -> list[str]:
     """Devolve a lista de erros encontrados (vazia = saída válida).
 
-    - `refs_esperadas` {arquivo: refs}: cada ref aparece exatamente uma vez no rastro de um
-      número COM-… ou PEN-… (DIV-… reaponta as mesmas linhas e não conta).
+    - `refs_esperadas` {arquivo: {(ref_origem, linha)}}: cada linha de origem aparece
+      exatamente uma vez no rastro de um COM-…, PEN-… ou EXC-… (a linha distingue cópias
+      com o mesmo Nº de operação).
     - `valor_taxa_orbe` {arquivo: {ref: valor_taxa}}, lido da fonte: conservação do checkout,
       Σ valor_taxa das linhas em COM-…-CHECKOUT = Σ comissão CHECKOUT + Σ divergências CHECKOUT;
-      e toda divergência aponta só linhas que estão numa comissão.
+      e toda divergência de checkout aponta só linhas que estão numa comissão.
+    - `spread_ponte` {arquivo: {(Nº, linha): Spread R$}}: conservação da remessa (ver
+      `_conservacao_remessa`); `spread_declarado` = "Spread total R$" do próprio relatório.
     """
     erros: list[str] = []
     dados: dict[str, list[dict]] = {}
@@ -118,15 +126,22 @@ def validar_saida(
         elif somas[ids] != total:
             erros.append(f"{ids}: reportado {total} ≠ soma do rastro {somas[ids]}")
     for ids in sorted(set(somas) - set(reportados)):
-        erros.append(f"rastro.csv: id_saida {ids} não existe em nenhum arquivo de saída")
+        if not ids.startswith(PREFIXO_EXCLUSAO):  # exclusão anotada: só existe no rastro
+            erros.append(f"rastro.csv: id_saida {ids} não existe em nenhum arquivo de saída")
+    for ids in reportados:
+        if ids.startswith(PREFIXO_EXCLUSAO):
+            erros.append(f"{ids}: exclusão anotada não pode ser número de saída")
 
     if valor_taxa_orbe:
         erros.extend(_conservacao_checkout(dados, valor_taxa_orbe))
+    if spread_ponte:
+        erros.extend(_conservacao_remessa(dados, spread_ponte, spread_declarado))
 
     if refs_esperadas:
         for arquivo, esperadas in refs_esperadas.items():
+            esperadas = {(r, str(n)) for r, n in esperadas}
             vistas = Counter(
-                l["ref_origem"] for l in dados["rastro.csv"]
+                (l["ref_origem"], l.get("linha_arquivo", "")) for l in dados["rastro.csv"]
                 if l.get("arquivo_origem") == arquivo and l["id_saida"].startswith(PREFIXOS_COBERTURA)
             )
             faltando = sorted(esperadas - set(vistas))
@@ -168,4 +183,48 @@ def _conservacao_checkout(dados: dict[str, list[dict]], valor_taxa_orbe: dict[st
             f"conservação CHECKOUT: Σ valor_taxa Orbe {soma_fonte} ≠ Σ comissão {soma_com} + Σ divergências {soma_div}"
             f" (diferença {soma_fonte - soma_com - soma_div})"
         )
+    return erros
+
+
+def _conservacao_remessa(
+    dados: dict[str, list[dict]], spread_ponte: dict[str, dict[tuple[str, int], Decimal]], declarado: Decimal | None
+) -> list[str]:
+    """Σ Spread R$ do anexo = Σ spread das elegíveis (COM-…-REMESSA) + Σ exclusões (EXC-…) + Σ pendências.
+
+    Também: comissão de cada operação = metade do spread (±0,01); exclusão anotada com
+    valor = Spread R$ da linha; Σ do anexo = total declarado pela Ponte.
+    """
+    erros: list[str] = []
+    com_ids = {l["id_saida"] for l in dados.get("comissoes_por_lojista.csv", []) if l["linha_negocio"] == "REMESSA"}
+    pen_ids = {l["id_saida"] for l in dados.get("pendencias.csv", [])}
+    partes = {"elegíveis": Decimal("0"), "exclusões": Decimal("0"), "pendências": Decimal("0")}
+    for arquivo, fonte in spread_ponte.items():
+        total_fonte = sum(fonte.values(), Decimal("0"))
+        if declarado is not None and total_fonte != declarado:
+            erros.append(f"{arquivo}: Σ Spread R$ das linhas {total_fonte} ≠ total declarado no relatório {declarado}")
+        for l in dados["rastro.csv"]:
+            if l.get("arquivo_origem") != arquivo:
+                continue
+            chave = (l["ref_origem"], int(l["linha_arquivo"])) if (l.get("linha_arquivo") or "").isdigit() else None
+            ids = l["id_saida"]
+            if ids in com_ids or ids.startswith(PREFIXO_EXCLUSAO) or (ids in pen_ids and ids.startswith("PEN-")):
+                if chave not in fonte:
+                    erros.append(f"{ids}: {l['ref_origem']} linha {l.get('linha_arquivo')} não existe no anexo")
+                    continue
+                spread, valor = fonte[chave], Decimal(l["valor"])
+                if ids in com_ids:
+                    partes["elegíveis"] += spread
+                    if abs(2 * valor - spread) > Decimal("0.01"):
+                        erros.append(f"{ids}: comissão {valor} de {l['ref_origem']} não é metade do spread {spread}")
+                elif ids.startswith(PREFIXO_EXCLUSAO):
+                    partes["exclusões"] += spread
+                    if valor != spread:
+                        erros.append(f"{ids}: exclusão de {l['ref_origem']} com valor {valor} ≠ Spread R$ {spread}")
+                else:
+                    partes["pendências"] += spread
+        if total_fonte != sum(partes.values()):
+            erros.append(
+                f"conservação REMESSA: Σ Spread R$ do anexo {total_fonte} ≠ elegíveis {partes['elegíveis']}"
+                f" + exclusões {partes['exclusões']} + pendências {partes['pendências']}"
+            )
     return erros
