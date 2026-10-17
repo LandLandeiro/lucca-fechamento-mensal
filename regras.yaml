@@ -26,14 +26,25 @@ orbe:
       próprio arquivo no rastro; opcional (se faltar, segue com aviso informativo, D89). Cada linha passa pelas mesmas regras (estorno,
       reversão, venda)
     status: SEI
-    fonte: "mensagem da organização 17/10 13:10: 'A Orbe mandou os ajustes de setembro que ficaram fora do relatório ... no mesmo formato do arquivo 01 ... O fechamento entregue às 18h30 precisa considerar esse arquivo.' Opcional: decisão Lucca 17/10"
-    pergunta_ref: null
+    fonte: "mensagem da organização 17/10 13:10: 'A Orbe mandou os ajustes de setembro que ficaram fora do relatório ... no mesmo formato do arquivo 01 ... O fechamento entregue às 18h30 precisa considerar esse arquivo.' Opcional: decisão Lucca 17/10; Helena 13:34 (Q-AJ 1): 'Vem quando a Orbe tem ajuste, não todo mês.'"
+    pergunta_ref: P40
+  mes_do_ajuste_tardio:     # D91
+    valor: >-
+      o ajuste que chega antes da aprovação do fechamento entra no mês do movimento (como em setembro); depois da
+      aprovação, entra no mês seguinte. Quem diz que o mês anterior já foi aprovado é uma pessoa, com a opção
+      --fechamento-anterior-aprovado: a linha do 06 com movimento no mês anterior entra no mês corrente, com aviso.
+      Sem a opção, a linha de outro mês fica fora da comissão e vira pendência ORBE_FORA_COMPETENCIA (D62)
+    status: CONFIRMADO
+    aprovado_por: "Helena"   # Q-S: regra de fechamento = Helena
+    fonte: "Slack Helena 13:34 (Q-AJ 1): 'Se chega antes de eu aprovar o fechamento, entra no mês do movimento, como agora. Se chegar depois da aprovação, entra no mês seguinte.' A opção da linha de comando é decisão Lucca 17/10 (D91)"
+    pergunta_ref: P40
   id_repetido_entre_arquivos:   # D75
     valor: "id_transacao em mais de um arquivo da Orbe (01 e 06): nenhuma das linhas conta; pendência ID_REPETIDO_ORBE para a Helena"
     status: ASSUMO
     autor: Lucca
-    fonte: "decisão Lucca 17/10 (D75); pergunta ao financeiro 13:19 (se o ajuste corrige uma linha, vale o ajuste?) sem resposta. Não acontece em setembro"
-    pergunta_ref: null
+    fonte: "decisão Lucca 17/10 (D75). Não acontece em setembro"
+    aceite: "Helena 13:34 (Q-AJ 2): 'Correção de uma linha com o mesmo id nunca aconteceu. Se acontecer, o critério é de vocês: deixem claro no `HIPOTESES.md` e mostrem a pendência para mim.'"
+    pergunta_ref: P40
   liquido_igual_bruto_menos_taxa:
     valor: true
     status: SEI

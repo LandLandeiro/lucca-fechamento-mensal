@@ -66,3 +66,31 @@ def test_arquivo_que_ninguem_le_vira_aviso(tmp_path):
     r = executar(dados, tmp_path / "s", RAIZ / "regras.yaml")
     assert any(a.arquivo == "07_novo_arquivo_da_orbe.csv" and "nenhum leitor reconhece" in a.mensagem for a in r["avisos"])
     assert not any(a.arquivo == "00_LEIA-ME.md" for a in r["avisos"])
+
+
+def _ajuste_de_agosto(tmp_path):
+    """Cópia de setembro em que a linha TX88446992 do 06 tem movimento em 29/08 (ajuste de agosto chegando agora)."""
+    dados = tmp_path / "d"
+    copiar_dados(dados, {AJ: [(b"TX88446992;30/09/2026;", b"TX88446992;29/08/2026;")]})
+    return dados
+
+
+def test_ajuste_de_mes_ja_aprovado_entra_no_mes_seguinte_com_a_opcao(tmp_path):
+    """D91 (Q-AJ 1, Helena 13:34): 'Se chega antes de eu aprovar o fechamento, entra no mês do movimento, como agora.
+    Se chegar depois da aprovação, entra no mês seguinte.' Com --fechamento-anterior-aprovado, o ajuste de agosto
+    entra em setembro; sem a opção, fica fora da comissão como linha de outro mês (pendência)."""
+    dados = _ajuste_de_agosto(tmp_path)
+    sem = executar(dados, tmp_path / "sem", RAIZ / "regras.yaml")
+    com = executar(dados, tmp_path / "com", RAIZ / "regras.yaml", fechamento_anterior_aprovado=True)
+    assert sem["erros_validacao"] == [] and com["erros_validacao"] == []
+    pend_sem = {p["id_saida"] for p in _csv(tmp_path / "sem", "pendencias.csv")}
+    pend_com = {p["id_saida"] for p in _csv(tmp_path / "com", "pendencias.csv")}
+    assert "PEN-ORBE_FORA_COMPETENCIA-TX88446992" in pend_sem and "PEN-ORBE_FORA_COMPETENCIA-TX88446992" not in pend_com
+    rastro = [l for l in _csv(tmp_path / "com", "rastro.csv") if l["ref_origem"] == "TX88446992"]
+    assert {l["id_saida"] for l in rastro} >= {"COM-68567965000102-CHECKOUT"}
+    assert any("entram em 09/2026 (Q-AJ 1): TX88446992" in a.mensagem for a in com["avisos"])
+    # setembro do jeito que chegou: a opção não muda nada (o 06 é todo de setembro)
+    a = executar(DADOS, tmp_path / "a", RAIZ / "regras.yaml")
+    b = executar(DADOS, tmp_path / "b", RAIZ / "regras.yaml", fechamento_anterior_aprovado=True)
+    assert all((tmp_path / "a" / n).read_bytes() == (tmp_path / "b" / n).read_bytes()
+               for n in ("comissoes_por_lojista.csv", "notas_a_emitir.csv", "pendencias.csv", "rastro.csv"))

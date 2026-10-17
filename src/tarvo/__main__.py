@@ -77,6 +77,9 @@ def criar_parser() -> argparse.ArgumentParser:
     parser.add_argument("--orbe-anterior", type=Path, default=None,
                         help="relatório da Orbe do mês anterior: com --pendencias-anteriores, linhas de lojista que aguardavam "
                              "contrato e agora têm contrato entram na comissão e na nota deste mês")
+    parser.add_argument("--fechamento-anterior-aprovado", action="store_true",
+                        help="o fechamento do mês anterior já foi aprovado: linha do arquivo de ajustes tardios (06) com "
+                             "movimento no mês anterior entra neste mês (Q-AJ 1); sem a opção, vira pendência")
     parser.add_argument("--sem-ia", action="store_true",
                         help="não usa IA nem o cache dela: lançamentos sem regra ficam para uma pessoa")
     return parser
@@ -110,7 +113,7 @@ def arquivos_nao_reconhecidos(pasta: Path) -> list[str]:
 
 def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, cliente_ia=_PADRAO,
              cache_ia: Path = CACHE_IA_PADRAO, pendencias_anteriores: Path | None = None,
-             orbe_anterior: Path | None = None) -> dict:
+             orbe_anterior: Path | None = None, fechamento_anterior_aprovado: bool = False) -> dict:
     """Roda o fechamento e devolve o resumo. Levanta exceção em erro de entrada."""
     regras = carregar_regras(regras_path)
     arq_orbe = achar_unico(dados, PADRAO_ORBE)
@@ -127,7 +130,10 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     )
     cadastro = montar_cadastro(taxas.linhas, regras, arq_taxas.name)
     try:  # D62: linha de outro mês vira pendência, não aborta
-        sep = separar_competencia(transacoes_orbe)
+        # D91 (Q-AJ 1): ajuste que chega depois da aprovação do mês anterior entra neste mês
+        ids_ajustes = frozenset(t.ref_origem for t in leituras_orbe[1].transacoes) if (
+            fechamento_anterior_aprovado and len(leituras_orbe) > 1) else frozenset()
+        sep = separar_competencia(transacoes_orbe, ids_ajustes)
     except CompetenciaAmbigua as e:
         raise ErroEntrada(str(e)) from e
     competencia = sep.competencia
@@ -147,6 +153,10 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         avisos_extra.append(Aviso(arq_ponte.name, "-", f"competência da Ponte {ponte.competencia} ≠ competência da Orbe {competencia}"))
     for p in sep.pendencias:
         avisos_extra.append(Aviso("relatório da Orbe", p.ref_origem, f"linha fora da competência {competencia}: vira pendência {p.id_saida}"))
+    if sep.do_mes_anterior:  # D91
+        avisos_extra.append(Aviso(arq_ajustes.name, "-", f"{len(sep.do_mes_anterior)} ajuste(s) tardio(s) do mês anterior "
+                                  f"(já aprovado) entram em {competencia[1]:02d}/{competencia[0]} (Q-AJ 1): "
+                                  + ", ".join(t.ref_origem for t in sep.do_mes_anterior)))
     if arq_ajustes is None:  # D89 (Turma 12:31: "Prefiro que a solução avise a que quebre sem ninguém perceber")
         avisos_extra.append(Aviso(PADRAO_ORBE_AJUSTES, "-", "sem arquivo de ajustes tardios da Orbe neste mês "
                                   "(informativo: o fechamento segue só com o relatório 01)"))
@@ -488,7 +498,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     try:
         r = executar(args.dados, args.saida, args.regras, sem_ia=args.sem_ia, pendencias_anteriores=args.pendencias_anteriores,
-                     orbe_anterior=args.orbe_anterior)
+                     orbe_anterior=args.orbe_anterior, fechamento_anterior_aprovado=args.fechamento_anterior_aprovado)
     except (ErroEntrada, ErroLeitura, RegraInvalida, RegraPendente, FileNotFoundError) as e:
         print(f"erro: {e}", file=sys.stderr)
         return 2

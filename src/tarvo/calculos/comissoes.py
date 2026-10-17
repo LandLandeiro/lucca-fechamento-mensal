@@ -101,16 +101,21 @@ class SeparacaoCompetencia:
     dentro: list[TransacaoOrbe]
     pendencias: list[Pendencia] = field(default_factory=list)
     rastro: list[dict] = field(default_factory=list)
+    do_mes_anterior: list[TransacaoOrbe] = field(default_factory=list)  # D91: ajuste tardio de mês já aprovado
 
 
 class CompetenciaAmbigua(ValueError):
     """O relatório da Orbe não tem um mês predominante (empate ou vazio)."""
 
 
-def separar_competencia(transacoes: list[TransacaoOrbe]) -> SeparacaoCompetencia:
+def separar_competencia(transacoes: list[TransacaoOrbe],
+                        ajustes_de_mes_aprovado: frozenset[str] = frozenset()) -> SeparacaoCompetencia:
     """D62: competência do checkout = o mês de `data_movimento` da maioria das linhas da Orbe. Linha de outro
     mês não aborta o fechamento: fica fora da comissão e vira pendência ORBE_FORA_COMPETENCIA (uma por linha,
-    valor = taxa cobrada, informativo). Sem linhas ou com empate entre meses → CompetenciaAmbigua."""
+    valor = taxa cobrada, informativo). Sem linhas ou com empate entre meses → CompetenciaAmbigua.
+
+    D91 (Q-AJ 1): `ajustes_de_mes_aprovado` = ids do arquivo de ajustes tardios quando o fechamento do mês anterior
+    já foi aprovado; a linha desses ids com movimento no mês anterior entra nesta competência."""
     contagem: dict[tuple[int, int], int] = {}
     for t in transacoes:
         mes = (t.data_movimento.year, t.data_movimento.month)
@@ -121,9 +126,16 @@ def separar_competencia(transacoes: list[TransacaoOrbe]) -> SeparacaoCompetencia
     if len(ordem) > 1 and ordem[0][1] == ordem[1][1]:
         raise CompetenciaAmbigua(f"relatório da Orbe com meses empatados {sorted(contagem)}: competência do checkout ambígua")
     competencia = ordem[0][0]
-    res = SeparacaoCompetencia(competencia, [t for t in transacoes if (t.data_movimento.year, t.data_movimento.month) == competencia])
+    anterior = (competencia[0] - 1, 12) if competencia[1] == 1 else (competencia[0], competencia[1] - 1)
+
+    def entra(t: TransacaoOrbe) -> bool:
+        mes = (t.data_movimento.year, t.data_movimento.month)
+        return mes == competencia or (mes == anterior and t.ref_origem in ajustes_de_mes_aprovado)
+
+    res = SeparacaoCompetencia(competencia, [t for t in transacoes if entra(t)])
+    res.do_mes_anterior = [t for t in res.dentro if (t.data_movimento.year, t.data_movimento.month) == anterior]
     for t in transacoes:
-        if (t.data_movimento.year, t.data_movimento.month) == competencia:
+        if entra(t):
             continue
         pid = f"PEN-ORBE_FORA_COMPETENCIA-{t.ref_origem}"
         res.pendencias.append(Pendencia(
