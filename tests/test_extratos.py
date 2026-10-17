@@ -479,3 +479,36 @@ def test_fornecedor_com_prefixo_de_lojista_fica_sem_regra(regras, cadastro_com_o
     r = classificar_por_regra(lan, {}, plano, regras, cadastro_com_orbe, (2026, 9))
     assert [(l["metodo"], l["conta_codigo"]) for l in r.linhas] == [("HUMANO", ""), ("HUMANO", "")]
     assert len(r.sem_regra) == 2  # vão para a IA, e o código prova antes de aceitar
+
+
+def _transferencia(saida_data, entrada_data, feriados):
+    from tarvo.classificacao.conferencias import conferir
+    lan = [LancamentoBancario("AURORA", "L1", saida_data, "TRANSF ENTRE CONTAS P/ BCO MERIDIANO", Decimal("-1000.00"), None, "a"),
+           LancamentoBancario("MERIDIANO", "M1", entrada_data, "TED RECEBIDA TARVO PAGAMENTOS LTDA - MESMA TITULARIDADE",
+                              Decimal("1000.00"), None, "m")]
+    regra = {("AURORA", "L1"): "aurora.transferencia_meridiano", ("MERIDIANO", "M1"): "meridiano.mesma_titularidade"}
+    return conferir(regra, lan, {}, {}, [], {}, None, "PENDENCIA", None, feriados)
+
+
+def test_feriado_nao_e_dia_util(regras):
+    """D59: sexta 09/10/2026 → terça 13/10 (12/10 é feriado nacional) = 1 dia útil: transferência casada, sem
+    pendência. Sem o calendário, eram 2 dias úteis e duas pendências falsas (em trânsito + sem origem)."""
+    from tarvo.regras import valor_da_regra
+    feriados = frozenset(date.fromisoformat(str(d)) for d in valor_da_regra(regras, "calendario.feriados_nacionais"))
+    assert {date(2026, 10, 12), date(2026, 11, 2), date(2026, 11, 15), date(2026, 11, 20), date(2026, 12, 25)} <= feriados
+    assert dias_uteis_entre(date(2026, 10, 9), date(2026, 10, 13), feriados) == 1
+    r = _transferencia(date(2026, 10, 9), date(2026, 10, 13), feriados)
+    assert r.pendencias == [] and r.transferencias[0][1] is not None
+    sem = _transferencia(date(2026, 10, 9), date(2026, 10, 13), frozenset())
+    assert sorted(p.tipo for p in sem.pendencias) == ["TRANSFERENCIA_EM_TRANSITO", "TRANSFERENCIA_SEM_ORIGEM"]
+
+
+def test_ano_sem_feriados_no_calendario_gera_aviso(tmp_path):
+    texto = (RAIZ / "regras.yaml").read_text(encoding="utf-8")
+    regras = tmp_path / "regras.yaml"
+    import re
+    novo, n = re.subn(r"(feriados_nacionais:.*\n\s*valor: )\[[^\]]*\]", r"\g<1>[2025-12-25]", texto)
+    assert n == 1
+    regras.write_text(novo, encoding="utf-8")
+    r = executar(DADOS, tmp_path / "s", regras)
+    assert r["erros_validacao"] == [] and any("sem feriados de 2026" in a.mensagem for a in r["avisos"])

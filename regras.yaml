@@ -99,6 +99,18 @@ plano_contas:
     fonte: "04_plano: colunas TIPO (SINTETICA/ANALITICA) e ACEITA_LANCTO"
     pergunta_ref: null
 
+calendario:
+  feriados_nacionais:       # D59: dia útil = seg–sex fora desta lista (conferência da transferência entre contas)
+    valor: [2026-01-01, 2026-04-21, 2026-05-01, 2026-09-07, 2026-10-12, 2026-11-02, 2026-11-15, 2026-11-20, 2026-12-25]
+    status: ASSUMO
+    autor: Lucca
+    fonte: >-
+      feriados nacionais por lei federal em 2026 (Lei 662/1949 com a Lei 10.607/2002; Lei 6.802/1980, 12/10;
+      Lei 14.759/2023, 20/11); pedido Lucca 17/10 após a avaliação simulada. Fora da lista: Carnaval, Sexta-feira
+      Santa e Corpus Christi (não são feriados nacionais por lei; o calendário bancário pode fechar). Ano sem
+      datas na lista → aviso. Acrescentar 2027 antes de fechar janeiro/2027
+    pergunta_ref: null
+
 extratos:
   ref_origem_aurora:
     valor: "L<linha física do arquivo, contando de 1>"

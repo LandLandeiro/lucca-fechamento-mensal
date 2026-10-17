@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -182,6 +183,10 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
                     and chave in c.lojista_por_lancamento):
                 regra_por_lanc[chave] = "meridiano.aporte_lojista"
     linhas_por_lanc = {(ext.banco, ref): n for ext in (aurora, meridiano) for ref, n in ext.linhas_arquivo.items()}
+    feriados = frozenset(date.fromisoformat(str(d)) for d in valor_da_regra(regras, "calendario.feriados_nacionais"))
+    if not any(d.year == competencia[0] for d in feriados):
+        avisos_extra.append(Aviso("regras.yaml", "calendario.feriados_nacionais",
+                                  f"sem feriados de {competencia[0]}: dia útil = seg–sex (acrescente as datas do ano)"))
     conf = conferir(
         regra_por_lanc, aurora.lancamentos + meridiano.lancamentos, linhas_por_lanc,
         {k: v for c in classif for k, v in c.lojista_por_lancamento.items()},
@@ -190,6 +195,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         [lan for c in classif for lan, _ in c.sem_regra if normalizar_nome(lan.descricao).startswith("PIX RECEB ")],
         valor_da_regra(regras, "classificacao_extratos.conferencias")["resgate_acima_do_aplicado"],
         ler_pendencias_anteriores(pendencias_anteriores) if pendencias_anteriores else None,
+        feriados,
     )
     lancamentos = [l for c in classif for l in c.linhas]
 

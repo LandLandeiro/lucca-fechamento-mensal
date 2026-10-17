@@ -39,14 +39,14 @@ class ResultadoConferencias:
     resgates: list[dict] = field(default_factory=list)
 
 
-def dias_uteis_entre(a: date, b: date) -> int:
-    """Dias úteis (seg–sex) de a até b, sem contar a; feriados não são considerados."""
+def dias_uteis_entre(a: date, b: date, feriados: frozenset[date] = frozenset()) -> int:
+    """Dias úteis (seg–sex fora de `feriados`, regra `calendario.feriados_nacionais`, D59) de a até b, sem contar a."""
     if b < a:
-        return -dias_uteis_entre(b, a)
+        return -dias_uteis_entre(b, a, feriados)
     n, d = 0, a
     while d < b:
         d += timedelta(days=1)
-        n += d.weekday() < 5
+        n += d.weekday() < 5 and d not in feriados
     return n
 
 
@@ -65,8 +65,10 @@ def conferir(
     aportes_nao_identificados: list[LancamentoBancario] | None = None,
     resgate_acima: str = "PENDENCIA",
     pendencias_anteriores: list[dict] | None = None,
+    feriados: frozenset[date] = frozenset(),
 ) -> ResultadoConferencias:
-    """Roda as três conferências. `regra_por_lancamento` (banco, ref) → nome da regra aplicada."""
+    """Roda as três conferências. `regra_por_lancamento` (banco, ref) → nome da regra aplicada;
+    `feriados` = datas que não são dia útil (`calendario.feriados_nacionais`)."""
     res = ResultadoConferencias()
     por_regra: dict[str, list[LancamentoBancario]] = {}
     for lan in sorted(lancamentos, key=lambda l: (l.data, l.banco, l.ref_origem)):
@@ -79,7 +81,8 @@ def conferir(
     # 1) transferências entre contas próprias
     entradas = list(por_regra.get("meridiano.mesma_titularidade", []))
     for saida in por_regra.get("aurora.transferencia_meridiano", []):
-        par = next((e for e in entradas if e.valor == -saida.valor and 0 <= dias_uteis_entre(saida.data, e.data) <= 1), None)
+        par = next((e for e in entradas
+                    if e.valor == -saida.valor and 0 <= dias_uteis_entre(saida.data, e.data, feriados) <= 1), None)
         res.transferencias.append((saida, par))
         if par is not None:
             entradas.remove(par)
@@ -95,7 +98,7 @@ def conferir(
         res.rastro_pendencias.append(_rastro(pid, saida, saida.valor, linha(saida), "transferência sem par no Meridiano"))
     em_transito = [p for p in (pendencias_anteriores or []) if p.get("tipo") == "TRANSFERENCIA_EM_TRANSITO"]
     for e in entradas:  # entrada de mesma titularidade sem saída no Aurora
-        anterior = _transito_anterior(e, em_transito)
+        anterior = _transito_anterior(e, em_transito, feriados)
         if anterior is not None:  # D50: a transferência em trânsito do mês anterior caiu agora
             em_transito.remove(anterior)
             m = _RE_DATA_SAIDA.search(anterior.get("motivo", ""))
@@ -199,7 +202,7 @@ def conferir(
 _RE_DATA_SAIDA = re.compile(r"saiu do Aurora em (\d{4}-\d{2}-\d{2})")
 
 
-def _transito_anterior(e: LancamentoBancario, em_transito: list[dict]) -> dict | None:
+def _transito_anterior(e: LancamentoBancario, em_transito: list[dict], feriados: frozenset[date] = frozenset()) -> dict | None:
     """Pendência "em trânsito" do mês anterior com o mesmo valor (sinal oposto) e saída até 1 dia útil antes."""
     for p in em_transito:
         try:
@@ -207,7 +210,7 @@ def _transito_anterior(e: LancamentoBancario, em_transito: list[dict]) -> dict |
         except Exception:  # noqa: BLE001 — linha ilegível do arquivo anterior: não casa
             continue
         m = _RE_DATA_SAIDA.search(p.get("motivo", ""))
-        if valor == -e.valor and m and 0 <= dias_uteis_entre(date.fromisoformat(m.group(1)), e.data) <= 1:
+        if valor == -e.valor and m and 0 <= dias_uteis_entre(date.fromisoformat(m.group(1)), e.data, feriados) <= 1:
             return p
     return None
 
