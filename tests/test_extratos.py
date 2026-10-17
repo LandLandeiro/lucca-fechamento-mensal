@@ -445,3 +445,37 @@ def test_confianca_nunca_vazia(saida, tmp_path):
 def test_humano_sem_conta_tem_confianca_zero(regras, cadastro, plano):
     r = classificar_por_regra([_lanc("PIX ENVIADO FORNECEDOR DESCONHECIDO", "-10.00")], {}, plano, regras, cadastro, (2026, 9))
     assert (r.linhas[0]["metodo"], r.linhas[0]["conta_codigo"], r.linhas[0]["confianca"]) == ("HUMANO", "", Decimal("0"))
+
+
+@pytest.fixture(scope="module")
+def cadastro_com_orbe(cadastro, orbe, regras):
+    import copy
+    from tarvo.cadastro import adicionar_nomes_orbe
+    cad = copy.deepcopy(cadastro)
+    adicionar_nomes_orbe(cad, orbe.transacoes, regras)
+    return cad
+
+
+@pytest.mark.parametrize("texto", ["VELA TRANSPORTES", "CANGURU MUDANCAS", "VELA", "MAPLE ST", "ROTA G"])
+def test_prefixo_de_uma_palavra_nao_casa(cadastro_com_orbe, texto):
+    """D58: "Vela" e "Canguru" são uma palavra só na planilha; um fornecedor que começa igual não é o lojista.
+    E um texto cortado precisa de 2 palavras inteiras do nome."""
+    assert lojista_por_nome_bancario(cadastro_com_orbe, texto)[0] is None
+
+
+@pytest.mark.parametrize("texto, cnpj", [
+    ("VELA TURISMO EDUCACIONAL L", "20987545000140"),  # pelo nome da Orbe do EC da Vela
+    ("CANGURU INTERCAMBIOS LTDA", "53857560000123"),
+    ("MUNDO ABERTO INTERC", "17217888000111"),  # "Mundo Aberto": 2 palavras, nome completo
+    ("NORDICA EDUCACAO INTERNA", "14760206000124"),  # cortado pelo banco, 2 palavras inteiras
+])
+def test_nomes_reais_de_setembro_continuam_casando(cadastro_com_orbe, texto, cnpj):
+    assert lojista_por_nome_bancario(cadastro_com_orbe, texto)[0] == cnpj
+
+
+def test_fornecedor_com_prefixo_de_lojista_fica_sem_regra(regras, cadastro_com_orbe, plano):
+    """Antes, "PIX ENVIADO VELA TRANSPORTES" virava repasse à Vela por REGRA, com confiança 1.00, em silêncio."""
+    lan = [_lanc("PIX ENVIADO VELA TRANSPORTES", "-500.00", "X1"), _lanc("PIX ENVIADO CANGURU MUDANCAS", "-800.00", "X2")]
+    r = classificar_por_regra(lan, {}, plano, regras, cadastro_com_orbe, (2026, 9))
+    assert [(l["metodo"], l["conta_codigo"]) for l in r.linhas] == [("HUMANO", ""), ("HUMANO", "")]
+    assert len(r.sem_regra) == 2  # vão para a IA, e o código prova antes de aceitar

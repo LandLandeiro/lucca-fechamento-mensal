@@ -133,25 +133,29 @@ def normalizar_nome(texto: str) -> str:
 
 
 def lojista_por_nome_bancario(cadastro: Cadastro, texto: str, aliases=()) -> tuple[str | None, str]:
-    """CNPJ do lojista cujo nome no extrato casa por PREFIXO EXATO com um nome da planilha (D31).
+    """CNPJ do lojista cujo nome no extrato casa por PREFIXO EXATO com um nome cadastrado (D31, D58).
 
-    Casa se, normalizados, o texto do extrato é prefixo do nome da planilha (o banco corta o
-    nome: "ROTA GLOBAL INTERCAMBIO LT" → "ROTA GLOBAL INTERCAMBIO LTDA") ou o nome da planilha
-    é prefixo do texto terminando em fronteira de palavra ("KIWI EXPERIENCE" → "KIWI EXPERIENCE
-    TURISMO LT"). Não há similaridade nem distância de edição: "EDU ABROAD" não casa com
-    "EDUABROAD". Zero ou mais de um CNPJ → None com o motivo. `aliases` = (cnpj, nome) aprovados e
-    vigentes na data do lançamento (`classificacao_extratos.aliases_lojista`, D44), com a mesma regra de prefixo.
+    Nomes cadastrados: os da planilha, os do relatório da Orbe ligados pelo EC (D52) e os `aliases`
+    (cnpj, nome) aprovados e vigentes na data do lançamento (`classificacao_extratos.aliases_lojista`,
+    D44). Normalizados, casa de dois jeitos, sempre em fronteira de palavra:
+      - nome completo no texto: o nome cadastrado inteiro é o começo do texto ("KIWI EXPERIENCE" →
+        "KIWI EXPERIENCE TURISMO LT"), e tem pelo menos 2 palavras ou é nome da Orbe ligado ao EC / alias
+        aprovado. "Vela" e "Canguru" (uma palavra, só na planilha) não casam com "VELA TRANSPORTES";
+      - o banco cortou o nome: o texto é o começo do nome cadastrado ("ROTA GLOBAL INTERCAMBIO LT" →
+        "ROTA GLOBAL INTERCAMBIO LTDA") e traz pelo menos 2 palavras inteiras dele.
+    Não há similaridade nem distância de edição: "EDU ABROAD" não casa com "EDUABROAD". Zero ou mais de
+    um CNPJ → None com o motivo.
     """
     alvo = normalizar_nome(texto)
     if not alvo:
         return None, "nome vazio"
     achados: dict[str, str] = {}
-    candidatos = [(cnpj, l.lojista) for cnpj, linhas in cadastro.linhas_por_cnpj.items() for l, _ in linhas]
-    candidatos += [(ident, nome) for ident, nomes in cadastro.nomes_orbe.items() for nome in sorted(nomes)]
-    candidatos += list(aliases)
-    for ident, nome_original in candidatos:
+    candidatos = [(cnpj, l.lojista, False) for cnpj, linhas in cadastro.linhas_por_cnpj.items() for l, _ in linhas]
+    candidatos += [(ident, nome, True) for ident, nomes in cadastro.nomes_orbe.items() for nome in sorted(nomes)]
+    candidatos += [(ident, nome, True) for ident, nome in aliases]
+    for ident, nome_original, ligado in candidatos:
         nome = normalizar_nome(nome_original)
-        if nome.startswith(alvo) or (alvo.startswith(nome) and (len(alvo) == len(nome) or alvo[len(nome)] == " ")):
+        if _casa_nome(alvo, nome, ligado):
             achados[ident] = nome_original
     if len(achados) == 1:
         cnpj, nome = next(iter(achados.items()))
@@ -159,6 +163,18 @@ def lojista_por_nome_bancario(cadastro: Cadastro, texto: str, aliases=()) -> tup
     if not achados:
         return None, f"{alvo!r} não é prefixo exato de nenhum lojista da planilha (nem o contrário)"
     return None, f"{alvo!r} casa com mais de um lojista: {sorted(achados.values())}"
+
+
+def _casa_nome(alvo: str, nome: str, ligado: bool) -> bool:
+    """Regra de `lojista_por_nome_bancario` (D58). `ligado` = nome da Orbe ligado ao EC ou alias aprovado."""
+    if alvo == nome or alvo.startswith(nome + " "):  # nome completo no texto
+        return len(nome.split()) >= 2 or ligado
+    if nome.startswith(alvo):  # o banco cortou o nome: conta só as palavras inteiras do texto
+        palavras = alvo.split()
+        if nome[len(alvo)] != " ":
+            palavras = palavras[:-1]  # a última foi cortada no meio
+        return len(palavras) >= 2
+    return False
 
 
 def lojista_por_ec(cadastro: Cadastro, ec: str) -> Lojista | None:
