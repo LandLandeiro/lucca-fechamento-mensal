@@ -94,7 +94,7 @@ Fonte única dos textos: `docs/FINANCEIRO_SLACK.md` (copiado do Slack sem ediç�
 | P10 | Estorno de venda de mês anterior | Q-B | MN AI · 20:04 | Helena · 20:06 | respondida | `checkout.estorno` CONFIRMADO (H03) |
 | P11 | Valor da divergência de remessa e tolerância | Q-G | Fox AI · 20:52 | Helena · 20:58 | respondida | `remessa.divergencia_spread` valor cheio (H19); tolerância é critério nosso, escrito com motivo (H07) |
 | P12 | Arredondamento (truncar ou arredondar; por linha; divergência; meio centavo no 50%) | Q-H | Fox AI | Helena · 21:13 | respondida | D09/D19/D20 substituídas pela D27; H10, H14, H27, H31 → CONFIRMADO |
-| P13 | Nota de remessa com o excesso da Mundo Aberto | Q-J | Theo Garcia · 21:45 | Helena · 21:45 | respondida | nota pelo realizado; pendência EXCESSO_REMESSA (D30, H34) |
+| P13 | Nota de remessa com o excesso da Mundo Aberto | Q-J | Theo · 21:45 | Helena · 21:45 | respondida | nota pelo realizado; pendência EXCESSO_REMESSA (D30, H34) |
 | P14 | Plano de contas: contrapartida, provisionado × despesa direta | Q-I | Fox AI | Helena · 21:14 | respondida | H24 e H33 → CONFIRMADO; `contabil.despesas_diretas` para a E6b |
 | P15 | Remessa: validação do número e repasse da Ponte | Q-K | Lucca | Helena · 22:33 | respondida | CONFERENCIA_REPASSE sem prever desconto: conferir o TED quando cair (H40, D38); coluna `participacao_tarvo_no_spread` |
 | P16 | Contestação com a Ponte | Q-L | Insper AI | Helena · 22:34 | respondida | pendência CONTESTACAO_PONTE por motivo + `contestacao_ponte.csv` (H41, D39) |
@@ -112,7 +112,7 @@ Fonte única dos textos: `docs/FINANCEIRO_SLACK.md` (copiado do Slack sem ediç�
 | P28 | Pendência por contraparte; contas; >12x; centavos da Mundo Aberto | Q-X | Casa Barton · 10:56 | Helena · 11:01 | respondida | rascunhos (D68); critério da divergência escrito (H25, D64) |
 | P29 | Contas dos fluxos e repasse à Atlas | Q-Y | Lucca · 11:01 | Helena · 11:03 | respondida | H39 CONFIRMADO |
 | P30 | Ajuste da Ponte | Q-Z | Desbravadores · 11:07 | Helena · 11:33 | respondida | regra registrada, pendência AJUSTE_PONTE (H57, D83) |
-| P31 | Aviso × contrato; alerta; spread negativo | Q-AA | Theo Garcia · 11:16 | Helena · 11:37 | respondida | Bridge `contrato_orbe` (H51, D76); alerta (H53, D81); dois valores do negativo (H26, H41, D80) |
+| P31 | Aviso × contrato; alerta; spread negativo | Q-AA | Theo · 11:16 | Helena · 11:37 | respondida | Bridge `contrato_orbe` (H51, D76); alerta (H53, D81); dois valores do negativo (H26, H41, D80) |
 | P32 | Regras gerais (estorno, sem contrato, lista, negativo, ajustes) | Q-AB | Southlands · 11:23 | Helena · 11:38 | respondida | divergências transação por transação (H15, D77) |
 | P33 | Atlas: identidade e apuração | Q-AC | Prime · 11:26 | Helena · 11:41 | respondida | CNPJ só para identificar; fora do arquivo (H05, D82) |
 | P34 | Casa: data-base da isenção | Q-AD | Prime · 11:27 | Helena · 11:41 | respondida | confirma a regra atual (venda a partir de 01/09) |
@@ -268,7 +268,7 @@ Fonte única dos textos: `docs/FINANCEIRO_SLACK.md` (copiado do Slack sem ediç�
 
 ---
 
-#### Q-J · Theo Garcia · resposta 21:45 · nota de remessa e excesso da Mundo Aberto
+#### Q-J · Theo · resposta 21:45 · nota de remessa e excesso da Mundo Aberto
 
 **Pergunta:** sobre o excesso de spread da Mundo Aberto na nota de remessa (texto da pergunta não copiado aqui; consultar o Slack).
 
