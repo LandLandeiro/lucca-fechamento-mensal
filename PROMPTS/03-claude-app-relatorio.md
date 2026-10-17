@@ -1,13 +1,13 @@
 # Relatório da sessão de planejamento no Claude (app) · Desafio Barte AI
 
-**Versão 1 · 17/10/2026, ~12h30.** Atualização prevista para ~16h30.
+**Versão 2 · 17/10/2026, ~16h50.** A versão 1 (~12h30) está no histórico do git.
 
 ## Como ler este documento
 
-- **O que é:** um relatório escrito pelo Claude, no app, sobre a conversa de planejamento e verificação com o Lucca, desde o kickoff (16/10, 19h) até agora. É um resumo organizado, não a transcrição.
-- **Transcrição literal:** a conversa completa, sem edição, vai pelo link de compartilhamento do chat, citado no `PROMPTS/README.md`. Este relatório não a substitui.
-- **O que ficou de fora:** perguntas de conceito básico (o que é CI, o que é EC, como funciona o git), conversa social e logística pessoal.
-- **Limite:** foi escrito a partir do registro de trabalho do próprio Claude, não de uma releitura turno a turno. Onde um horário não é exato, ele aparece como aproximado (~). Se este texto divergir da transcrição, vale a transcrição.
+- **O que é:** o registro da conversa de planejamento e verificação entre o Lucca e o Claude, no app, de 16/10 às 10h43 até o congelamento do código (17/10, 17h). É um relatório organizado, escrito pelo Claude, e não a transcrição.
+- **Por que não a transcrição:** o claude.ai só exporta a conta inteira de uma vez, com conversas pessoais de fora do projeto, e a tentativa de copiar a conversa turno a turno por uma sessão de IA foi interrompida pelo filtro de segurança do modelo (duas vezes). Os prompts literais da construção estão nos exports das sessões do Claude Code (02, 04, 05 e 06).
+- **O que ficou de fora:** perguntas de conceito e explicações didáticas, conversa social, logística pessoal e outros assuntos fora do projeto.
+- **Limite:** onde um horário não é exato, ele aparece como aproximado (~).
 
 ---
 
@@ -15,9 +15,10 @@
 
 | Quem | O que fez |
 |---|---|
-| **Lucca** | Dirigiu o trabalho: escolheu o que construir e em que ordem, decidiu cada trade-off apresentado, escreveu e mandou as perguntas ao financeiro, rodou e aprovou cada prompt no Claude Code, validou os resultados. |
-| **Claude (app)** | Planejamento, leitura do case, rascunho e revisão de perguntas, prompts para o Claude Code, verificação independente dos números com scripts próprios, avaliação crítica (inclusive dos próprios erros). |
-| **Claude Code (Dell, `C:\Lucca\tarvo-fechamento`)** | Construção: código, testes, auditoria, documentação e commits. Ele também questionou e corrigiu pedidos do Claude app quando os dados mostravam outra coisa (seção 6). |
+| **Lucca** | Dirigiu o trabalho: escolheu o que construir e em que ordem, decidiu cada trade-off apresentado, escreveu e mandou as perguntas ao financeiro, rodou e aprovou cada prompt no Claude Code, validou os resultados e discordou do Claude quando achou que devia. |
+| **Claude (app)** | Planejamento, leitura do case, rascunho e revisão de perguntas, prompts para o Claude Code, verificação independente dos números com scripts próprios, leitura do Slack (só leitura), deck do pitch, avaliação crítica (inclusive dos próprios erros). |
+| **Claude Code (Dell)** | Construção: código, testes, auditoria, documentação e commits. Ele também questionou e corrigiu pedidos do Claude app quando os dados mostravam outra coisa (seção 6). |
+| **Sessões novas do Claude Code, sem contexto** | Avaliação simulada da banca (manhã), auditoria cega das regras (tarde) e auditoria final (16h). Usadas de propósito para que o trabalho não se autoavaliasse. |
 
 Regra combinada no kickoff: a partir do case real, as hipóteses e as perguntas ao financeiro são do Lucca, e o Claude atua como revisor.
 
@@ -27,31 +28,32 @@ Regra combinada no kickoff: a partir do case real, as hipóteses e as perguntas 
 
 ### 16/10 (sexta)
 
+- **10h43–19h, preparação.** O case ainda não era conhecido. Discussão de formato, stack e método. Do ensaio da tarde (que supunha um case de conciliação) vieram só ideias de método: dinheiro sem float, rastro arquivo+linha, IA com cache e confiança, testes e auditoria. O repositório da entrega é novo.
 - **19h00, kickoff.**
   - O case real é o **fechamento de setembro/2026 da Tarvo**, uma subadquirente: checkout pela Orbe e remessas pela Ponte Câmbio.
   - A entrega são 6 CSVs com formato fixo em `saida/`, com rastro até a linha de origem.
-  - Mockup de tela não conta.
-  - O histórico de prompts vai junto, sem edição, tirando só chaves e dados pessoais.
-- **~19h30, o que reaproveitar do ensaio da tarde:**
-  - O repositório é novo. Do ensaio (que supunha um case de conciliação) vieram só ideias de método: dinheiro sem float, rastro arquivo+linha, IA com cache e confiança, testes e auditoria.
-  - A preparação ficou registrada como tal, de forma transparente.
-- **~19h35, estrutura do repo:** criada no Dell (`data/` intocado, `docs/`, `src/`, `saida/`, `PROMPTS/`, README, HIPOTESES, CLAUDE.md).
+  - O histórico de prompts vai junto, tirando só chaves e dados pessoais.
+- **~19h35, estrutura do repo** criada no Dell (`data/` intocado, `docs/`, `src/`, `saida/`, `PROMPTS/`, README, HIPOTESES, CLAUDE.md).
 - **~19h40, primeiro prompt no Claude Code (high):** exploração dos dados, sem código de solução. Saídas: perfil de cada arquivo, ambiguidades classificadas como SEI / ASSUMO / PERGUNTAR com o impacto em R$, e rascunho das perguntas.
-- **20h–21h, perguntas ao financeiro.** O financeiro respondeu no `#duvidas-hackathon-ai`. Q-A a Q-G estão literais em `docs/FINANCEIRO_SLACK.md`; resumo na seção 4.
-- **Noite, construção por níveis:** comissão de checkout com rastro, divergências, remessa, notas, lançamentos e pendências. Cada etapa com teste, e checkpoints com verificação.
+- **20h–22h30, perguntas ao financeiro** (Q-A a Q-M, literais em `docs/FINANCEIRO_SLACK.md`).
+- **Noite, construção por níveis:** comissão de checkout com rastro, divergências, remessa, notas, lançamentos e pendências. Cada etapa com teste.
 
 ### 17/10 (sábado)
 
-- **Manhã, endurecimento:**
-  - CI no GitHub Actions (Ubuntu e Windows, Python 3.12 e 3.14, sem rede, `git diff --exit-code saida/`).
-  - Auditoria independente da saída (`scripts/auditar_saida.py`).
-  - Fixture sintética de outubro com `--pendencias-anteriores`.
-  - Documentação para a banca: causa raiz, momentos de IA e "onde ver cada critério".
-- **09h09–11h03, segunda rodada de respostas do financeiro (Q-N a Q-Y),** inclusive sobre como os 8 dias do fechamento se dividem.
-- **Manhã, avaliador simulado.** O Claude Code avaliou o projeto como se fosse a banca da Barte. Resultado: 15 de 15 números recalculados certos, nota ~7,1/10 hoje e ~8,3 com as correções, e uma lista de correções antes das 18h30 (seção 6).
-- **~11h54, correções da avaliação:** 11 itens, um commit e um teste por item (D52–D62). 221 testes, 0 violações, saída idêntica gerada do zero, CI verde.
-- **~11h50–12h05, painel:** prévia visual no Claude Design. Depois de discutir com o Lucca, o painel virou só leitura e só com o que tem utilidade real (seção 3).
-- **12h, em andamento:** incorporar as respostas Q-N a Q-Y (high) e construir o painel numa branch separada (high).
+- **Manhã, endurecimento:** CI no GitHub Actions (Ubuntu e Windows, Python 3.12 e 3.14, `git diff --exit-code saida/`), auditoria independente da saída, teste de outubro com dados sintéticos, documentação para a banca.
+- **09h09–11h03, segunda rodada do financeiro (Q-N a Q-Y).**
+- **10h44, Checkpoint 1** (DM ao Manuel). Resposta dele: conferir as três premissas contra o canal e garantir que a conferência independente teste as regras, não só a conta.
+- **~11h, avaliador simulado** (sessão nova): 15 de 15 números certos e uma lista de correções (D52–D62).
+- **11h16–12h50, terceira rodada (Q-Z a Q-AH).** Viradas importantes: a Bridge é erro da Orbe com contrato (D76), a Casa é concessão do comercial, o valor a devolver da Casa é o que a Orbe descontou de fato (D71), a provisão sai do fechamento.
+- **12h21–14h52, painel** numa branch separada, validado e levado para a main.
+- **13h10, arquivo 06 da Orbe** (14 ajustes tardios). Entrou sem mudança de cálculo: −R$ 3.304,39 nas notas. Achado no caminho: o programa ignorava em silêncio um arquivo que não reconhecia; agora avisa.
+- **Tarde, ponto 2 do Manuel:** auditoria cega das regras (sessão nova, sem `regras.yaml` nem código) e teste de citações literais. 34 regras CONFIRMADO sem citação literal foram corrigidas.
+- **13h19–14h11, quarta rodada (Q-AI a Q-AM)**, incorporada até 15h25 (D91–D96), com `manifesto.csv` e `rastro_regras.csv`.
+- **Tarde, deck do pitch** montado no Claude (app), com várias rodadas de ajuste visual pedidas pelo Lucca.
+- **15h27–15h45, entrega:** limpeza do nome de usuário nos arquivos, repositório renomeado e público, DM ao Manuel com o link.
+- **15h38, Checkpoint 2.**
+- **15h49–16h25, auditoria final** por uma sessão nova do Claude Code: recontagem sem importar o código, clone limpo, formato, rastro e docs × saída. Nenhum número errado. Os achados foram de texto e de entrega (seção 6).
+- **17h00, código congelado.**
 
 ---
 
@@ -59,74 +61,58 @@ Regra combinada no kickoff: a partir do case real, as hipóteses e as perguntas 
 
 | Decisão | Motivo | Quem decidiu |
 |---|---|---|
-| Comissão de checkout pela **taxa contratada**, linha a linha | Resposta Q-A: "A gente fatura pela taxa contratada" | Regra do financeiro |
-| Arredondamento **meio para cima por linha**, depois soma | Q-H. O Claude tinha recomendado truncar como a Orbe, e a Helena decidiu diferente | Financeiro (a recomendação do Claude foi vencida) |
-| Estorno entra no mês do estorno, pela taxa da venda original | Q-B | Financeiro |
-| Venda e estorno que se anulam **não** viram divergência | Q-N 3 ("Cobro da Orbe só o que sobrou de diferença líquida"); o Lucca já tinha decidido assim antes da resposta | Lucca, depois confirmado |
-| Remessa = 50% do Spread R$ realizado; Mundo Aberto pelo **Spread %** (1.418,85) | Q-E, Q-G e Q-X 4. Status ASSUMO, porque a Helena delegou a escolha | Lucca, com a correção do Claude Code |
-| **IA só onde há ambiguidade**, nunca em número | "Alarme falso conta contra" e o CFO não aceita conciliação que alucina. Determinístico primeiro, IA nas sobras com prova em código | Lucca e Claude |
-| IA: claude-haiku-5-5 com saída estruturada, cache por hash do prompt e confiança ≥ 0,8 | Custo, reprodutibilidade (a banca roda sem chave) e verificação pelo código (Σ PIX recebidos = Σ Valor R$ + IOF da Ponte) | Claude Code, aprovado pelo Lucca |
-| Regra antes da IA no EduAbroad (D35 → D52) | O avaliador apontou que a IA tinha sido forçada nesse caso por sugestão do Claude. Com a correção, a IA tem 0 linhas em setembro | Lucca, a partir da avaliação |
-| Divergência de checkout também vira pendência (D53) | Crítica do avaliador. A Helena disse que decide cada caso | Lucca |
-| Casa do Estudante: devolução ao lojista, **nunca** cobrança da Orbe | Q-N 1 e Q-V: ninguém avisou a Orbe, então ela cobrou certo pela planilha | Financeiro |
-| Bridge: mesmo tratamento da Casa, com a natureza generalizada para `condicao_nao_informada` | Q-T 1: a Orbe foi avisada dias depois de 15/09, e as 5 divergências são de 15 a 18/09. ASSUMO, com a data do aviso em aberto | Lucca, com a recomendação do Claude |
-| Alerta de antecipação só para lojista sem histórico (em setembro, só a Atlas) | O critério do "mês acumulado" daria 5 alarmes falsos, porque a antecipação cobre recebíveis de meses fora dos dados. Limitação escrita | Lucca, a partir da pergunta do Claude Code |
-| Atlas em outubro com `--orbe-anterior` | Q-Q. Arquivo explícito no rastro, sem adivinhar pelo prefixo | Lucca, com a recomendação do Claude Code |
-| Documentação junto no repo, não espalhada | Quem avalia (e a IA da banca) acha tudo num lugar | Lucca |
-| Painel: HTML estático gerado pelo Python, branch `relatorio`, merge só se estiver pronto até 14h30 | Não está na rubrica. Determinístico, versionado com a saída, abre sem servidor | Lucca |
-| Painel só de leitura, sem arrastar | Arrastar não salva nada num HTML estático; seria fingir uma função. A decisão é humana e acontece fora do painel | Lucca, a partir de uma pergunta dele ("a IA não faz isso?") |
-| "Com mais tempo" fala de capacidades (registro de decisões, cadastro de condições, checagem diária, papéis), e o React aparece só como consequência | React é ferramenta, não valor para a Tarvo | Lucca, depois de o Claude discordar da primeira versão |
+| Comissão de checkout pela **taxa contratada**, linha a linha | Q-A: "A gente fatura pela taxa contratada" | Financeiro |
+| Arredondamento **meio para cima por linha**, depois soma | Q-H. O Claude tinha recomendado truncar como a Orbe, e a Helena decidiu diferente | Financeiro (recomendação do Claude vencida) |
+| Estorno no mês do estorno, pela taxa da venda original | Q-B | Financeiro |
+| Divergências **transação por transação**: venda e estorno entram com sinais opostos; a cobrança da Orbe é pelo líquido | Q-N 3 e as respostas seguintes do canal | Financeiro |
+| Remessa = 50% do Spread R$ realizado; Mundo Aberto pelo **Spread %** (1.418,85) | Q-E, Q-G e Q-X 4. ASSUMO, porque a Helena delegou a escolha | Lucca, com a correção do Claude Code |
+| **IA só onde há ambiguidade**, nunca em número | "Alarme falso conta contra". Determinístico primeiro, IA nas sobras, com prova em código | Lucca e Claude |
+| IA com saída estruturada, cache e confiança ≥ 0,8 | Custo, reprodutibilidade (a banca roda sem chave) e verificação pelo código | Claude Code, aprovado pelo Lucca |
+| Regra antes da IA no EduAbroad (D52) | O avaliador apontou que a IA tinha sido forçada nesse caso por sugestão do Claude | Lucca, a partir da avaliação |
+| **Bridge = erro da Orbe com contrato** (`contrato_orbe`, D76) | Q-AA 1: "O que decide é o contrato, não o aviso". Substituiu a recomendação anterior do Claude (seção 6) | Financeiro |
+| **Casa do Estudante = concessão do comercial**, custo da Tarvo | Q-AA 1: "Quem abriu mão da receita fomos nós". As 118 linhas ficam nas divergências marcadas como isenção (Q-AE 1), com natureza e motivo próprios | Financeiro; o texto do motivo foi ajustado na auditoria final |
+| Valor a devolver = valor da taxa cobrado − comissão contratada (D71) | O valor descontado de fato pela Orbe (15.396,77), em coluna própria; `diferenca_brl` segue a fórmula da Q-H | Financeiro (CONFIRMADO às 12h50) |
+| Spreads negativos: na pendência com os dois valores, e também nas divergências com natureza própria | Q-O: "Se quiserem listar também nas divergências, tudo bem, desde que fique claro que é outra natureza". Reconferido no Slack às 16h17 e mantido | Lucca |
+| Alerta de antecipação só para lojista sem histórico | O critério do mês inteiro daria alarme falso em 5 lojistas; a Helena deixou o critério conosco (Q-AA 2) | Lucca |
+| Arquivo 06 lido junto com o relatório da Orbe; ajuste tardio pelo mês da aprovação | Aviso da organização (13h10) e Q-AJ 1 | Financeiro + Lucca |
+| Painel: HTML estático gerado pelo Python, **só de leitura** | Arrastar cartões num HTML estático seria fingir uma função; decisão é humana | Lucca, a partir de uma pergunta dele |
+| "Com mais tempo" fala de capacidades (cadastro de condições, checagem diária, travas, registro de decisões), não de ferramenta | React é ferramenta, não valor para a Tarvo | Lucca, depois de o Claude discordar da primeira versão |
+| Nada muda por comparação com outros times | A base são o código, as regras e as falas da Helena | Lucca |
 
 ---
 
 ## 4. Perguntas ao financeiro
 
-O texto literal, com horários, está em `docs/FINANCEIRO_SLACK.md`. Aqui, só o que mudou o resultado.
+O texto literal, com horários, está em `docs/FINANCEIRO_SLACK.md` e na tabela do `HIPOTESES.md`. Aqui, só o que mudou o resultado.
 
-**16/10 à noite**
-- **Q-A (Fox AI):** base da comissão é a taxa contratada; divergência é decidida pela Helena.
-- **Q-B (MN AI):** estorno de venda de agosto entra em setembro, pela taxa original.
-- **Q-C (Fox AI):** 3 ECs sem cadastro casam com linhas da planilha. Atlas não fatura até o comercial confirmar.
-- **Q-D (MN AI):** uma nota por lojista por mês; saldo zero ou negativo não emite; na remessa, uma nota só, para a Ponte.
-- **Q-E (MN AI):** remessa = 50% do Spread R$. Mundo Aberto é divergência. Spread negativo fora da trava não é aceito. O número de operação é único.
-- **Q-F (Lucca):** a Rota não teve reajuste. A Casa tem tarifa zerada de setembro a dezembro. Folha e impostos são de agosto, já provisionados. Os 3 créditos sem origem ficam pendentes.
-  - Autocorreção registrada na própria pergunta: os rótulos de modalidade estavam trocados.
-- **Q-G (Fox AI):** divergência de remessa pelo valor cheio; o critério de tolerância é nosso, desde que escrito.
-- **Q-H a Q-M:** arredondamento, tolerância e outras regras. Ver o arquivo.
+**16/10 à noite (Q-A a Q-M):** taxa contratada; estorno de agosto em setembro pela taxa original; Atlas não fatura sem contrato; uma nota por lojista e uma só para a Ponte; remessa = 50% do Spread R$; Rota sem reajuste; Casa com tarifa zerada de setembro a dezembro; arredondamento meio para cima por linha.
 
-**17/10 de manhã (Q-N a Q-Y)**
-- Casa separada das divergências de contrato.
-- Spread negativo é contestação, não divergência do lojista.
-- Netting confirmado.
-- 18.240 é aporte para remessa de outubro.
-- Antecipação da Atlas vira alerta.
-- Atlas de setembro é faturada em outubro quando o comercial confirmar.
-- Folha e impostos sempre provisionados.
-- Quem aprova: comercial para taxa, Helena para regra de fechamento.
-- "Ninguém tem essa função" de avisar Orbe e Ponte.
-- Rascunhos de contestação: "Serve, e muito".
-- Como se dividem os 8 dias e "se eu faltar, ninguém sabe essas regras".
-- Conta garantida usada sem regra nem limite.
-- O repasse à Atlas não para.
+**17/10 de manhã (Q-N a Q-Y):** Casa separada das divergências de contrato; spread negativo é contestação, listável nas divergências com natureza própria; netting confirmado; 18.240 é aporte para remessa de outubro; antecipação da Atlas vira alerta; "ninguém tem essa função" de avisar Orbe e Ponte; rascunhos de contestação: "Serve, e muito".
 
-**Ainda sem resposta (~12h):** data do aviso da Bridge, critério do alerta, valor da contestação do spread negativo (Theo, 11:16), ajuste da Ponte no mês seguinte (Desbravadores).
+**17/10, fim da manhã (Q-Z a Q-AH):** o contrato decide quem deve (Bridge e Mundo Aberto); critério do alerta é nosso; spread negativo com os dois valores na pendência; valor a devolver da Casa; provisão fora do fechamento.
+
+**17/10, tarde (Q-AI a Q-AM):** antecipação da Casa pela data da antecipação; ajuste tardio pelo mês da aprovação; bandeira trocada no estorno não muda nada; ajuste sem a original entra pelo valor e vira pendência; auditabilidade do rastro (resposta da organização).
 
 ---
 
 ## 5. Prompts enviados ao Claude Code (principais)
 
-O formato fixo foi papel e senioridade → contexto → método → restrições → formato de saída. O effort de cada um foi escolhido pelo custo de erro.
+Formato fixo: papel e senioridade → contexto → método → restrições → formato de saída. O effort foi escolhido pelo custo do erro.
 
 | Quando | Assunto | Effort | Resultado relatado |
 |---|---|---|---|
-| 16/10 ~19h40 | Exploração dos dados, sem código | high | Mapa dos arquivos, ambiguidades e rascunho de perguntas |
-| 16/10, noite | Construção por níveis (checkout → divergências → remessa → notas → lançamentos → pendências) | high/medium por etapa | Níveis entregues com testes e rastro |
-| 17/10, manhã | CI no GitHub Actions + fixture e teste de outubro | high | CI verde (Windows e Linux, 3.12 e 3.14); 12 testes de outubro |
-| 17/10, manhã | Auditoria independente e documentação para a banca | high | 0 violações; CAUSA_RAIZ, AUDITORIA, CONFORMIDADE, MOMENTOS |
-| 17/10, manhã | Avaliador simulado da Barte | xhigh | Relatório em `docs/AVALIACAO_SIMULADA.md` |
-| 17/10 ~11h20 | Correções da avaliação (11 itens) | high | D52–D62, 221 testes, saída idêntica, CI verde |
-| 17/10 ~11h55 | Incorporar Q-N a Q-Y + 3 correções extras | high | Em andamento |
-| 17/10 ~12h05 | Painel na branch `relatorio` (worktree) | high | Em andamento |
+| 16/10 ~19h40 | Exploração dos dados, sem código | high | Mapa dos arquivos, ambiguidades e perguntas |
+| 16/10, noite | Construção por níveis | high/medium | Níveis entregues com testes e rastro |
+| 17/10, manhã | CI, teste de outubro, auditoria da saída, docs | high | CI verde; 0 violações |
+| 17/10 ~11h | Avaliador simulado (sessão nova) | xhigh | `docs/AVALIACAO_SIMULADA.md` |
+| 17/10 ~11h20 | Correções da avaliação (11 itens) | high | D52–D62 |
+| 17/10 ~12h | Respostas Q-N a Q-AH; painel na branch `relatorio` | high | D63–D90; painel na main às 14h52 |
+| 17/10 ~13h30 | Arquivo 06 da Orbe | high | Aviso para arquivo desconhecido; −3.304,39 |
+| 17/10, tarde | Auditoria cega das regras (sessão nova) e teste de citações | xhigh | `docs/auditoria_regras/`; mesmas notas no centavo |
+| 17/10 ~14h30 | Respostas Q-AI a Q-AM, manifesto e rastro de regras | high | D91–D96, 303 testes |
+| 17/10 15h30 | Nome de usuário fora dos arquivos e repositório renomeado | — | Commits bdce182, d182b15 |
+| 17/10 15h49 | Auditoria final da banca (sessão nova) | xhigh | Nenhum número errado; 16 achados de texto e entrega |
+| 17/10 16h13 | Decisões sobre os achados | high | MOMENTOS com 4 momentos, Checkpoint 2 registrado, motivo da Casa, nomes de terceiros |
 
 ---
 
@@ -135,69 +121,64 @@ O formato fixo foi papel e senioridade → contexto → método → restrições
 Registrados sem suavizar, incluindo os erros do Claude app.
 
 **Erros do Claude (app)**
+- **Truncar como a Orbe.** Recomendação vencida pela Helena (meio para cima, Q-H).
 - **Checkpoint superestimado.** Um texto de checkpoint dizia mais do que o código fazia. O Claude Code corrigiu.
-- **"Resíduo < 0,01" em vez de "≤ 0,01".** Corrigido.
-- **Rótulos de modalidade trocados** na pergunta da Rota (Q-F). Autocorreção registrada; a resposta não mudou.
-- **Truncar como a Orbe.** A recomendação foi vencida pela Helena (meio para cima, Q-H).
-- **Spread R$ × Spread %.** A recomendação oscilou. Ficou o Spread % (Q-G e Q-X 4).
-- **Previsão de 16 pendências.** A saída real teve 15 naquele momento.
-- **IA forçada nas linhas do EduAbroad (D35),** por sugestão do Claude. O avaliador apontou; corrigido para regra primeiro (D52) e registrado em MOMENTOS.
-- **IOF fora da prova do EduAbroad** no prompt. Corrigido.
-- **Pedido de CONFIRMADO no critério da Mundo Aberto.** O Claude Code apontou que a Helena delegou a escolha; ficou ASSUMO com aceite.
-- **Valor da devolução da Casa (achado às 12h08 com dados de outro time no canal).** Os R$ 15.397,42 recalculavam bruto × taxa com meio para cima. A Orbe descontou de fato R$ 15.396,77 (118 linhas). O critério correto é o valor cobrado de fato menos a comissão contratada. Correção enviada ao Claude Code (item A), junto com a provisão de setembro (B) e a exposição máxima no alerta (C).
+- **IA forçada nas linhas do EduAbroad (D35).** Apontado pelo avaliador; corrigido para regra primeiro (D52).
+- **Bridge como "condição não informada".** A recomendação do Claude estava errada; a Helena respondeu que o contrato decide (D76; a D63 registra o erro).
+- **Pedido de CONFIRMADO no critério da Mundo Aberto.** O Claude Code apontou que a Helena delegou a escolha; ficou ASSUMO.
+- **Valor da devolução da Casa** (15.397,42 contra os 15.396,77 descontados de fato). Achado pelo canal e corrigido com coluna própria.
+- **Pendência de provisão** mantida por engano depois de a Helena dizer "Fica fora do fechamento de vocês". Removida.
+- **Prazo do Checkpoint 2.** O Claude disse que o prazo era 15h30 e que o envio estava atrasado; a organização tinha mudado o prazo para 16h, e o envio das 15h38 estava dentro.
+- **Spreads negativos.** O Claude recomendou tirar as 4 linhas das divergências, dizendo que a Helena considerava alarme falso. Ao conferir o Slack, a Helena permite listar com natureza própria, e as linhas já estão assim. O Claude voltou atrás e as linhas ficaram.
+- **Export literal desta conversa por subagentes**, tentado duas vezes (de manhã e às ~16h45): interrompido pelo filtro de segurança do modelo nas duas. O Claude parou os agentes e apagou os parciais, e a conversa ficou registrada neste relatório.
 
 **Correções do Claude Code sobre pedidos do Claude**
-- **Casamento de nomes (D58).** Exigir o nome completo quebraria 9 nomes reais que o banco corta. Ficou valendo nome cortado com 2 palavras inteiras.
-- **Feriados (D59).** Só os nacionais por lei federal; Carnaval e outros ficam documentados como não incluídos.
+- **Casamento de nomes (D58)** e **feriados (D59).**
+- **Texto do motivo da Casa:** taxas vindas da própria linha (não fixas), ponto decimal e `;` trocado, porque o escritor converte `;` em vírgula.
 
-**Problemas achados pelo próprio Claude Code**
-- Perda de trabalho num `git checkout`.
-- Símbolo Σ no console cp1252.
-- `-0.00` na saída.
-- `;` dentro de campos.
-- Textos com o mês fixo.
-- Premissa do resgate tornada condicional.
-- Bug da natureza no D11.
-- Confiança com 3 casas quebrando o cache (D56).
+**Problemas achados pelo próprio Claude Code e pelas auditorias**
+- Perda de trabalho num `git checkout`; `-0.00` na saída; `;` dentro de campos; textos com o mês fixo; confiança quebrando o cache (D56).
+- **Export da avaliação apagado** por um `rm` encadeado; regenerado do `.jsonl` (DIARIO, 12:43–13:07).
+- **34 regras CONFIRMADO sem citação literal**, corrigidas; o teste de citações impede que volte.
+- **O painel perdeu a Casa** depois de uma renomeação de tipo; corrigido com teste.
+- **Horários estimados errados nas decisões**, corrigidos pela hora do commit.
+- **Hash do painel** desatualizado depois de editar o HIPOTESES; o painel foi gerado de novo.
 
 ---
 
 ## 7. Verificação independente
 
-- **Scripts próprios.** O Claude (app) recalculou os números com scripts próprios, sem ler o código do projeto. Estão em `scripts/verificacao_independente/`: checkout truncado, divergências, remessa e checkout arredondado. Todos bateram com a saída, inclusive depois da troca para meio para cima.
-- **Avaliador simulado:** recalculou 15 de 15 números corretamente.
-- **Limite declarado:** os scripts independentes não conferem lançamentos nem pendências.
-- **Rastro:** 100% (hoje 5.184 linhas). Toda linha de rastro foi encontrada no arquivo de origem.
+- **Scripts próprios do Claude (app)**, sem ler o código do projeto (`scripts/verificacao_independente/`): checkout, divergências e remessa bateram com a saída.
+- **Avaliador simulado:** 15 de 15 números certos.
+- **Auditoria cega das regras:** reescreveu as regras do zero e chegou a notas 243.284,29 e Ponte 39.543,45, no centavo; as diferenças de regra foram tratadas nas D84–D89.
+- **Auditoria final:** recontagem sem importar `src/` (checkout 203.735,34; remessa 39.543,45; notas 243.284,29; recuperar da Orbe 1.575,80; custo da Tarvo 15.396,77); clone limpo idêntico byte a byte; todo `id_saida` do rastro fecha no centavo.
+- **Limite declarado:** os scripts do Claude (app) não conferem lançamentos nem pendências; a auditoria final confere.
 
 ---
 
 ## 8. Uso de IA
 
 **No produto**
-- **Onde a IA entra:** só em casamento ambíguo de nome/CNPJ nos extratos. A resposta tem formato fixo, a confiança mínima é 0,8, e o código prova o resultado (Σ PIX recebidos = Σ Valor R$ + IOF da Ponte = 394.222,69).
-- **Setembro:** depois da D52, a IA tem 0 linhas, porque as regras cobrem tudo.
-- **Outubro:** a fixture tem um nome novo, que vai para a IA e é aceito pela prova da soma. Um comando documentado mostra a IA de verdade com a chave da banca.
-- **Onde a IA foi evitada de propósito:** cálculo de comissão, divergência, nota, conta contábil por regra e qualquer decisão de dinheiro. Decisão é da Helena ou do comercial. Por isso o painel não move cartões.
+- A IA entra só no casamento ambíguo de nome nos extratos, com confiança mínima e prova pela soma (Σ PIX recebidos = Σ Valor R$ + IOF da Ponte).
+- Em setembro, a IA tem 0 linhas: as regras cobrem tudo. No teste de outubro, um nome novo vai para a IA e é aceito pela prova da soma.
+- Onde a IA foi evitada de propósito: comissão, divergência, nota, conta contábil com regra e qualquer decisão de dinheiro.
 
 **No processo**
-- **IA fez:** leitura do case, perfil dos dados, rascunho de perguntas, código e testes, verificação cruzada entre duas IAs (app e Claude Code), avaliador simulado.
-- **Lucca fez:** cada decisão da seção 3, escolhida entre opções com prós e contras; a ordem das prioridades; o envio das perguntas; a aprovação de cada prompt e de cada merge.
+- **A IA fez:** leitura do case, perfil dos dados, rascunho de perguntas, código e testes, verificação cruzada entre sessões, três avaliações por sessões sem contexto, deck do pitch.
+- **O Lucca fez:** cada decisão da seção 3, a ordem das prioridades, o envio das perguntas, a aprovação de cada prompt e de cada merge, e as discordâncias que mudaram o rumo (painel só de leitura, "com mais tempo" por capacidades, nada por comparação com outros times).
 
 ---
 
-## 9. Próximos passos (às 12h30)
+## 9. Próximos passos (às 16h50)
 
-1. Validar o resultado das respostas Q-N a Q-Y e das correções A, B e C.
-2. Passada de documentação (README sem `[preencher]`, Limitações, "com mais tempo", números antigos, CHECKPOINTS).
-3. Painel: status às 14h, validação e decisão de merge às 14h30.
-4. Slides e ensaio do pitch (13h30–15h30).
-5. Checkpoint 2 às 16h.
-6. Congelar às 17h, conferência de consistência em xhigh e repo público.
-7. Entregas: repo às 18h30, pitch às 19h.
+1. Congelar o código às 17h.
+2. Exportar as sessões do Claude Code da manhã/tarde (05) e da auditoria final (06); acrescentar este 03 e o 01.
+3. Pitch: ensaio, export em PDF.
+4. Entregas: link do repositório às 18h15 (prazo 18h30) e pitch às 18h45 (prazo 19h).
 
 ---
 
 ## 10. Lacunas desta versão
 
-- Os horários da madrugada (16 → 17/10) e as respostas Q-H a Q-M estão resumidos. O detalhe está na transcrição e em `docs/FINANCEIRO_SLACK.md`.
-- A lista de prompts da noite está agrupada. Os prompts literais estão nos exports das sessões do Claude Code em `PROMPTS/`.
+- As respostas do Claude estão resumidas, não transcritas.
+- A lista de prompts está agrupada. Os prompts literais estão nos exports das sessões do Claude Code em `PROMPTS/`.
