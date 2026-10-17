@@ -29,15 +29,34 @@
   window.addEventListener("load", function () { window.scrollTo(0, 0); });
   window.addEventListener("hashchange", mostrar);
 
-  // ---- abas de Contratado × cobrado (filtram as linhas de verdade)
-  document.querySelectorAll(".aba").forEach(function (b) {
-    b.addEventListener("click", function () {
-      var f = b.getAttribute("data-filtro");
-      document.querySelectorAll(".aba").forEach(function (o) { o.setAttribute("aria-selected", o === b ? "true" : "false"); });
-      document.querySelectorAll("#tabela-lojistas tbody tr").forEach(function (tr) {
-        tr.hidden = !(f === "todos" || tr.getAttribute("data-situacao") === f);
-      });
+  // ---- Contratado × cobrado: linha de negócio (Checkout/Remessa) e abas que filtram as linhas de verdade
+  var linhaAtual = "checkout", filtroAtual = "todos";
+  function aplicarFiltro() {
+    var tab = document.getElementById(linhaAtual === "remessa" ? "tabela-remessa" : "tabela-lojistas");
+    ["tabela-lojistas", "tabela-remessa"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.hidden = el !== tab;
     });
+    document.querySelectorAll(".nota-residuo").forEach(function (el) { el.hidden = linhaAtual !== "checkout"; });
+    document.querySelectorAll(".nota-remessa").forEach(function (el) { el.hidden = linhaAtual !== "remessa"; });
+    tab.querySelectorAll("tbody tr").forEach(function (tr) {
+      tr.hidden = !(filtroAtual === "todos" || tr.getAttribute("data-situacao") === filtroAtual);
+    });
+    document.querySelectorAll(".aba").forEach(function (o) {
+      o.setAttribute("aria-selected", o.getAttribute("data-filtro") === filtroAtual ? "true" : "false");
+      o.setAttribute("aria-controls", tab.id);
+      var q = o.querySelector(".qtd");
+      q.textContent = q.getAttribute("data-qtd-" + linhaAtual);
+    });
+    document.querySelectorAll(".aba-linha").forEach(function (o) {
+      o.setAttribute("aria-pressed", o.getAttribute("data-linha") === linhaAtual ? "true" : "false");
+    });
+  }
+  document.querySelectorAll(".aba").forEach(function (b) {
+    b.addEventListener("click", function () { filtroAtual = b.getAttribute("data-filtro"); aplicarFiltro(); });
+  });
+  document.querySelectorAll(".aba-linha").forEach(function (b) {
+    b.addEventListener("click", function () { linhaAtual = b.getAttribute("data-linha"); aplicarFiltro(); });
   });
 
   // ---- rastro

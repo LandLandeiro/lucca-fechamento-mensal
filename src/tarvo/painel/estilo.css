@@ -132,7 +132,12 @@ main:focus { outline: none; }
 .vazio { color: var(--tx3); font-size: 12.5px; padding: 4px; }
 
 /* tabelas e abas */
-.abas { display: flex; gap: 4px; margin: 20px 0 12px; flex-wrap: wrap; }
+.linhas { display: inline-flex; gap: 2px; padding: 3px; margin-top: 20px; border: 1px solid var(--borda); border-radius: 10px; background: var(--fundo2); }
+.aba-linha { font: inherit; font-weight: 500; color: var(--tx2); background: none; border: 0; border-radius: 7px; padding: 5px 12px; cursor: pointer; }
+.aba-linha[aria-pressed="true"] { background: var(--sup); color: var(--tx); box-shadow: var(--sombra), inset 0 0 0 1px var(--borda); }
+.tabela-caixa[hidden], .nota-residuo[hidden], .nota-remessa[hidden] { display: none; }
+.nota-remessa { margin-top: 12px; }
+.abas { display: flex; gap: 4px; margin: 12px 0 12px; flex-wrap: wrap; }
 .aba { font: inherit; font-weight: 500; color: var(--tx2); background: none; border: 1px solid transparent; border-radius: 8px; padding: 6px 12px; cursor: pointer; }
 .aba:hover { background: var(--fundo2); }
 .aba[aria-selected="true"] { background: var(--sup); color: var(--tx); border-color: var(--borda2); box-shadow: var(--sombra); }

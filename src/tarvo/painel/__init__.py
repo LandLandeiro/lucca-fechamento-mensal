@@ -195,6 +195,7 @@ class Painel:
     saidas: dict[str, dict] = field(default_factory=dict)  # id_saida → arquivo, valor reportado, Σ rastro, linhas, regra
     fechadas: list[dict] = field(default_factory=list)
     lojistas: list[dict] = field(default_factory=list)
+    remessa: list[dict] = field(default_factory=list)
     residuo: Decimal | None = None
     nomes: dict[str, str] = field(default_factory=dict)
 
@@ -457,6 +458,28 @@ def _montar_lojistas(pn: Painel, dados: Path, divs: list[dict]) -> None:
             nome = nome_orbe[ec].most_common(1)[0][0] if nome_orbe.get(ec) else (f"EC {ec}" if ec else p.id)
             pn.lojistas.append(linha(p.id, "", f"{nome} (EC {ec})" if ec else nome, None, "sem_contrato"))
     pn.lojistas.sort(key=lambda l: (-(l["divergencia"]), l["nome"]))
+
+    # remessa (Ponte): spread realizado e comissão pela saída; divergência = lojista pagou spread ≠ contratado
+    # spread negativo é outra natureza (Helena 09:44, Q-O: "o lojista não pagou a mais"): coluna à parte, nunca "com diferença"
+    div_rem: dict[str, Decimal] = defaultdict(lambda: ZERO)
+    negativo: dict[str, Decimal] = defaultdict(lambda: ZERO)
+    for d in divs:
+        if d.get("linha_negocio") == "REMESSA" and d.get("cnpj"):
+            e_negativo = d.get("natureza") == "spread_negativo" or (not d.get("natureza") and (_dec(d.get("spread_brl")) or ZERO) < 0)
+            if e_negativo:
+                negativo[d["cnpj"]] += _dec(d.get("spread_brl")) or ZERO
+            else:
+                div_rem[d["cnpj"]] += _dec(d.get("diferenca_brl")) or ZERO
+    for ident, s in pn.saidas.items():
+        if ident.startswith("COM-") and ident.endswith("-REMESSA") and s["arquivo"] == "comissoes_por_lojista.csv":
+            cnpj = ident[len("COM-"):-len("-REMESSA")]
+            rs = por_saida.get(ident, [])
+            div = div_rem.get(cnpj, ZERO)
+            pn.remessa.append({"id": ident, "cnpj": cnpj, "nome": pn.nomes.get(cnpj, cnpj), "operacoes": len(rs),
+                               "spread": sum((_dec(r.get("spread_brl")) or ZERO for r in rs), ZERO),
+                               "comissao": _dec(s["reportado"]), "divergencia": div, "negativo": negativo.get(cnpj, ZERO),
+                               "situacao": "com_diferenca" if div != 0 else ("spread_negativo" if negativo.get(cnpj) else "confere")})
+    pn.remessa.sort(key=lambda l: (-(abs(l["divergencia"])), l["negativo"], l["nome"]))
     if taxa_orbe:
         com_ids = [i for i in pn.saidas if i.startswith("COM-") and i.endswith("-CHECKOUT")]
         soma_vt = sum((taxa_orbe.get(r["ref_origem"], ZERO) for i in com_ids for r in por_saida[i]), ZERO)
@@ -671,7 +694,8 @@ def _tela_decisoes(pn: Painel) -> str:
     return "\n".join(h)
 
 
-SITUACAO = {"com_diferenca": ("Com diferença", "sit-dif"), "sem_contrato": ("Sem contrato", "sit-sem"), "confere": ("Confere", "sit-ok")}
+SITUACAO = {"com_diferenca": ("Com diferença", "sit-dif"), "sem_contrato": ("Sem contrato", "sit-sem"), "confere": ("Confere", "sit-ok"),
+            "spread_negativo": ("Spread negativo · contestação", "sit-sem")}
 
 
 def _tela_contratado(pn: Painel) -> str:
@@ -679,14 +703,20 @@ def _tela_contratado(pn: Painel) -> str:
     abas = [("todos", "Todos", len(pn.lojistas)), ("com_diferenca", "Com diferença", cont["com_diferenca"]),
             ("sem_contrato", "Sem contrato", cont["sem_contrato"]), ("confere", "Conferem", cont["confere"])]
     h = ['<section id="contratado" class="tela" aria-labelledby="t-contratado">',
-         '<p class="eyebrow">Checkout</p><h1 id="t-contratado">Contratado × cobrado</h1>',
-         '<p class="sub">Comissão pela planilha (taxa contratada, o que a Tarvo fatura) contra o que a Orbe cobrou (taxa aplicada). '
-         'A diferença inclui o centavo de truncamento da Orbe; a divergência é só onde a taxa difere.</p>',
+         '<p class="eyebrow">Por lojista</p><h1 id="t-contratado">Contratado × cobrado</h1>',
+         '<p class="sub">Checkout: comissão pela planilha (taxa contratada, o que a Tarvo fatura) contra o que a Orbe cobrou (taxa aplicada); '
+         'a diferença inclui o centavo de truncamento da Orbe e a divergência é só onde a taxa difere. Remessa: spread que a Ponte '
+         'aplicou contra o contratado.</p>',
+         '<div class="linhas" role="group" aria-label="Linha de negócio">'
+         '<button type="button" class="aba-linha" aria-pressed="true" data-linha="checkout">Checkout (Orbe)</button>'
+         + ('<button type="button" class="aba-linha" aria-pressed="false" data-linha="remessa">Remessa (Ponte)</button>' if pn.remessa else "")
+         + '</div>',
          '<div class="abas" role="tablist" aria-label="Filtrar lojistas">']
+    qtd_r = {"todos": len(pn.remessa), **Counter(l["situacao"] for l in pn.remessa)}
     for chave, rotulo, qtd in abas:
         sel = "true" if chave == "todos" else "false"
         h.append(f'<button type="button" role="tab" class="aba" aria-selected="{sel}" aria-controls="tabela-lojistas" data-filtro="{chave}">'
-                 f'{_e(rotulo)} <span class="qtd">{qtd}</span></button>')
+                 f'{_e(rotulo)} <span class="qtd" data-qtd-checkout="{qtd}" data-qtd-remessa="{qtd_r.get(chave, 0)}">{qtd}</span></button>')
     h.append('</div><div class="tabela-caixa" id="tabela-lojistas" role="tabpanel"><table class="tabela"><thead><tr>'
              '<th scope="col">Lojista</th><th scope="col" class="n">Vendas</th><th scope="col" class="n">Volume bruto</th>'
              '<th scope="col" class="n">Pela planilha</th><th scope="col" class="n">Pela taxa aplicada</th>'
@@ -700,6 +730,24 @@ def _tela_contratado(pn: Painel) -> str:
                  f'<td class="n num">{brl(l["diferenca"])}</td><td class="n num">{brl(l["divergencia"]) if l["divergencia"] else "—"}</td>'
                  f'<td><span class="sit {cls}">{rot}</span></td><td>{_link_rastro(l["id"])}</td></tr>')
     h.append("</tbody></table></div>")
+    if pn.remessa:
+        h.append('<div class="tabela-caixa" id="tabela-remessa" role="tabpanel" hidden><table class="tabela"><thead><tr>'
+                 '<th scope="col">Lojista</th><th scope="col" class="n">Operações</th><th scope="col" class="n">Spread realizado (Ponte)</th>'
+                 '<th scope="col" class="n">Comissão Tarvo</th><th scope="col" class="n">Divergência listada</th>'
+                 '<th scope="col" class="n" title="Spread R$ do relatório, fora da comissão">Spread negativo</th><th scope="col">Situação</th>'
+                 '<th scope="col"><span class="sr">Rastro</span></th></tr></thead><tbody>')
+        for l in pn.remessa:
+            rot, cls = SITUACAO[l["situacao"]]
+            h.append(f'<tr data-situacao="{l["situacao"]}" data-remessa="{_e(l["id"])}" data-comissao="{_num(l["comissao"])}" data-divergencia="{_num(l["divergencia"])}">'
+                     f'<th scope="row"><span class="t-nome">{_e(l["nome"])}</span><code class="c-cnpj">{_e(_cnpj_fmt(l["cnpj"]))}</code></th>'
+                     f'<td class="n num">{l["operacoes"]}</td><td class="n num">{brl(l["spread"])}</td><td class="n num">{brl(l["comissao"])}</td>'
+                     f'<td class="n num">{brl(l["divergencia"]) if l["divergencia"] else "—"}</td>'
+                     f'<td class="n num">{brl(l["negativo"]) if l["negativo"] else "—"}</td><td><span class="sit {cls}">{rot}</span></td>'
+                     f'<td>{_link_rastro(l["id"])}</td></tr>')
+        h.append("</tbody></table></div>")
+        h.append('<p class="meta nota-remessa" hidden>Divergência é o valor cheio que o lojista pagou de spread diferente do contratado. '
+                 'Spread negativo é outra natureza: o lojista não pagou a mais, o prejuízo é da Tarvo com a Ponte (Spread R$ do relatório, '
+                 'em contestação). Operações fora da comissão (duplicata, spread negativo) estão em "Fechadas por regra".</p>')
     if pn.residuo is not None:
         regra = pn.regras.get("divergencias.criterio_checkout", {})
         h.append(f'<aside class="nota-residuo" data-residuo="{_num(pn.residuo)}"><p><strong>Resíduo de truncamento da Orbe: '
@@ -748,8 +796,9 @@ def _dados_json(pn: Painel) -> str:
 
 
 def renderizar(pn: Painel) -> tuple[str, int]:
-    css = (AQUI / "estilo.css").read_text(encoding="utf-8")
-    js = (AQUI / "app.js").read_text(encoding="utf-8")
+    # LF sempre: o checkout no Windows (autocrlf) não pode mudar os bytes do painel
+    css = (AQUI / "estilo.css").read_text(encoding="utf-8").replace("\r\n", "\n")
+    js = (AQUI / "app.js").read_text(encoding="utf-8").replace("\r\n", "\n")
     dados = _dados_json(pn)
     nav = "".join(
         f'<a href="#{t}" data-tela="{t}" aria-label="{rot}">{_icone(t)}<span>{rot}</span></a>'

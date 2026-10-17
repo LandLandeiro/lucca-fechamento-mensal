@@ -196,6 +196,43 @@ def test_contratado_bate_com_comissoes_divergencias_e_orbe(painel):
             assert Decimal(a["data-aplicada"]) == sum(vt[i] for i in ids)
 
 
+def test_aba_remessa_bate_com_comissoes_e_divergencias(painel):
+    pasta, _, _, p = painel
+    linhas = {a["data-remessa"]: a for a in p.com("data-remessa")}
+    coms = [c for c in _ler(pasta / "comissoes_por_lojista.csv") if c["linha_negocio"] == "REMESSA"]
+    assert set(linhas) == {c["id_saida"] for c in coms}
+    div_cnpj, negativo = defaultdict(Decimal), defaultdict(Decimal)
+    for d in _ler(pasta / "divergencias_taxa.csv"):
+        if d["linha_negocio"] == "REMESSA":
+            if Decimal(d["spread_brl"]) < 0:  # spread negativo: outra natureza (Q-O), não é "com diferença"
+                negativo[d["cnpj"]] += Decimal(d["spread_brl"])
+            else:
+                div_cnpj[d["cnpj"]] += Decimal(d["diferenca_brl"])
+    for c in coms:
+        a = linhas[c["id_saida"]]
+        assert Decimal(a["data-comissao"]) == Decimal(c["comissao_brl"])
+        assert Decimal(a["data-divergencia"]) == div_cnpj[c["cnpj"]]
+        esperado = "com_diferenca" if div_cnpj[c["cnpj"]] else ("spread_negativo" if negativo[c["cnpj"]] else "confere")
+        assert a["data-situacao"] == esperado
+
+
+def test_quebra_de_linha_do_checkout_nao_muda_os_bytes(tmp_path, monkeypatch):
+    """autocrlf no Windows: CSS/JS com CRLF geram o mesmo painel que com LF (o CI roda no Ubuntu)."""
+    import tarvo.painel as modulo
+
+    ativos = tmp_path / "ativos"
+    ativos.mkdir()
+    for nome in ("estilo.css", "app.js"):
+        texto = (modulo.AQUI / nome).read_text(encoding="utf-8").replace("\r\n", "\n")
+        (ativos / nome).write_bytes(texto.replace("\n", "\r\n").encode("utf-8"))
+    lf = _copiar_saida(tmp_path / "lf")
+    crlf = _copiar_saida(tmp_path / "crlf")
+    a, _ = gerar_painel(lf, DADOS, REGRAS)
+    monkeypatch.setattr(modulo, "AQUI", ativos)
+    b, _ = gerar_painel(crlf, DADOS, REGRAS)
+    assert a.read_bytes() == b.read_bytes()
+
+
 def test_premissas_assumo_e_contagem_por_status(painel):
     _, _, _, p = painel
     from tarvo.regras import carregar_regras
