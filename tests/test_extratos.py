@@ -197,7 +197,7 @@ def test_transferencias(saida):
 
 
 def test_aporte_sem_operacao_ponte_aerea(saida):
-    p = next(p for p in _csv(saida[0], "pendencias.csv") if p["tipo"] == "APORTE_SEM_OPERACAO")
+    p = next(p for p in _csv(saida[0], "pendencias.csv") if p["tipo"] == "ACOMPANHAMENTO_APORTE")  # D87
     assert (p["ref_origem"], p["valor_brl"]) == ("MRD2026090425", "18240.00")
     # Bagagem (duplicata PC-0926-0162) não acusa: a duplicata conta uma vez nas operações
     assert not any("50900987000179" in x["id_saida"] for x in _csv(saida[0], "pendencias.csv"))
@@ -539,3 +539,12 @@ def test_aurora_avisa_layout_mudado(tmp_path):
     dados = copiar_dados(tmp_path / "d", {"05a_*.csv": [(b"Valor (R$)", b"Montante (R$)")]})
     lido = ler_extrato_aurora(next(dados.glob("05a_*.csv")))
     assert any("cabeçalho de colunas diferente do esperado" in a.mensagem for a in lido.avisos)
+
+
+def test_pix_de_18240_e_acompanhamento_da_remessa_de_outubro(saida):
+    """D87 (Q-N 5, Helena 09:44): 'É a Ponte Aérea mandando dinheiro de uma remessa que ainda não foi feita. A operação
+    sai em outubro.' A pendência vira acompanhamento, com a fala e o próximo passo."""
+    (p,) = [p for p in _csv(saida[0], "pendencias.csv") if p["ref_origem"] == "MRD2026090425"]
+    assert (p["tipo"], p["valor_brl"], p["quem_decide"]) == ("ACOMPANHAMENTO_APORTE", "18240.00", "analista (conferir em outubro)")
+    assert "A operação sai em outubro." in p["motivo"] and "Próximo passo:" in p["motivo"]
+    assert _lan(saida[0], "LAN-MERIDIANO-MRD2026090425")["conta_codigo"] == "2.1.02.001"

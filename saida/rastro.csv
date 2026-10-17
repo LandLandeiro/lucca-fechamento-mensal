@@ -4562,6 +4562,7 @@ NF-95927868000148-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443523;15
 NF-95927868000148-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88443503;68.17;1863;VENDA;2279.88;2.99;planilha R10 col. 'Créd. 2-6x';
 NF-95927868000148-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444545;462.47;1888;VENDA;12882.23;3.59;planilha R10 col. 'Créd. 7-12x';
 NF-95927868000148-CHECKOUT;01_orbe_relatorio_comissoes_set2026.csv;TX88444143;6.65;1943;VENDA;746.93;0.89;planilha R10 col. 'Pix';
+PEN-ACOMPANHAMENTO_APORTE-MERIDIANO-MRD2026090425;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090425;18240.00;520;EXTRATO MERIDIANO;;;aporte sem operação na Ponte;
 PEN-ALERTA_ANTECIPACAO-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;TX88421353;-1292.63;608;VENDA;1292.63;;venda/estorno até a data do pico (− bruto);
 PEN-ALERTA_ANTECIPACAO-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;TX88423234;-7551.55;681;VENDA;7551.55;;venda/estorno até a data do pico (− bruto);
 PEN-ALERTA_ANTECIPACAO-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;TX88418299;-957.70;687;VENDA;957.70;;venda/estorno até a data do pico (− bruto);
@@ -4581,7 +4582,6 @@ PEN-ALERTA_ANTECIPACAO-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;TX88
 PEN-ALERTA_ANTECIPACAO-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;TX88427530;-7000.39;966;VENDA;7000.39;;venda/estorno até a data do pico (− bruto);
 PEN-ALERTA_ANTECIPACAO-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;AN88445703;51942.03;971;ANTECIPACAO;51942.03;;antecipação (+ bruto);
 PEN-ALERTA_ANTECIPACAO-EC1076801732;01_orbe_relatorio_comissoes_set2026.csv;AN88445766;53065.13;976;ANTECIPACAO;53065.13;;antecipação (+ bruto);
-PEN-APORTE_SEM_OPERACAO-MERIDIANO-MRD2026090425;05b_extrato_banco_meridiano_cc90233_set2026.ofx;MRD2026090425;18240.00;520;EXTRATO MERIDIANO;;;aporte sem operação na Ponte;
 PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0002;131.01;6;REMESSA;;;50% de Spread R$ 262.01, status APROVADO, liquidada em 2026-10-01 (competência pela contratação);262.01
 PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0003;270.39;7;REMESSA;;;50% de Spread R$ 540.78, status APROVADO;540.78
 PEN-CONFERENCIA_REPASSE-REMESSA;03_email_ponte_cambio_relatorio_set2026.eml;PC-0926-0004;244.23;8;REMESSA;;;50% de Spread R$ 488.45, status APROVADO;488.45

@@ -241,6 +241,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         valor_da_regra(regras, "classificacao_extratos.conferencias")["resgate_acima_do_aplicado"],
         pend_ant,
         feriados,
+        valor_da_regra(regras, "classificacao_extratos.conferencias").get("aporte_sem_operacao"),
     )
     lancamentos = [l for c in classif for l in c.linhas]
     conf.resolvidas.extend(resolvidas_sem_contrato(retomadas, cadastro, competencia))
