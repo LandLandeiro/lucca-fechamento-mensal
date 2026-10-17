@@ -114,7 +114,8 @@ def classificar_por_regra(
                 raise ValueError(f"{chave}: conta {v['conta']} não existe ou não aceita lançamento")
             nome_regra = chave.split(".", 1)[1]
             res.por_regra[nome_regra] = res.por_regra.get(nome_regra, 0) + 1
-            res.linhas.append(_linha(ida, lan, v["conta"], "REGRA", Decimal("1"), nome_regra, regra["status"], conta_banco))
+            res.linhas.append(_linha(ida, lan, v["conta"], "REGRA", Decimal("1"), nome_regra, regra["status"], conta_banco,
+                                     v.get("motivo", "")))
             if cnpj:
                 res.lojista_por_lancamento[(banco, lan.ref_origem)] = cnpj
             if v.get("pendencia"):
@@ -127,7 +128,7 @@ def classificar_por_regra(
     return res
 
 
-def _linha(ida, lan, conta, metodo, confianca, regra, status, conta_banco) -> dict:
+def _linha(ida, lan, conta, metodo, confianca, regra, status, conta_banco, motivo_conta="") -> dict:
     # D12: saída do banco → débito na contrapartida; entrada → crédito
     lado = "D" if lan.valor < 0 else "C"
     return {
@@ -135,6 +136,7 @@ def _linha(ida, lan, conta, metodo, confianca, regra, status, conta_banco) -> di
         "descricao": lan.descricao, "valor": lan.valor, "conta_codigo": conta, "metodo": metodo,
         "confianca": confianca, "regra_aplicada": regra, "status_regra": status,
         "contrapartida_banco": conta_banco, "lado_contrapartida": lado if conta else "",
+        "motivo_conta": motivo_conta,  # por que esta conta, quando a regra escreve (D65)
         "sugestao_ia": "", "justificativa_ia": "",  # colunas fixas: preenchidas por por_ia quando a IA responde
     }
 

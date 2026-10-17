@@ -512,3 +512,14 @@ def test_ano_sem_feriados_no_calendario_gera_aviso(tmp_path):
     regras.write_text(novo, encoding="utf-8")
     r = executar(DADOS, tmp_path / "s", regras)
     assert r["erros_validacao"] == [] and any("sem feriados de 2026" in a.mensagem for a in r["avisos"])
+
+
+def test_devolucao_volta_para_a_conta_do_repasse(saida, regras):
+    """D65 (Q-R 2, Q-I a, Q-X 2): a devolução L65 baixa a conta onde o repasse à Mundo Aberto foi registrado."""
+    lan = {l["id_saida"]: l for l in _csv(saida[0], "lancamentos_classificados.csv")}
+    repasse, devolucao = lan["LAN-AURORA-L26"], lan["LAN-AURORA-L65"]
+    assert "MUNDO ABERTO" in repasse["descricao"] and repasse["data"] == "2026-09-09"
+    assert devolucao["conta_codigo"] == repasse["conta_codigo"] == "2.1.01.001"
+    assert (repasse["lado_contrapartida"], devolucao["lado_contrapartida"]) == ("D", "C")  # a obrigação volta
+    assert "baixa a conta onde o repasse estava" in devolucao["motivo_conta"]
+    assert "Q-R 2" in regras["classificacao_extratos.aurora.devolucao_pix_lojista"]["aceite"]

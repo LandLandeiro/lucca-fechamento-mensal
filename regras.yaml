@@ -582,10 +582,16 @@ classificacao_extratos:
       pergunta_ref: P09
     devolucao_pix_lojista:
       valor: {padrao: "^DEVOLUCAO PIX - (?P<lojista>.+)$", sinal: "+", conta: "2.1.01.001", lojista: true,
-              pendencia: "PIX de repasse que voltou; motivo ainda desconhecido (Helena 20:49, Q-F 4b)"}
+              pendencia: "PIX de repasse que voltou; motivo ainda desconhecido (Helena 20:49, Q-F 4b)",
+              motivo: "baixa a conta onde o repasse estava: o PIX de repasse saiu de 2.1.01.001 (regra repasse_lojista), então a devolução volta a obrigação com o lojista para 2.1.01.001, não para 2.1.01.002"}
       status: ASSUMO
       autor: Lucca
-      fonte: "decisão Lucca; Slack Helena 20:49 (Q-F 4b): 'A devolução é um Pix de repasse que voltou, e ainda não sei o motivo'; caso: 05a L65"
+      aceite: "Slack Helena 09:48 (Q-R 2): 'As duas contas fazem sentido. Escolham uma, mantenham o mesmo critério e escrevam o motivo.'"
+      fonte: >-
+        decisão Lucca (D65); Slack Helena 20:49 (Q-F 4b): 'A devolução é um Pix de repasse que voltou, e ainda não sei o
+        motivo'; critério da Q-I a (Helena 21:14, para a Fox AI) e Q-X 2 (11:01): se já estava registrado, baixa a conta
+        onde estava. Caso: 05a L65 (+12.400,00, 23/09), devolução de repasse à Mundo Aberto; o repasse de 09/09 (L26,
+        −48.714,59) está em 2.1.01.001
       pergunta_ref: P09
     repasse_lojista:
       valor: {padrao: "^PIX ENVIADO (?P<lojista>.+)$", sinal: "-", conta: "2.1.01.001", lojista: true}
