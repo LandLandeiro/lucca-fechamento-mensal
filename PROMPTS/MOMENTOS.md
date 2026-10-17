@@ -20,14 +20,14 @@ Os 4 mais fortes, no formato do case: o que pedi, o que a IA devolveu e o que fi
 
 ## 4. Verificação cruzada: outra sessão de IA, sem ver o código, recalculou do zero
 
-- **Pedi**, em outra sessão de IA que não via este código, um script que recalculasse do zero comissões, divergências, remessa e notas. **Bateu no centavo** em todas essas etapas: 207.031,31 com truncamento (registrada no commit `3f83a5a`) e, depois da correção da Helena, 207.039,73, 16.973,65, 39.543,45 e as 21 notas (commit `cc7022d`).
+- **Pedi**, em outra sessão de IA que não via este código, um script que recalculasse do zero comissões, divergências, remessa e notas. **Bateu no centavo** em todas essas etapas: 207.031,31 com truncamento (registrada no commit `3f83a5a`) e, depois da correção da Helena, 207.039,73, 16.973,65, 39.543,45 e as 21 notas (commit `cc7022d`). São os números de antes do arquivo 06 (ajustes tardios, D75); com ele, a comissão de checkout é 203.735,34 e as notas, 243.284,29.
 - **O que fiz:** só aceitei cada etapa depois de bater. Quando a minha previsão não bateu (16 pendências esperadas × 15 calculadas, na E6b), a IA mostrou o porquê antes do commit, e o número ficou como estava.
 
 ## 5. Quanto devolver: a fórmula da Helena ficou, e o valor a devolver virou outra coluna
 
 - **O que aconteceu:** a pendência da Casa pedia para devolver R$ 15.397,42, o valor da divergência pela fórmula da Q-H c (bruto × (taxa aplicada − contratada)). A resposta da Helena a uma pergunta de outro time no canal (Q-U 4, Turma do Barulho) mostrou o problema: *"A Orbe já liquida o líquido"*, então o lojista perdeu exatamente o que a Orbe descontou acima do contrato, que é o `valor_taxa` truncado menos a comissão contratada. A diferença era o centavo de truncamento da Orbe: Casa 15.396,77, Rota 1.545,86, Bridge 29,94.
 - **Pedi** para trocar o valor da divergência. **A IA parou antes de implementar:** a troca contrariava a Q-H c, uma resposta CONFIRMADO da Helena (*"O valor da divergência eu quero como valor bruto × (taxa aplicada − contratada)"*), e sugeriu separar os dois valores.
-- **O que fiz:** aceitei separar (D71). `diferenca_brl` segue a Q-H c, e `valor_a_devolver_brl` (Q-U 4) é a coluna que pendências, rascunhos e totais usam. Daí saiu a conta da causa raiz (D74): devolver R$ 16.972,57, recuperar da Orbe R$ 1.545,86, custo para a Tarvo R$ 15.426,71.
+- **O que fiz:** aceitei separar (D71). `diferenca_brl` segue a Q-H c, e `valor_a_devolver_brl` (Q-U 4) é a coluna que pendências, rascunhos e totais usam. Daí saiu a conta da causa raiz (D74): devolver R$ 16.972,57, recuperar da Orbe R$ 1.545,86, custo para a Tarvo R$ 15.426,71. Depois, a D76 (Bridge com aditivo assinado, `contrato_orbe`, Q-AA 1) corrigiu para recuperar da Orbe R$ 1.575,80 e custo para a Tarvo R$ 15.396,77, os números de hoje.
 
 ## Outros momentos (resumo)
 
