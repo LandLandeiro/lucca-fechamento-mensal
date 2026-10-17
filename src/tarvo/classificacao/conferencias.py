@@ -66,6 +66,7 @@ def conferir(
     resgate_acima: str = "PENDENCIA",
     pendencias_anteriores: list[dict] | None = None,
     feriados: frozenset[date] = frozenset(),
+    aporte_sem_operacao: dict | None = None,
 ) -> ResultadoConferencias:
     """Roda as três conferências. `regra_por_lancamento` (banco, ref) → nome da regra aplicada;
     `feriados` = datas que não são dia útil (`calendario.feriados_nacionais`)."""
@@ -139,12 +140,17 @@ def conferir(
         candidatos = [l for l in aportes.get(cnpj, []) if l.valor == sobra]
         if len(candidatos) == 1:
             lan = candidatos[0]
-            pid = f"PEN-APORTE_SEM_OPERACAO-{lan.banco}-{lan.ref_origem}"
+            # D87 (Q-N 5): é dinheiro de remessa que ainda não foi feita; vira acompanhamento, com próximo passo
+            cfg = aporte_sem_operacao or {}
+            proximo = nome_mes(mes_seguinte(lan.data)[1])
+            pid = f"PEN-ACOMPANHAMENTO_APORTE-{lan.banco}-{lan.ref_origem}"
             res.pendencias.append(Pendencia(
-                pid, "APORTE_SEM_OPERACAO", lan.ref_origem, lan.valor,
-                f"{nomes.get(cnpj, cnpj)}: aportes no Meridiano somam {fmt_dinheiro(recebido)} e as operações da Ponte "
-                f"(Valor R$ + IOF) {fmt_dinheiro(devido.get(cnpj, ZERO))}; a sobra é exatamente o PIX de "
-                f"{lan.data.isoformat()} ({fmt_dinheiro(lan.valor)}): recurso do lojista sem operação de câmbio", "Helena",
+                pid, "ACOMPANHAMENTO_APORTE", lan.ref_origem, lan.valor,
+                f"Acompanhamento: {nomes.get(cnpj, cnpj)}: aportes no Meridiano somam {fmt_dinheiro(recebido)} e as "
+                f"operações da Ponte (Valor R$ + IOF) {fmt_dinheiro(devido.get(cnpj, ZERO))}; a sobra é exatamente o PIX de "
+                f"{lan.data.isoformat()} ({fmt_dinheiro(lan.valor)}), recurso do lojista para remessa que ainda não foi feita, "
+                f"em 2.1.02.001. {cfg.get('citacao_fonte', '')}: '{cfg.get('citacao', '')}' Próximo passo: "
+                f"{cfg.get('proximo_passo', 'conferir no mês seguinte')} ({proximo})", f"analista (conferir em {proximo})",
             ))
             res.rastro_pendencias.append(_rastro(pid, lan, lan.valor, linha(lan), "aporte sem operação na Ponte"))
         else:

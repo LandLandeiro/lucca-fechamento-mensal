@@ -90,7 +90,7 @@ def achar_unico(pasta: Path, padrao: str) -> Path:
 
 
 def achar_opcional(pasta: Path, padrao: str) -> Path | None:
-    """Arquivo que pode faltar (D75): 0 → None, sem aviso; 1 → o arquivo; mais de um → erro de entrada."""
+    """Arquivo que pode faltar (D75): 0 → None (quem chama decide o aviso, D89); 1 → o arquivo; mais de um → erro de entrada."""
     achados = sorted(pasta.glob(padrao))
     if len(achados) > 1:
         raise ErroEntrada(f"esperado no máximo 1 arquivo {padrao!r} em {pasta}, achei {len(achados)}: {[p.name for p in achados]}")
@@ -147,6 +147,9 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         avisos_extra.append(Aviso(arq_ponte.name, "-", f"competência da Ponte {ponte.competencia} ≠ competência da Orbe {competencia}"))
     for p in sep.pendencias:
         avisos_extra.append(Aviso("relatório da Orbe", p.ref_origem, f"linha fora da competência {competencia}: vira pendência {p.id_saida}"))
+    if arq_ajustes is None:  # D89 (Turma 12:31: "Prefiro que a solução avise a que quebre sem ninguém perceber")
+        avisos_extra.append(Aviso(PADRAO_ORBE_AJUSTES, "-", "sem arquivo de ajustes tardios da Orbe neste mês "
+                                  "(informativo: o fechamento segue só com o relatório 01)"))
     avisos_extra += [Aviso(nome, "-", "arquivo que nenhum leitor reconhece: não foi lido (confira se é do pacote)")
                      for nome in arquivos_nao_reconhecidos(dados)]
     declarado_qtd = ponte.totais_declarados.get("Total de operações:")
@@ -242,6 +245,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         valor_da_regra(regras, "classificacao_extratos.conferencias")["resgate_acima_do_aplicado"],
         pend_ant,
         feriados,
+        valor_da_regra(regras, "classificacao_extratos.conferencias").get("aporte_sem_operacao"),
     )
     lancamentos = [l for c in classif for l in c.linhas]
     conf.resolvidas.extend(resolvidas_sem_contrato(retomadas, cadastro, competencia))
@@ -360,7 +364,7 @@ def _imprimir_divergencias(r: dict) -> None:
         acc[2] += d["diferenca_brl"]
     for cnpj, (nome, n, total) in sorted(por_lojista.items(), key=lambda kv: (-kv[1][2], kv[0])):
         print(f"  {cnpj}  {nome[:40]:<40} {fmt_dinheiro(total):>12}  ({n} divergências)")
-    for direcao in ("COBROU_A_MAIS", "COBROU_A_MENOS"):
+    for direcao in ("COBROU_A_MAIS", "COBROU_A_MENOS", "ESTORNO_DE_VENDA_ACIMA_DO_CONTRATO"):
         sel = [d["diferenca_brl"] for d in divs if d["direcao"] == direcao]
         print(f"  {direcao:<16} {len(sel):>4} divergências  {fmt_dinheiro(sum(sel, ZERO)):>12}")
     fonte, com, div = r["conservacao"]

@@ -25,7 +25,7 @@ from tarvo.saida.escritor import formatar
 ZERO = Decimal("0")
 PASTA = "rascunhos"
 COLUNAS_ORBE = ["id_transacao", "data", "tipo_lancamento", "valor_bruto", "taxa_aplicada_pct", "taxa_contratada_pct",
-                "valor_taxa_orbe", "comissao_contratada", "valor_brl"]
+                "valor_taxa_orbe", "comissao_contratada", "diferenca_formula_q_h_brl", "valor_brl"]
 COLUNAS_PONTE = ["numero_operacao", "linha_anexo", "lojista", "cnpj", "data_contratacao", "moeda", "valor_me", "ptax_ref",
                  "taxa_cliente", "spread_aplicado_pct", "spread_contratado_pct", "spread_brl", "diferenca_contrato_brl", "valor_brl"]
 
@@ -85,7 +85,9 @@ def gerar_rascunhos(saida: Path, divergencias: list[dict], contestacao: list[dic
         linhas = [{"id_transacao": d["ref_origem"], "data": d["data"], "tipo_lancamento": d["tipo_lancamento"],
                    "valor_bruto": d["valor_bruto"], "taxa_aplicada_pct": d["taxa_aplicada_pct"],
                    "taxa_contratada_pct": d["taxa_contratada_pct"], "valor_taxa_orbe": d["valor_taxa_orbe"],
-                   "comissao_contratada": d["comissao_contratada"], "valor_brl": d["valor_a_devolver_brl"]} for d in ds]
+                   "comissao_contratada": d["comissao_contratada"], "diferenca_formula_q_h_brl": d["diferenca_brl"],
+                   "valor_brl": d["valor_a_devolver_brl"]} for d in ds]
+        formula = sum((d["diferenca_brl"] for d in ds), ZERO)
         _escrever(pasta, base, COLUNAS_ORBE, linhas, _md(
             "Orbe Adquirência", f"Taxa acima do contrato - {nome} (CNPJ {cnpj}) - {mes}",
             [f"No fechamento de {mes}, a taxa aplicada em {len(ds)} transações de {nome} (CNPJ {cnpj}) ficou diferente "
@@ -93,8 +95,13 @@ def gerar_rascunhos(saida: Path, divergencias: list[dict], contestacao: list[dic
              f"O valor descontado {sentido} do lojista soma {fmt_brl(abs(total))}: a taxa que a Orbe descontou menos a "
              f"comissão pela taxa contratada, transação por transação.",
              "",
-             "A Tarvo devolve esse valor ao lojista e pede o ressarcimento à Orbe no próximo repasse. A lista anexa traz "
-             "cada transação com a taxa aplicada, a contratada, o valor descontado e a comissão contratada."],
+             f"- **Valor a recuperar (o que foi descontado de fato):** {fmt_brl(total)}",
+             f"- **Pela fórmula da divergência** (bruto × (taxa aplicada − taxa contratada), Q-H c): {fmt_brl(formula)}. "
+             f"A diferença, {fmt_brl(formula - total)}, são centavos: a Orbe trunca a taxa que desconta e a fórmula "
+             f"arredonda. Pedimos o que saiu do bolso do lojista (Q-AH).",
+             "",
+             "A Tarvo devolve esse valor ao lojista e pede o ressarcimento à Orbe. A lista anexa traz cada transação com a "
+             "taxa aplicada, a contratada, o valor descontado, a comissão contratada e a diferença pela fórmula."],
             total, f"{base}.csv", "Origem: `divergencias_taxa.csv` (natureza `contrato_orbe`)."))
         feitos.append(f"{base}.md")
 

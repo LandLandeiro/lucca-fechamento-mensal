@@ -108,7 +108,11 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
             aplicada = t.taxa_aplicada_pct / 100
             outros = [x.transacao.ref_origem for x in itens if x is not c]
             motivo = f"Orbe aplicou {fmt_pct(aplicada)}%; contratada {fmt_pct(c.taxa_contratada)}% ({c.fonte_taxa})"
-            if t.tipo_lancamento in ("ESTORNO", "REVERSAO ANTECIPACAO") and c is not cabeca:
+            estorno_de_acima = (t.tipo_lancamento in ("ESTORNO", "REVERSAO ANTECIPACAO") and c is not cabeca
+                                and difs[0] > 0 and d < 0)
+            if estorno_de_acima:  # D86: não é "a Orbe cobrou a menos" (Q-N 7), é o estorno de uma venda cobrada a mais
+                motivo = (f"estorno de venda cobrada acima do contrato ({cabeca_id}): " + motivo)
+            elif t.tipo_lancamento in ("ESTORNO", "REVERSAO ANTECIPACAO") and c is not cabeca:
                 motivo += f"; {t.tipo_lancamento.lower()} de {cabeca_id}"
             elif t.tipo_lancamento == "ESTORNO":
                 motivo += f"; estorno de venda de {t.data_venda_original.isoformat()} que não está no arquivo"
@@ -133,11 +137,13 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
                 "valor_taxa_orbe": t.valor_taxa,
                 # D71: o que o lojista perdeu de fato (a Orbe liquida o líquido, Q-U 4): valor cobrado − comissão contratada
                 "valor_a_devolver_brl": t.valor_taxa - c.comissao,
-                "direcao": "COBROU_A_MAIS" if d > 0 else "COBROU_A_MENOS",
+                "direcao": ("ESTORNO_DE_VENDA_ACIMA_DO_CONTRATO" if estorno_de_acima
+                            else "COBROU_A_MAIS" if d > 0 else "COBROU_A_MENOS"),
                 "liquida_com": ", ".join(outros),
                 "natureza": _natureza_checkout(c, aplicada, cadastro),
                 "motivo": motivo,
-                "decisao": decisao,
+                # D85: a devolução da Casa (concessão comercial) decide Helena + comercial, não só a Helena
+                "decisao": (c.condicao or {}).get("quem_decide_divergencia") or decisao,
             })
             res.itens_por_div[ida] = [c]
             res.rastro.append({
@@ -200,11 +206,13 @@ def _pendencias_por_lojista(res: ResultadoDivergencias, condicoes: dict[str, dic
                      f"menos, {cfg['liquido_fonte']}) e recuperar o mesmo valor da Orbe (rascunho em rascunhos/; o valor "
                      f"não soma duas vezes). {cfg['citacao_fonte']}: '{cfg['citacao']}'")
         texto += ". Detalhe por transação em divergencias_taxa.csv (DIV-<id_transacao>)"
-        pid = f"PEN-DIVERGENCIA_CHECKOUT-{cnpj}"
-        if len({k for (c, k) in grupos if c == cnpj}) > 1:
+        # D85 (Q-N 1 "Deixem separado"): a devolução por concessão comercial tem tipo próprio, fora das divergências
+        tipo = "DEVOLUCAO_CONCESSAO_COMERCIAL" if natureza == "condicao_nao_informada" else "DIVERGENCIA_CHECKOUT"
+        pid = f"PEN-{tipo}-{cnpj}"
+        if len({k for (c, k) in grupos if c == cnpj}) > 1 and tipo == "DIVERGENCIA_CHECKOUT":
             pid += f"-{natureza.upper()}"
         texto = texto.replace(".'.", ".'")
-        res.pendencias.append(Pendencia(pid, "DIVERGENCIA_CHECKOUT", "|".join(d["ref_origem"] for d in divs), total,
+        res.pendencias.append(Pendencia(pid, tipo, "|".join(d["ref_origem"] for d in divs), total,
                                         " ".join(texto.split()), quem))
         for d in divs:
             for c in res.itens_por_div[d["id_saida"]]:

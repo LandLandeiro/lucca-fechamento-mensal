@@ -154,8 +154,8 @@ python -m tarvo --dados tests/fixtures/outubro --saida saida_outubro
 Três tipos de afirmação, cada um num lugar:
 
 - **Fato dos dados** → está nos arquivos de `data/` e cada número de saída aponta a linha de origem no `rastro.csv`. Regras do tipo no `regras.yaml`: **SEI** (13).
-- **Resposta do financeiro** → texto literal em `docs/FINANCEIRO_SLACK.md` (Q-A a Q-Y); a regra que ela fixa é **CONFIRMADO** no `regras.yaml` (49), com a fonte e quem aprovou (`aprovado_por`, Q-S).
-- **Premissa nossa** → **ASSUMO** no `regras.yaml` (37), sempre com o motivo; as que a Helena delegou trazem o `aceite`. Em `HIPOTESES.md`, cada premissa diz o que muda se estiver errada.
+- **Resposta do financeiro** → texto literal em `docs/FINANCEIRO_SLACK.md` (Q-A a Q-AH); a regra que ela fixa é **CONFIRMADO** no `regras.yaml` (48), com a fala literal na fonte (um teste confere, D90) e quem aprovou (`aprovado_por`, Q-S). Os exemplos concretos dela são testes com o valor que ela afirmou (`docs/TESTE_DAS_REGRAS.md`), e uma auditoria independente das regras conferiu a leitura (`docs/auditoria_regras/`).
+- **Premissa nossa** → **ASSUMO** no `regras.yaml` (38), sempre com o motivo; as que a Helena delegou trazem o `aceite`. Em `HIPOTESES.md`, cada premissa diz o que muda se estiver errada.
 
 Nenhuma regra PENDENTE. O que nenhum dos três cobre vira pendência para uma pessoa, não regra.
 
