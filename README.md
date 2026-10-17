@@ -68,6 +68,8 @@ data/      data pack original, sem alteração (ver .gitattributes)
 docs/      instruções do case
 src/       código
 saida/     arquivos gerados
+cache_ia/  respostas da IA em cache (reexecução sem chave e sem custo)
+scripts/   auditoria independente da saída (auditar_saida.py)
 PROMPTS/   histórico das sessões de IA + MOMENTOS.md
 HIPOTESES.md
 ```

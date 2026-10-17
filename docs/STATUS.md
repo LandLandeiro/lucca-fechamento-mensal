@@ -32,7 +32,8 @@
 
 - [x] `pendencias.csv` com motivo e quem decide: 11 pendências (checkout, remessa, notas, extratos)
 - [x] Extra `contestacao_ponte.csv` (Q-L): 28 operações em 3 pendências CONTESTACAO_PONTE, pronto para a Helena mandar à Ponte
-- [ ] Rastro de 100% dos números
+- [ ] Rastro de 100% dos números: **quase** (auditoria de 17/10, `docs/AUDITORIA.md` item 5). O validador garante que os 478 números têm rastro com soma igual e que cada linha de origem aparece uma vez. Falta: (1) a linha `arredondamento` de −0,03 da PEN-EXCESSO_REMESSA não aponta para linha de origem; (2) o validador não confere a origem das linhas de `NF-`, `DIV-` da remessa e das pendências derivadas (hoje todas existem, conferido pelo `scripts/auditar_saida.py`)
+- [x] Auditoria independente da saída (`scripts/auditar_saida.py`, sem importar o pacote): formato sem violação; coerência com 1 achado (o −0,03 acima); matriz de conformidade Q-A…Q-M em `docs/CONFORMIDADE.md`
 - [ ] Roda em outubro sem mudar código: arquivos achados por prefixo, competência lida do relatório da Ponte, vigências e regras lidas do `regras.yaml`; falta testar com um arquivo de outro mês
 
 ## Regras (`regras.yaml`)
