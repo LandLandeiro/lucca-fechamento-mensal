@@ -6,19 +6,19 @@
 
 > Desafio Barte AI · Hackathon de AI Services · 16 e 17/10/2026 · time solo: Lucca Rocha Landeiro
 
-**O problema em 2 frases.** Todo mês o financeiro da Tarvo leva 8 dias úteis para fechar comissões, divergências de taxa, notas e extratos à mão, cruzando a planilha de taxas com os relatórios da Orbe e da Ponte. E erra porque o contrato muda sem ninguém avisar quem cobra: em setembro, R$ 16.972,57 descontados a mais dos lojistas no checkout, dos quais R$ 15.426,71 ficam como custo da Tarvo porque a Orbe nunca soube da condição.
+**O problema em 2 frases.** Todo mês o financeiro da Tarvo leva 8 dias úteis para fechar comissões, divergências de taxa, notas e extratos à mão, cruzando a planilha de taxas com os relatórios da Orbe e da Ponte. E erra porque o contrato muda sem ninguém avisar quem cobra: em setembro, R$ 16.972,57 descontados a mais dos lojistas no checkout, dos quais R$ 15.396,77 ficam como custo da Tarvo: a isenção que o comercial deu à Casa do Estudante nunca chegou à Orbe.
 
 ## Setembro em números (`saida/`)
 
 | | |
 |---|---|
-| Notas a emitir | **R$ 246.588,68 em 21 notas** (20 de checkout, R$ 207.045,23; 1 para a Ponte, R$ 39.543,45) |
-| Comissão | checkout R$ 207.039,73 (21 lojistas; a Casa fica em −5,50 e não emite nota); remessa R$ 39.543,45 (14 lojistas) |
-| Divergência de checkout | devolver aos lojistas **R$ 16.972,57**; recuperar da Orbe **R$ 1.545,86** (Rota); custo para a Tarvo **R$ 15.426,71** (Casa e Bridge: a Orbe não foi avisada) |
-| Remessa | Mundo Aberto R$ 1.418,85 a contestar com a Ponte; 4 spreads negativos (R$ −1.834,05 no relatório) em contestação |
+| Notas a emitir | **R$ 243.284,29 em 21 notas** (20 de checkout, R$ 203.740,84; 1 para a Ponte, R$ 39.543,45), já com os 14 ajustes tardios da Orbe (arquivo 06: −R$ 3.304,39) |
+| Comissão | checkout R$ 203.735,34 (21 lojistas; a Casa fica em −5,50 e não emite nota); remessa R$ 39.543,45 (14 lojistas) |
+| Divergência de checkout | 210 transações (o estorno de venda divergente entra com valor negativo); devolver aos lojistas **R$ 16.972,57**; recuperar da Orbe **R$ 1.575,80** (Rota e Bridge: condição contratada); custo para a Tarvo **R$ 15.396,77** (Casa: concessão do comercial fora do contrato) |
+| Remessa | Mundo Aberto R$ 1.418,85 a contestar com a Ponte; 4 spreads negativos: −R$ 1.834,05 no relatório (o que aconteceu), −R$ 3.565,98 até o spread do contrato (o que se pede à Ponte) |
 | Lançamentos | 184 dos dois extratos, todos por regra (0 para a IA) |
-| Pendências | **16**, cada uma com valor, motivo e quem decide (Helena 11, Helena + comercial 3, comercial 1, analista 1) |
-| Rastro | **5.203 linhas**: cada número acima ligado às linhas de origem |
+| Pendências | **15**, cada uma com valor, motivo e quem decide (Helena 11, Helena + comercial 2, comercial 1, analista 1) |
+| Rastro | **5.251 linhas**: cada número acima ligado às linhas de origem (relatório da Orbe, ajustes tardios, anexo da Ponte, extratos) |
 
 ## Como a banca roda
 
@@ -40,7 +40,7 @@ A tabela é a porta de entrada; os arquivos detalhados são a evidência.
 |---|---|---|
 | Correção dos números (25%) | `saida/` + `docs/AUDITORIA.md` + CI | Os 6 arquivos, cada número com a linha de origem no `rastro.csv`; auditoria independente com 0 violações; o CI refaz a saída do zero em Windows e Linux a cada commit e confere que é idêntica |
 | Uso de IA (20%) | `PROMPTS/MOMENTOS.md` + `PROMPTS/` | Onde a IA errou e como foi corrigida, onde ela sugeriu e o código provou antes de aceitar, e o histórico completo das sessões |
-| Causa raiz (15%) | `docs/CAUSA_RAIZ.md` | Por que o fechamento erra (o comercial fecha a condição e ninguém avisa a Orbe e a Ponte), com os casos de setembro em reais, o custo (R$ 15.426,71) e o que precisa mudar no processo |
+| Causa raiz (15%) | `docs/CAUSA_RAIZ.md` | Por que o fechamento erra (o comercial fecha a condição e ninguém avisa a Orbe e a Ponte), com os casos de setembro em reais, o custo (R$ 15.396,77) e o que precisa mudar no processo |
 | Hipóteses (10%) | `HIPOTESES.md` + `regras.yaml` | O que é fato, o que é premissa e o que o financeiro confirmou, com fonte; cada regra do cálculo com status SEI/ASSUMO/CONFIRMADO |
 | Perguntar antes de construir (10%) | `HIPOTESES.md` (seção "Perguntas ao financeiro") + `docs/FINANCEIRO_SLACK.md` | As perguntas feitas, as respostas literais da Helena e o que cada resposta mudou na solução |
 | Raciocínio e comunicação (10%) | este README + `docs/PLANO.md` + `docs/DECISOES.md` | Como rodar, como fechar outubro e onde a IA atua; o plano; cada decisão técnica com alternativa e motivo |
@@ -75,7 +75,8 @@ Arquivos **extras** (além dos 6 do case):
 |---|---|
 | `contestacao_ponte.csv` | uma linha por operação que a Helena contesta com a Ponte (valor e motivo) |
 | `sugestoes_regra.csv` | vínculos que a IA acertou e o código provou, propostos como regra para o mês seguinte |
-| `rascunhos/` | rascunhos de contestação para a Helena revisar e enviar: um por contraparte e lojista (`orbe_rota_global.md`, `ponte_mundo_aberto.md`, `ponte_spreads_negativos.md`, `ponte_duplicata.md`), cada um com assunto, texto, total e a lista anexa em `.csv`; sem IA. Casa e Bridge não têm rascunho para a Orbe (devolução ao lojista) |
+| `rascunhos/` | rascunhos de contestação para a Helena revisar e enviar: um por contraparte e lojista (`orbe_rota_global.md`, `orbe_escola_bridge.md`, `ponte_mundo_aberto.md`, `ponte_spreads_negativos.md`, `ponte_duplicata.md`), cada um com assunto, texto, total e a lista anexa em `.csv`; sem IA. A Casa não tem rascunho para a Orbe (concessão nossa: só devolução ao lojista) |
+| `06_orbe_ajustes_tardios_*.csv` (entrada, opcional) | ajustes que a Orbe manda depois do relatório: lidos junto com o 01, cada linha no rastro com o próprio arquivo; se faltar, o fechamento segue |
 | `pendencias_resolvidas.csv` | só com `--pendencias-anteriores`: pendências do mês anterior resolvidas neste mês |
 
 ## Como rodar do zero
@@ -140,7 +141,7 @@ python -m tarvo --dados tests/fixtures/outubro --saida saida_outubro
 ## Limitações conhecidas
 
 - **Outubro é dado sintético** (`tests/fixtures/outubro/`): setembro deslocado um mês, com seis novidades (EC novo, estorno da Bridge, TED de 300 mil, PIX da EduAbroad, nome novo da Nórdica, contrato da Atlas). Prova que o código roda sem mudança, não que outubro real não traz caso novo.
-- **Perguntas sem resposta** (17/10, 11:16 e 11:07): a data do aviso da Bridge à Orbe (decide se os R$ 29,94 se recuperam da Orbe), o critério do alerta de antecipação, o valor da contestação do spread negativo e como o ajuste da Ponte volta no relatório. Estão como ASSUMO com motivo.
+- **Perguntas sem resposta** (17/10): se o arquivo de ajustes tardios vem todo mês e o que vale quando ele repete um id do relatório (Lucca, 13:19: hoje vira pendência); e se o Spread R$ do ajuste da Ponte é o spread inteiro ou já a participação (Desbravadores, 12:04). O ajuste da Ponte tem a regra registrada (Q-Z) e vira pendência, mas o abatimento ainda não é calculado (D83).
 - **Alerta de antecipação só para lojista sem histórico** (D66, D73). A antecipação pode cobrir recebíveis de meses anteriores, que não estão nos dados; com o critério do mês inteiro, o alerta seria alarme falso em 5 lojistas.
 - **Sem agenda de recebíveis da Orbe**: checar a antecipação de todos os lojistas e conciliar a Orbe com o banco exige essa agenda, que não veio no pacote.
 - **Conciliação Orbe × banco parcela por parcela fica de fora** (Q-M): os créditos da Orbe no Aurora são só classificados.
@@ -150,8 +151,8 @@ python -m tarvo --dados tests/fixtures/outubro --saida saida_outubro
 
 Três tipos de afirmação, cada um num lugar:
 
-- **Fato dos dados** → está nos arquivos de `data/` e cada número de saída aponta a linha de origem no `rastro.csv`. Regras do tipo no `regras.yaml`: **SEI** (12).
-- **Resposta do financeiro** → texto literal em `docs/FINANCEIRO_SLACK.md` (Q-A a Q-Y); a regra que ela fixa é **CONFIRMADO** no `regras.yaml` (46), com a fonte e quem aprovou (`aprovado_por`, Q-S).
+- **Fato dos dados** → está nos arquivos de `data/` e cada número de saída aponta a linha de origem no `rastro.csv`. Regras do tipo no `regras.yaml`: **SEI** (13).
+- **Resposta do financeiro** → texto literal em `docs/FINANCEIRO_SLACK.md` (Q-A a Q-Y); a regra que ela fixa é **CONFIRMADO** no `regras.yaml` (49), com a fonte e quem aprovou (`aprovado_por`, Q-S).
 - **Premissa nossa** → **ASSUMO** no `regras.yaml` (37), sempre com o motivo; as que a Helena delegou trazem o `aceite`. Em `HIPOTESES.md`, cada premissa diz o que muda se estiver errada.
 
 Nenhuma regra PENDENTE. O que nenhum dos três cobre vira pendência para uma pessoa, não regra.
