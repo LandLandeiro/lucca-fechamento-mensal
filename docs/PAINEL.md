@@ -1,7 +1,7 @@
 # Painel do fechamento (`saida/painel.html`)
 
 ```powershell
-python -m tarvo.painel --saida saida            # padrões: --dados data --regras regras.yaml
+python -m tarvo.painel --saida saida            # padrões: --dados data --regras regras.yaml --hipoteses HIPOTESES.md
 ```
 
 O resultado é um arquivo único, `saida/painel.html`, com HTML, CSS e JS puro inline, sem framework e sem build. Abre com duplo clique, sem servidor. Ele lê só o que o fechamento já gerou: `saida/*.csv`, `rastro.csv` e `regras.yaml`. Do `data/` lê duas coisas: o sha256 de cada arquivo, que identifica a versão, e o `valor_taxa` da Orbe, para a coluna "pela taxa aplicada". O painel não calcula regra nova: cada número exibido é uma soma de linhas da saída, feita em `Decimal`.
@@ -25,22 +25,36 @@ O grupo sai do `tipo` da pendência e, em `DIVERGENCIA_CHECKOUT`, da `natureza`.
 
 | Grupo | Tipos | Soma no total? |
 |---|---|---|
-| Devolver ao lojista | `DIVERGENCIA_CHECKOUT` com natureza `condicao_nao_informada` **ou sem natureza** · `DEVOLUCAO_PIX_LOJISTA` | sim |
-| Cobrar da Orbe | `DIVERGENCIA_CHECKOUT` com natureza `contrato_orbe` | sim |
+| Devolver ao lojista | **toda** `DIVERGENCIA_CHECKOUT`, pelo Σ `valor_a_devolver_brl` das transações dela em `divergencias_taxa.csv` (sem a coluna: `valor_brl` da pendência) | sim |
+| Recuperar da Orbe | a parte das `DIVERGENCIA_CHECKOUT` com natureza `contrato_orbe` (Σ `valor_a_devolver_brl` dessas linhas) | **não**: "é o mesmo valor que volta ao lojista" |
+| Repasse que voltou | `DEVOLUCAO_PIX_LOJISTA` | sim |
 | Contestar com a Ponte | `CONTESTACAO_PONTE` · `SPREAD_NEGATIVO_SEM_TRAVA` · `EXCESSO_REMESSA` | sim, exceto `EXCESSO_REMESSA` |
 | Receita parada | `SEM_CONTRATO_VIGENTE` · `NF_NEGATIVA` · `NOTA_BLOQUEADA` | sim |
 | Sem origem | `PIX_SEM_IDENTIFICACAO` · `TRANSFERENCIA_SEM_ORIGEM` · `SEM_REGRA` · `IA_REPROVADA` | sim |
 | Em trânsito | `TRANSFERENCIA_EM_TRANSITO` · `APORTE_SEM_OPERACAO` · `CONFERENCIA_REPASSE` | não |
 | Outras pendências | qualquer tipo novo (outubro não quebra) | sim |
 | (Alertas, à parte) | `ALERTA_*` | não, é informativo |
+| (fora dos grupos) | pendência sem valor (ex.: `PROVISAO_DO_MES`) | aparece só no kanban |
 
-Escolhas que o Lucca precisa validar:
+**Custo para a Tarvo**, no topo da visão geral: devolver ao lojista − recuperar da Orbe, só com as divergências de checkout, com o link de rastro de cada pendência que compõe cada parcela. Setembro: 16.972,57 − 1.545,86 = **15.426,71**. É a mesma conta do resumo do `python -m tarvo` e da D71 (`divergencias.valor_a_devolver`).
 
-- **Total em jogo = Σ |valor_brl|.** Somar com sinal deixaria o spread negativo (−1.834,05, prejuízo da Tarvo) abater o spread cobrado a mais (+1.418,85, dinheiro do lojista): "Contestar com a Ponte" daria R$ 406,68. Cada linha mostra o valor com o sinal do CSV.
-- **`DIVERGENCIA_CHECKOUT` sem natureza vai para "devolver ao lojista"**, porque é a única afirmação verdadeira nos dois casos. Pela Q-U 4, quando a Orbe cobra a mais o lojista já recebeu a menos, e a Tarvo devolve. "Cobrar da Orbe" só aparece quando a saída diz `contrato_orbe`. Pela Q-N 1 e pela Q-V, a Casa do Estudante não é cobrança da Orbe.
-- **Não somam (`NAO_SOMA`):** em trânsito e aportes, como foi pedido. Somei mais dois a essa lista: `CONFERENCIA_REPASSE`, porque o valor é a própria nota de remessa e já está no "a faturar", e `EXCESSO_REMESSA`, porque os 709,46 são a metade da Tarvo dentro dos 1.418,85 contestados.
-- **`SEM_CONTRATO_VIGENTE`** (Atlas) entra em "receita parada" com o valor que a pendência traz. Esse valor é a taxa cobrada pela Orbe, informativa, conforme o próprio `motivo`. A comissão contratada não existe enquanto o comercial não confirmar.
+Aprovado pelo Lucca (17/10):
+
+- **Total em jogo = Σ |valor|.** Somar com sinal deixaria o spread negativo (−1.834,05, prejuízo da Tarvo) abater o spread cobrado a mais (+1.418,85, dinheiro do lojista): "Contestar com a Ponte" daria R$ 406,68. Cada linha mostra o valor com o sinal do CSV.
+- **Toda divergência de checkout é "devolver ao lojista"** (Q-A: "a diferença volta para o lojista e eu cobro a Orbe"; Q-U 4: o lojista já recebeu a menos). "Recuperar da Orbe" é a parte `contrato_orbe` e não soma. Sem a coluna `natureza`, o grupo "recuperar" não aparece: nada se afirma sobre a Orbe.
+- **Não somam (`NAO_SOMA`):** em trânsito e aportes; `CONFERENCIA_REPASSE`, porque o valor é a própria nota de remessa e já está no "a faturar"; e `EXCESSO_REMESSA`, porque os 709,46 são a metade da Tarvo dentro dos 1.418,85 contestados.
+
+A validar:
+
+- **`DEVOLUCAO_PIX_LOJISTA` (12.400,00, L65) saiu de "devolver ao lojista"** para um grupo próprio, "Repasse que voltou". Ela não é divergência de taxa: é dinheiro do lojista que o banco devolveu, com motivo ainda desconhecido (Q-F 4b). Se continuasse no grupo, "devolver" daria 29.372,57 e o custo para a Tarvo ficaria errado.
+- **`SEM_CONTRATO_VIGENTE`** (Atlas) entra em "receita parada" com o rótulo "taxa cobrada pela Orbe (referência); comissão a definir pelo comercial" (`ROTULO_VALOR`), na visão, no kanban e na tela 3.
 - O `APORTE_SEM_OPERACAO` da Ponte Aérea está em "em trânsito" pela Q-N 5 / Q-P 1: "dinheiro de uma remessa que sai em outubro".
+
+## Premissas: de onde vem cada contagem (tela 1)
+
+- **"Premissas do HIPOTESES.md"**: linhas `H..` da tabela Premissas, contadas pela 1ª palavra da coluna Status ("ASSUMO com aceite" conta como ASSUMO). Ao lado, a frase do Resumo de lá, literal. A tabela do Histórico conta como substituída. O teste confere que tabela e Resumo dizem o mesmo (setembro: 28 CONFIRMADO, 25 ASSUMO, 1 SEI, 1 substituída = 55). A lista que espera aprovação são as **25 ASSUMO do HIPOTESES**, com premissa, status, base e impacto.
+- **"Regras no regras.yaml"**: cada regra do YAML (chave com `status`), sem as decisões marcadas `substituida`. Uma premissa vira várias regras (ex.: a H35 são várias regras de `classificacao_extratos`), por isso os números não coincidem. Setembro, depois do merge: 46 CONFIRMADO, 12 SEI, 35 ASSUMO, 0 PENDENTE, 2 decisões substituídas.
+- Sem `HIPOTESES.md` (`--hipoteses` aponta para outro caminho), a seção cai na lista ASSUMO do `regras.yaml`.
 
 ## Mapeamento: pendência → coluna do kanban (tela 2)
 
@@ -52,7 +66,7 @@ A ordem de avaliação é: `tipo` primeiro, depois `quem_decide`.
 | Com o comercial | `quem_decide` contém "comercial" e não contém quem fecha (ex.: `comercial`). "Helena + comercial" fica com a Helena, porque ela conduz: "pendência minha com o comercial" (Q-N 1) |
 | Com uma contraparte | tipo `CONTESTACAO_PONTE` ou `EXCESSO_REMESSA`, que dependem da Ponte |
 | Acompanhar | tipo `TRANSFERENCIA_EM_TRANSITO`, `CONFERENCIA_REPASSE` ou `APORTE_SEM_OPERACAO`; ou `quem_decide` com "analista"/"conferir" |
-| Fechadas por regra | não é pendência. São cartões por regra que decidiu sozinha: lançamentos classificados (`metodo` REGRA ou IA, agrupados por `regra_aplicada`), exclusões `EXC-*` do rastro (duplicata, spread negativo) e condições especiais aplicadas (nota do rastro `regras.yaml cadastro.condicoes_especiais[<id>]`). Cada cartão mostra a chave, o status, a fonte, o número de linhas e o link de rastro. Não soma ao total |
+| Fechadas por regra | não é pendência. Um cartão por grupo do que o sistema decidiu sozinho: **um por extrato** (lançamentos com `metodo` REGRA, e um cartão "IA" se houver), listando cada regra com status, contagem e um exemplo; **um por exclusão `EXC-*`** do rastro (duplicata, spread negativo), com regra, status, fonte e exemplo; **um por condição especial** aplicada (nota do rastro `regras.yaml cadastro.condicoes_especiais[<id>]`). A chave da regra abre a busca, que mostra a fonte e os números que ela decide. Não soma ao total. Setembro: 5 cartões (Aurora 84 lançamentos em 17 regras, Meridiano 100 em 10, duplicata 1, spread negativo 4, Casa do Estudante 118 linhas) |
 
 O total de cada coluna é Σ |valor| das pendências que somam. O que não soma aparece como "+ R$ x à parte (n)", com o selo "não entra no total" no cartão.
 
@@ -69,7 +83,7 @@ O total de cada coluna é Σ |valor| das pendências que somam. O que não soma 
 1. **`pyproject.toml`:** incluir `painel/*.css` e `painel/*.js` em `[tool.setuptools.package-data]` (hoje só há `prompts/*.md`). Com `pip install -e .` funciona sem isso; um wheel normal não levaria os dois arquivos.
 2. **Gerar na mesma execução:** chamar `tarvo.painel.gerar_painel(saida, dados, regras)` no fim do `__main__.py`, depois do validador, para que `python -m tarvo` já entregue o painel e o CI (`git diff --exit-code saida/`) cubra também o `painel.html`. Enquanto isso não for feito, o `painel.html` versionado só é atualizado quando alguém roda `python -m tarvo.painel`.
 3. **README:** uma linha com o comando e o que o painel é.
-4. **`natureza`, `ALERTA_*` e `saida/rascunhos/`** já são lidos quando existirem (teste `test_campos_opcionais_aparecem_quando_existem`). Se a main gravar `natureza` também em `pendencias.csv`, ela tem prioridade sobre a de `divergencias_taxa.csv`. Valores novos de natureza caem em "devolver ao lojista" até entrarem em `GRUPO_POR_NATUREZA`.
+4. **`natureza`, `valor_a_devolver_brl`, `ALERTA_*` e `saida/rascunhos/`** são lidos quando existem e, sem eles, a seção some (testes `test_campos_opcionais_aparecem_quando_existem` e `test_sem_campos_opcionais_as_secoes_somem`). Se a main gravar `natureza` também em `pendencias.csv`, ela tem prioridade sobre a de `divergencias_taxa.csv`. Natureza nova entra em "devolver ao lojista" e só vira "recuperar" se for `NATUREZA_RECUPERAR`.
 5. **Ambiente:** o `.venv` tem install editável apontando para o `src` da main. No worktree, rode com `PYTHONPATH=src`, senão `python -m tarvo` (inclusive o subprocesso de `test_cli.py`) importa o código da main.
 
 ## Com mais tempo

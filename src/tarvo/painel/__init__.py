@@ -37,16 +37,18 @@ COLUNAS_VALOR = ("comissao_brl", "diferenca_brl", "valor_brl", "valor")
 # ---------------------------------------------------------------------------
 
 GRUPOS = (  # (chave, rótulo, descrição)
-    ("devolver_lojista", "Devolver ao lojista", "o lojista recebeu a menos ou o dinheiro dele voltou"),
-    ("cobrar_orbe", "Cobrar da Orbe", "a Orbe aplicou taxa diferente do contrato que ela conhecia"),
+    ("devolver_lojista", "Devolver ao lojista", "a Orbe cobrou acima do contrato: o lojista já recebeu a menos (Q-U 4)"),
+    ("recuperar_orbe", "Recuperar da Orbe", "só o que a Orbe cobrou contra o contrato que ela conhecia (natureza contrato_orbe)"),
+    ("repasse_devolvido", "Repasse que voltou", "PIX de repasse devolvido pelo banco: refazer quando o motivo for apurado"),
     ("contestar_ponte", "Contestar com a Ponte", "relatório da Ponte com valor que o fechamento não aceita"),
-    ("receita_parada", "Receita parada", "comissão calculada que não vira nota"),
+    ("receita_parada", "Receita parada", "comissão que não vira nota"),
     ("sem_origem", "Sem origem", "entrada ou lançamento sem dono identificado"),
     ("em_transito", "Em trânsito", "dinheiro que chega depois; conferir no mês seguinte"),
     ("outras", "Outras pendências", "tipo sem destino mapeado"),
 )
 GRUPO_POR_TIPO = {
-    "DEVOLUCAO_PIX_LOJISTA": "devolver_lojista",
+    "DIVERGENCIA_CHECKOUT": "devolver_lojista",  # toda divergência de checkout (Q-A, Q-U 4); a natureza só decide o "recuperar"
+    "DEVOLUCAO_PIX_LOJISTA": "repasse_devolvido",
     "CONTESTACAO_PONTE": "contestar_ponte",
     "EXCESSO_REMESSA": "contestar_ponte",
     "SPREAD_NEGATIVO_SEM_TRAVA": "contestar_ponte",
@@ -61,8 +63,11 @@ GRUPO_POR_TIPO = {
     "APORTE_SEM_OPERACAO": "em_transito",
     "CONFERENCIA_REPASSE": "em_transito",
 }
-# natureza (divergencias_taxa.csv, D63 na main) → grupo; sem natureza, DIVERGENCIA_CHECKOUT = devolver ao lojista
-GRUPO_POR_NATUREZA = {"contrato_orbe": "cobrar_orbe", "condicao_nao_informada": "devolver_lojista"}
+# natureza (divergencias_taxa.csv, D63) que a Tarvo recupera da Orbe; o mesmo valor volta ao lojista, por isso não soma
+NATUREZA_RECUPERAR = "contrato_orbe"
+NAO_SOMA_RECUPERAR = "não soma: é o mesmo valor que volta ao lojista"
+# rótulo do valor quando ele não é o que o título sugere
+ROTULO_VALOR = {"SEM_CONTRATO_VIGENTE": "taxa cobrada pela Orbe (referência); comissão a definir pelo comercial"}
 
 # não somam ao total (o valor já está em outro número, ou é dinheiro que ainda vai chegar)
 NAO_SOMA = {
@@ -99,17 +104,22 @@ TITULOS = {
     "TRANSFERENCIA_EM_TRANSITO": "Transferência entre contas em trânsito",
     "APORTE_SEM_OPERACAO": "Aporte de lojista sem operação de câmbio",
     "CONFERENCIA_REPASSE": "Conferir o repasse da Ponte quando cair",
+    "ALERTA_ANTECIPACAO": "Antecipação acima do que o lojista vendeu",
+    "PROVISAO_DO_MES": "Provisão de folha e impostos do mês",
 }
 SUBTITULOS = {  # sufixo do id_saida
     "DUPLICATA": "operação repetida no relatório",
     "SPREAD_NEGATIVO": "spread negativo",
     "SPREAD_ACIMA_DO_CONTRATADO": "spread acima do contratado",
 }
-TITULO_NATUREZA = {"condicao_nao_informada": "Condição não informada à Orbe: devolver ao lojista"}
+TITULO_NATUREZA = {"condicao_nao_informada": "Condição não informada à Orbe: devolver ao lojista",
+                   "contrato_orbe": "Orbe cobrou acima do contrato: devolver e recuperar"}
 
 # regra de cada número de saída (chave do regras.yaml); a nota do rastro, quando cita o regras.yaml, é mais específica
 REGRA_POR_TIPO_PENDENCIA = {
-    "DIVERGENCIA_CHECKOUT": "divergencias.pendencia_por_lojista",
+    "DIVERGENCIA_CHECKOUT": "divergencias.valor_a_devolver",
+    "ALERTA_ANTECIPACAO": "checkout.alerta_antecipacao",
+    "PROVISAO_DO_MES": "contabil.provisao_do_mes",
     "CONTESTACAO_PONTE": "remessa.contestacao_ponte",
     "EXCESSO_REMESSA": "remessa.excesso_cobrado_na_remessa",
     "NF_NEGATIVA": "notas.estrutura_nf_checkout",
@@ -178,6 +188,9 @@ class Pendencia:
     titulo: str = ""
     contraparte: str = ""
     alerta: bool = False
+    devolver: Decimal | None = None  # DIVERGENCIA_CHECKOUT: Σ valor_a_devolver_brl das transações (fallback: valor_brl)
+    recuperar: Decimal = ZERO  # parte de natureza contrato_orbe
+    rotulo_valor: str = ""
 
 
 @dataclass
@@ -198,6 +211,7 @@ class Painel:
     remessa: list[dict] = field(default_factory=list)
     residuo: Decimal | None = None
     nomes: dict[str, str] = field(default_factory=dict)
+    hipoteses: dict = field(default_factory=dict)
 
 
 def _nomes_por_cnpj(saida: Path) -> dict[str, str]:
@@ -230,10 +244,8 @@ def _classificar(p: Pendencia, dona: str, natureza_por_ref: dict[str, str], nome
     if not p.natureza and tipo == "DIVERGENCIA_CHECKOUT":
         vistas = sorted({natureza_por_ref[r] for r in p.refs if r in natureza_por_ref})
         p.natureza = vistas[0] if len(vistas) == 1 else ""
-    if tipo == "DIVERGENCIA_CHECKOUT":
-        p.grupo = GRUPO_POR_NATUREZA.get(p.natureza, "devolver_lojista")
-    else:
-        p.grupo = GRUPO_POR_TIPO.get(tipo, "outras")
+    p.grupo = GRUPO_POR_TIPO.get(tipo, "outras")
+    p.rotulo_valor = ROTULO_VALOR.get(tipo, "")
     if p.alerta:
         p.grupo = ""
         p.soma, p.nao_soma_motivo = False, "alerta: informativo"
@@ -261,7 +273,7 @@ def _classificar(p: Pendencia, dona: str, natureza_por_ref: dict[str, str], nome
     p.titulo = titulo
 
     partes = []
-    if p.grupo == "cobrar_orbe":
+    if p.recuperar:
         partes.append("Orbe")
     if p.grupo == "contestar_ponte" or tipo == "CONFERENCIA_REPASSE":
         partes.append(ponte or "Ponte")
@@ -279,9 +291,46 @@ def _classificar(p: Pendencia, dona: str, natureza_por_ref: dict[str, str], nome
     p.contraparte = " · ".join(dict.fromkeys(partes)) or "—"
 
 
-def carregar(saida: Path, dados: Path, regras_path: Path) -> Painel:
+def _sem_markdown(texto: str) -> str:
+    texto = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", texto)
+    return " ".join(texto.replace("**", "").replace("~~", "").replace("`", "").split())
+
+
+def ler_hipoteses(caminho: Path) -> dict:
+    """`HIPOTESES.md`: a frase de contagem do Resumo e as linhas da tabela de Premissas (H01…), com o status da coluna 4.
+
+    A tabela do Histórico (substituídas) é contada à parte. Arquivo ausente → {} (a seção usa o regras.yaml)."""
+    if not caminho.exists():
+        return {}
+    secao, resumo, linhas, substituidas = "", "", [], 0
+    for bruta in caminho.read_text(encoding="utf-8").splitlines():
+        if bruta.startswith("## "):
+            secao = bruta[3:].strip().lower()
+            continue
+        if secao == "resumo" and not resumo and re.match(r"-\s+\*\*\d+ premissas", bruta):
+            resumo = _sem_markdown(bruta.lstrip("- ")).split(" As H")[0]
+        if not re.match(r"\|\s*H\d+", bruta):
+            continue
+        celulas = [c.strip().replace("\\|", "|") for c in re.split(r"(?<!\\)\|", bruta.strip().strip("|"))]
+        if secao.startswith("histórico"):
+            substituidas += 1
+        elif secao == "premissas" and len(celulas) >= 7:
+            status_txt = _sem_markdown(celulas[3])
+            linhas.append({"id": celulas[0], "tema": _sem_markdown(celulas[1]), "premissa": _sem_markdown(celulas[2]),
+                           "status": status_txt.split(" ")[0], "status_txt": status_txt, "base": _sem_markdown(celulas[4]),
+                           "impacto": _sem_markdown(celulas[5])})
+    contagem_resumo = {st: int(n) for n, st in re.findall(r"(\d+) (CONFIRMADO|ASSUMO|SEI|PENDENTE)", resumo)}
+    m_sub = re.search(r"(\d+) substitu", resumo)
+    m_tot = re.search(r"(\d+) premissas", resumo)
+    return {"arquivo": caminho.name, "resumo": resumo, "contagem_resumo": contagem_resumo,
+            "substituidas_resumo": int(m_sub.group(1)) if m_sub else None, "total_resumo": int(m_tot.group(1)) if m_tot else None,
+            "linhas": linhas, "substituidas": substituidas}
+
+
+def carregar(saida: Path, dados: Path, regras_path: Path, hipoteses_path: Path | None = None) -> Painel:
     pn = Painel()
     pn.regras = carregar_regras(regras_path)
+    pn.hipoteses = ler_hipoteses(hipoteses_path or regras_path.parent / "HIPOTESES.md")
     pn.nomes = _nomes_por_cnpj(saida)
 
     _, notas = _ler_csv(saida / "notas_a_emitir.csv")
@@ -293,6 +342,8 @@ def carregar(saida: Path, dados: Path, regras_path: Path) -> Painel:
     pn.dona = _dona(pn.regras, pend)
     _, divs = _ler_csv(saida / "divergencias_taxa.csv")
     natureza_por_ref = {d["ref_origem"]: d["natureza"] for d in divs if d.get("natureza")}
+    div_checkout = {d["ref_origem"]: d for d in divs if d.get("linha_negocio") == "CHECKOUT"}
+    tem_devolver = bool(divs) and "valor_a_devolver_brl" in divs[0]
     ponte_regra = pn.regras.get("ponte.tomador_nf_remessa", {}).get("valor") or {}
     ponte = ponte_regra.get("nome", "") if isinstance(ponte_regra, dict) else ""
     # lojistas de uma pendência sem CNPJ no id (ex.: contestação de duplicata): pelo anexo da contestação
@@ -306,6 +357,14 @@ def carregar(saida: Path, dados: Path, regras_path: Path) -> Painel:
             valor=_dec(l.get("valor_brl")), motivo=l.get("motivo", ""), quem_decide=l.get("quem_decide", ""),
             natureza=l.get("natureza", "") or "",
         )
+        if p.tipo.upper() == "DIVERGENCIA_CHECKOUT":
+            linhas_div = [div_checkout[r] for r in p.refs if r in div_checkout]
+            if tem_devolver and linhas_div:
+                p.devolver = sum((_dec(d.get("valor_a_devolver_brl")) or ZERO for d in linhas_div), ZERO)
+                p.recuperar = sum((_dec(d.get("valor_a_devolver_brl")) or ZERO for d in linhas_div
+                                   if d.get("natureza") == NATUREZA_RECUPERAR), ZERO)
+            else:
+                p.devolver = p.valor
         _classificar(p, pn.dona, natureza_por_ref, pn.nomes, ponte, sorted(lojistas_por_pend.get(p.id, ())))
         pn.pendencias.append(p)
 
@@ -315,8 +374,9 @@ def carregar(saida: Path, dados: Path, regras_path: Path) -> Painel:
         pn.rascunhos = sorted(c.relative_to(saida).as_posix() for c in pasta_rasc.rglob("*") if c.is_file())
     if dados.is_dir():
         pn.insumos = [(c.name, _sha256(c)[:12], c.stat().st_size) for c in sorted(dados.iterdir()) if c.is_file()]
-    if regras_path.exists():
-        pn.insumos.append((regras_path.name, _sha256(regras_path)[:12], regras_path.stat().st_size))
+    for extra in (regras_path, hipoteses_path or regras_path.parent / "HIPOTESES.md"):
+        if extra.exists():
+            pn.insumos.append((extra.name, _sha256(extra)[:12], extra.stat().st_size))
 
     pn.rastro_cab, pn.rastro = _ler_csv(saida / "rastro.csv")
     _montar_saidas(pn, saida)
@@ -387,33 +447,42 @@ def _regra_da_saida(ident: str, pend_tipo, lanc_regra, div_linha, regras) -> str
 
 
 def _montar_fechadas(pn: Painel, saida: Path) -> None:
-    """Coluna "Fechadas por regra": o que o sistema decidiu sozinho, agrupado pela regra que decidiu."""
+    """Coluna "Fechadas por regra": o que o sistema decidiu sozinho. Um cartão por grupo:
+    classificação de cada extrato (as regras dele, com contagem e um exemplo), cada exclusão EXC-* e cada condição especial."""
     _, lancs = _ler_csv(saida / "lancamentos_classificados.csv")
-    grupos: dict[str, dict] = {}
+    por_banco: dict[str, dict[str, dict]] = defaultdict(dict)
     for l in lancs:
         if l.get("metodo") not in ("REGRA", "IA"):
             continue
         chave = pn.saidas.get(l["id_saida"], {}).get("regra", "")
         if not chave:
             continue
-        g = grupos.setdefault(chave, {"regra": chave, "qtd": 0, "valor": ZERO, "exemplo": l["id_saida"],
-                                      "titulo": "Lançamentos classificados" if l.get("metodo") == "REGRA" else "Lançamentos classificados pela IA (conferidos pelo código)"})
-        g["qtd"] += 1
-        g["valor"] += _dec(l.get("valor")) or ZERO
-    for ident, s in pn.saidas.items():
+        banco = (l.get("banco") or "").capitalize() if l.get("metodo") == "REGRA" else "IA"
+        r = por_banco[banco].setdefault(chave, {"regra": chave, "qtd": 0, "valor": ZERO, "exemplo": l["id_saida"]})
+        r["qtd"] += 1
+        r["valor"] += _dec(l.get("valor")) or ZERO
+    cartoes = []
+    for banco, regras in sorted(por_banco.items()):
+        itens = sorted(regras.values(), key=lambda r: (-r["qtd"], r["regra"]))
+        qtd = sum(r["qtd"] for r in itens)
+        titulo = (f"Extrato {banco}: {qtd} lançamentos classificados por {len(itens)} {'regra' if len(itens) == 1 else 'regras'}"
+                  if banco != "IA" else f"{qtd} lançamentos classificados pela IA e conferidos pelo código")
+        cartoes.append({"tipo": "classificacao", "titulo": titulo, "regra": "", "qtd": qtd, "regras": itens,
+                        "valor": sum((r["valor"] for r in itens), ZERO), "exemplo": itens[0]["exemplo"]})
+    for ident, s in sorted(pn.saidas.items()):
         if ident.startswith("EXC-"):
-            grupos[ident] = {"regra": s["regra"], "qtd": s["linhas"], "valor": Decimal(s["soma"]), "exemplo": ident,
-                             "titulo": "Fora da comissão por regra: " + ident.split("-", 2)[-1].replace("_", " ").lower()}
+            cartoes.append({"tipo": "exclusao", "regra": s["regra"], "qtd": s["linhas"], "valor": Decimal(s["soma"]), "exemplo": ident,
+                            "titulo": "Fora da comissão por regra: " + ident.split("-", 2)[-1].replace("_", " ").lower(), "regras": []})
     especiais: dict[str, dict] = {}
     for r in pn.rastro:
         m = re.search(r"regras\.yaml (cadastro\.condicoes_especiais)\[([^\]]+)\]", r.get("nota", ""))
         if m and r["id_saida"].startswith("COM-"):
-            g = especiais.setdefault(m.group(2), {"regra": m.group(1), "qtd": 0, "valor": ZERO, "exemplo": r["ref_origem"],
+            g = especiais.setdefault(m.group(2), {"tipo": "condicao", "regra": m.group(1), "qtd": 0, "valor": ZERO,
+                                                  "exemplo": r["ref_origem"], "regras": [],
                                                   "titulo": f"Condição especial aplicada: {m.group(2)}"})
             g["qtd"] += 1
             g["valor"] += _dec(r.get("valor")) or ZERO
-    todos = list(grupos.values()) + list(especiais.values())
-    pn.fechadas = sorted(todos, key=lambda g: (-g["qtd"], g["regra"], g["titulo"]))
+    pn.fechadas = cartoes + [especiais[k] for k in sorted(especiais)]
 
 
 def _montar_lojistas(pn: Painel, dados: Path, divs: list[dict]) -> None:
@@ -576,6 +645,32 @@ def _badge(status: str) -> str:
 # ---------------------------------------------------------------------------
 
 
+def itens_por_grupo(pn: Painel) -> dict[str, list[tuple[Pendencia, Decimal, bool, str]]]:
+    """Destino do dinheiro: (pendência, valor no grupo, soma?, motivo de não somar). Só pendências com valor e sem alerta.
+
+    Toda divergência de checkout entra em "devolver ao lojista" pelo valor a devolver; a parte contrato_orbe aparece
+    também em "recuperar da Orbe", sem somar (é o mesmo dinheiro)."""
+    grupos: dict[str, list] = defaultdict(list)
+    for p in pn.pendencias:
+        if p.alerta or p.valor is None or not p.grupo:
+            continue
+        if p.grupo == "devolver_lojista" and p.devolver is not None:
+            grupos["devolver_lojista"].append((p, p.devolver, p.soma, p.nao_soma_motivo))
+            if p.recuperar:
+                grupos["recuperar_orbe"].append((p, p.recuperar, False, NAO_SOMA_RECUPERAR))
+        else:
+            grupos[p.grupo].append((p, p.valor, p.soma, p.nao_soma_motivo))
+    return grupos
+
+
+def custo_tarvo(pn: Painel) -> tuple[Decimal, Decimal, Decimal, list[Pendencia]]:
+    """Custo para a Tarvo = devolver ao lojista − recuperar da Orbe (só divergências de checkout)."""
+    divs = [p for p in pn.pendencias if p.tipo.upper() == "DIVERGENCIA_CHECKOUT" and p.devolver is not None]
+    devolver = sum((p.devolver for p in divs), ZERO)
+    recuperar = sum((p.recuperar for p in divs), ZERO)
+    return devolver, recuperar, devolver - recuperar, divs
+
+
 def _tela_visao(pn: Painel) -> str:
     total_notas = sum((_dec(n.get("valor_brl")) or ZERO for n in pn.notas), ZERO)
     por_linha: dict[str, list[Decimal]] = defaultdict(list)
@@ -588,6 +683,17 @@ def _tela_visao(pn: Painel) -> str:
          f'<span class="num">{brl(total_notas)}</span> a faturar em {len(pn.notas)} notas</h1>',
          f'<p class="sub">{sub} · <a href="#notas">ver as notas</a></p>']
 
+    devolver, recuperar, custo, divs = custo_tarvo(pn)
+    if divs:
+        links_dev = " ".join(_link_rastro(p.id, p.contraparte.split(" · ")[-1]) for p in sorted(divs, key=lambda p: -p.devolver))
+        links_rec = " ".join(_link_rastro(p.id, p.contraparte.split(" · ")[-1]) for p in divs if p.recuperar)
+        h.append(f'<p class="custo" data-devolver="{_num(devolver)}" data-recuperar="{_num(recuperar)}" data-custo="{_num(custo)}">'
+                 f'<span class="custo-rot">Custo para a Tarvo</span> <strong class="num">{brl(custo)}</strong>'
+                 f'<span class="custo-conta">= devolver ao lojista <span class="num">{brl(devolver)}</span> − recuperar da Orbe '
+                 f'<span class="num">{brl(recuperar)}</span></span>'
+                 f'<span class="custo-rastro">Rastro do devolver: {links_dev}'
+                 + (f' · do recuperar: {links_rec}' if links_rec else "") + '</span></p>')
+
     alertas = [p for p in pn.pendencias if p.alerta]
     if alertas:
         h.append('<div class="alertas" role="region" aria-label="Alertas">')
@@ -596,48 +702,37 @@ def _tela_visao(pn: Painel) -> str:
                      f'<p>{_e(p.motivo)}</p><p class="meta">{_e(p.quem_decide)} · {brl(p.valor)} · {_link_rastro(p.id)}</p></div></div>')
         h.append("</div>")
 
+    grupos = itens_por_grupo(pn)
+    total_geral = sum((abs(v) for itens in grupos.values() for _, v, soma, _m in itens if soma), ZERO)
     h.append('<h2>Dinheiro que depende de uma decisão</h2>')
-    total_geral = em_jogo(p for p in pn.pendencias if p.soma)
     h.append(f'<p class="sub" data-total-decisao="{_num(total_geral)}"><strong class="num">{brl(total_geral)}</strong> em jogo: '
-             f'soma do valor absoluto de cada pendência (o sinal de pendencias.csv aparece em cada linha). '
+             f'soma do valor absoluto de cada pendência com valor (o sinal de pendencias.csv aparece em cada linha). '
              f'Dinheiro em trânsito e valor que já está em outro número aparecem à parte.</p>')
     h.append('<div class="grupos">')
     for chave, rotulo, desc in GRUPOS:
-        membros = [p for p in pn.pendencias if p.grupo == chave]
-        if not membros:
+        itens = grupos.get(chave)
+        if not itens:
             continue
-        soma = em_jogo(p for p in membros if p.soma)
-        quem = " · ".join(sorted({p.quem_decide for p in membros if p.quem_decide}))
-        total_txt = brl(soma) if any(p.soma for p in membros) else "não entra no total"
-        h.append(f'<article class="grupo" data-grupo="{chave}" data-total="{_num(soma)}" data-qtd="{len(membros)}">'
-                 f'<header><h3>{_e(rotulo)}</h3><p class="desc">{_e(desc)}</p></header>'
-                 f'<p class="grupo-total num">{total_txt}</p>'
-                 f'<p class="meta">{len(membros)} {"pendência" if len(membros) == 1 else "pendências"} · decide: {_e(quem)}</p><ul class="itens">')
-        for p in sorted(membros, key=lambda p: (-(abs(p.valor) if p.valor is not None else ZERO), p.id)):
-            extra = f'<span class="nao-soma">não entra no total: {_e(p.nao_soma_motivo)}</span>' if not p.soma else ""
-            h.append(f'<li><div class="item-l"><span class="item-t">{_e(p.titulo)}</span>'
-                     f'<span class="item-c">{_e(p.contraparte)}</span>{extra}</div>'
-                     f'<div class="item-r"><span class="num">{brl(p.valor)}</span>{_link_rastro(p.id)}</div></li>')
+        soma = sum((abs(v) for _, v, s_, _m in itens if s_), ZERO)
+        parte = sum((abs(v) for _, v, s_, _m in itens if not s_), ZERO)
+        quem = " · ".join(sorted({p.quem_decide for p, *_ in itens if p.quem_decide}))
+        if any(s_ for _, _, s_, _m in itens):
+            total_txt = f'<p class="grupo-total num">{brl(soma)}</p>'
+        else:
+            total_txt = f'<p class="grupo-total num">{brl(parte)}</p><p class="nao-soma">não entra no total</p>'
+        h.append(f'<article class="grupo" data-grupo="{chave}" data-total="{_num(soma)}" data-a-parte="{_num(parte)}" data-qtd="{len(itens)}">'
+                 f'<header><h3>{_e(rotulo)}</h3><p class="desc">{_e(desc)}</p></header>{total_txt}'
+                 f'<p class="meta">{len(itens)} {"pendência" if len(itens) == 1 else "pendências"} · decide: {_e(quem)}</p><ul class="itens">')
+        for p, v, s_, motivo in sorted(itens, key=lambda i: (-abs(i[1]), i[0].id)):
+            extra = f'<span class="nao-soma">{_e(motivo if motivo.startswith("não soma") else "não entra no total: " + motivo)}</span>' if not s_ else ""
+            rot = f'<span class="nao-soma">{_e(p.rotulo_valor)}</span>' if p.rotulo_valor else ""
+            h.append(f'<li data-item="{_e(p.id)}" data-valor="{_num(v)}"><div class="item-l"><span class="item-t">{_e(p.titulo)}</span>'
+                     f'<span class="item-c">{_e(p.contraparte)}</span>{rot}{extra}</div>'
+                     f'<div class="item-r"><span class="num">{brl(v)}</span>{_link_rastro(p.id)}</div></li>')
         h.append("</ul></article>")
     h.append("</div>")
 
-    # premissas
-    contagem = Counter(r["status"] for r in pn.regras.values() if not r.get("substituida"))
-    substituidas = sum(1 for r in pn.regras.values() if r.get("substituida"))
-    assumo = [(k, r) for k, r in sorted(pn.regras.items()) if r["status"] == "ASSUMO" and not r.get("substituida")]
-    h.append('<h2>Premissas que esperam aprovação</h2>')
-    chips = "".join(f'<li data-status="{s}" data-qtd="{contagem.get(s, 0)}">{_badge(s)}<span class="num">{contagem.get(s, 0)}</span></li>'
-                    for s in ("CONFIRMADO", "SEI", "ASSUMO", "PENDENTE"))
-    extra_sub = f'<li class="meta">{substituidas} substituídas (histórico)</li>' if substituidas else ""
-    h.append(f'<ul class="contagem" aria-label="Regras por status">{chips}{extra_sub}</ul>')
-    h.append(f'<p class="sub">{len(assumo)} premissas ASSUMO em regras.yaml: o fechamento roda com elas, '
-             f'e cada uma precisa do aceite de quem decide (regra de fechamento: {_e(pn.dona)}; taxa e condição comercial: o comercial).</p>')
-    h.append('<div class="premissas">')
-    for k, r in assumo:
-        autor = f' · {_e(r["autor"])}' if r.get("autor") else ""
-        h.append(f'<details class="premissa"><summary><code>{_e(k)}</code><span class="premissa-v">{_e(_resumo_valor(r["valor"], 140))}</span></summary>'
-                 f'<dl><dt>Valor</dt><dd>{_e(_resumo_valor(r["valor"], 900))}</dd><dt>Fonte e motivo</dt><dd>{_e(_resumo_valor(r.get("fonte", ""), 900))}{autor}</dd></dl></details>')
-    h.append("</div>")
+    h.append(_premissas(pn))
 
     # arquivos
     h.append('<h2>Arquivos da saída</h2><ul class="arquivos">')
@@ -645,8 +740,48 @@ def _tela_visao(pn: Painel) -> str:
         h.append(f'<li><a href="{_e(nome)}">{_icone("arquivo")}<span>{_e(ROTULO_ARQUIVO.get(nome, nome))}</span>'
                  f'<code>{_e(nome)}</code><span class="meta">{qtd} linhas</span></a></li>')
     for rel in pn.rascunhos:
-        h.append(f'<li><a href="{_e(rel)}">{_icone("arquivo")}<span>Rascunho de contestação</span><code>{_e(rel)}</code></a></li>')
+        rotulo = "Rascunho de contestação" + (" (operações)" if rel.endswith(".csv") else "")
+        h.append(f'<li><a href="{_e(rel)}">{_icone("arquivo")}<span>{rotulo}</span><code>{_e(rel)}</code></a></li>')
     h.append("</ul></section>")
+    return "\n".join(h)
+
+
+def _premissas(pn: Painel) -> str:
+    """Duas contagens com nome: regras do regras.yaml por status (o que o código usa) e premissas do HIPOTESES.md."""
+    contagem = Counter(r["status"] for r in pn.regras.values() if not r.get("substituida"))
+    substituidas = sum(1 for r in pn.regras.values() if r.get("substituida"))
+    h = ['<h2>Premissas que esperam aprovação</h2>']
+    hip = pn.hipoteses
+    if hip:
+        assumo = [l for l in hip["linhas"] if l["status"] == "ASSUMO"]
+        cont_tab = Counter(l["status"] for l in hip["linhas"])
+        chips = "".join(f'<li data-hip-status="{s}" data-qtd="{cont_tab.get(s, 0)}">{_badge(s)}<span class="num">{cont_tab.get(s, 0)}</span></li>'
+                        for s in ("CONFIRMADO", "SEI", "ASSUMO", "PENDENTE"))
+        sub_txt = f'<li class="meta">{hip["substituidas"]} substituídas (Histórico)</li>' if hip["substituidas"] else ""
+        h.append(f'<p class="sub"><strong>Premissas do {_e(hip["arquivo"])}</strong>, contadas na tabela Premissas. '
+                 f'Resumo de lá: “{_e(hip["resumo"])}”</p>')
+        h.append(f'<ul class="contagem" aria-label="Premissas do {_e(hip["arquivo"])} por status">{chips}{sub_txt}</ul>')
+        h.append(f'<p class="sub">As {len(assumo)} ASSUMO esperam o aceite de quem decide (regra de fechamento: {_e(pn.dona)}; '
+                 f'taxa e condição comercial: o comercial, Q-S).</p><div class="premissas">')
+        for l in assumo:
+            h.append(f'<details class="premissa" data-hipotese="{_e(l["id"])}"><summary><code>{_e(l["id"])}</code>'
+                     f'<span class="premissa-v"><strong>{_e(l["tema"])}</strong> · {_e(_resumo_valor(l["premissa"], 140))}</span></summary>'
+                     f'<dl><dt>Premissa</dt><dd>{_e(l["premissa"])}</dd><dt>Status</dt><dd>{_e(l["status_txt"])}</dd>'
+                     f'<dt>Base e motivo</dt><dd>{_e(l["base"])}</dd><dt>Impacto se errada</dt><dd>{_e(l["impacto"])}</dd></dl></details>')
+        h.append("</div>")
+    chips = "".join(f'<li data-status="{s}" data-qtd="{contagem.get(s, 0)}">{_badge(s)}<span class="num">{contagem.get(s, 0)}</span></li>'
+                    for s in ("CONFIRMADO", "SEI", "ASSUMO", "PENDENTE"))
+    extra_sub = f'<li class="meta">{substituidas} decisões substituídas (histórico)</li>' if substituidas else ""
+    h.append(f'<p class="sub"><strong>Regras no regras.yaml</strong> (o espelho executável que o código lê; uma premissa '
+             f'do {_e(hip.get("arquivo", "HIPOTESES.md"))} pode virar várias regras), por status:</p>')
+    h.append(f'<ul class="contagem" aria-label="Regras no regras.yaml por status">{chips}{extra_sub}</ul>')
+    if not hip:
+        assumo_r = [(k, r) for k, r in sorted(pn.regras.items()) if r["status"] == "ASSUMO" and not r.get("substituida")]
+        h.append('<div class="premissas">')
+        for k, r in assumo_r:
+            h.append(f'<details class="premissa"><summary><code>{_e(k)}</code><span class="premissa-v">{_e(_resumo_valor(r["valor"], 140))}</span></summary>'
+                     f'<dl><dt>Valor</dt><dd>{_e(_resumo_valor(r["valor"], 900))}</dd><dt>Fonte e motivo</dt><dd>{_e(_resumo_valor(r.get("fonte", ""), 900))}</dd></dl></details>')
+        h.append("</div>")
     return "\n".join(h)
 
 
@@ -662,12 +797,22 @@ def _tela_decisoes(pn: Painel) -> str:
                      f'<header><h2>{_e(rotulo)}</h2><span class="qtd">{len(pn.fechadas)}</span>'
                      f'<p class="col-total">decidido por regra: não entra no total</p></header><div class="cartoes">')
             for g in pn.fechadas:
+                if g["regras"]:
+                    linhas = "".join(
+                        f'<li><a href="#notas?id={_e(r["regra"])}"><code>{_e(r["regra"].removeprefix("classificacao_extratos."))}</code></a> '
+                        f'{_badge(pn.regras.get(r["regra"], {}).get("status", ""))} <span class="num">{r["qtd"]}</span> · ex. '
+                        f'<a href="#notas?id={_e(r["exemplo"])}"><code>{_e(r["exemplo"])}</code></a></li>' for r in g["regras"])
+                    h.append(f'<article class="cartao cartao-regra" data-fechada="{_e(g["tipo"])}" data-qtd="{g["qtd"]}">'
+                             f'<p class="c-titulo">{_e(g["titulo"])}</p><ul class="regras-lista">{linhas}</ul>'
+                             f'<p class="c-fonte">Regra, status e fonte de cada uma: clique na chave.</p></article>')
+                    continue
                 r = pn.regras.get(g["regra"], {})
                 fonte = _resumo_valor(r.get("fonte", ""), 180)
-                h.append(f'<article class="cartao cartao-regra" data-regra="{_e(g["regra"])}"><p class="c-titulo">{_e(g["titulo"])}</p>'
+                h.append(f'<article class="cartao cartao-regra" data-fechada="{_e(g["tipo"])}" data-regra="{_e(g["regra"])}" data-qtd="{g["qtd"]}">'
+                         f'<p class="c-titulo">{_e(g["titulo"])}</p>'
                          f'<p class="c-ref"><code>{_e(g["regra"])}</code> {_badge(r.get("status", ""))}</p>'
                          f'<p class="c-fonte">{_e(fonte)}</p>'
-                         f'<p class="c-rodape"><span>{g["qtd"]} {"linha" if g["qtd"] == 1 else "linhas"} · <span class="num">{brl(g["valor"])}</span></span>'
+                         f'<p class="c-rodape"><span>{g["qtd"]} {"linha" if g["qtd"] == 1 else "linhas"} · ex. <code>{_e(g["exemplo"])}</code></span>'
                          f'{_link_rastro(g["exemplo"])}</p></article>')
             h.append("</div></section>")
             continue
@@ -688,6 +833,7 @@ def _tela_decisoes(pn: Painel) -> str:
                      f'<p class="c-contra">{_e(p.contraparte)}</p><p class="c-titulo">{_e(p.titulo)}{alerta}</p>'
                      f'<p class="c-ref"><code title="{_e(" | ".join(p.refs))}">{_e(_refs_curtas(p.refs))}</code></p>'
                      f'<p class="c-valor num">{brl(p.valor)}{selo}</p>'
+                     + (f'<p class="c-fonte">{_e(p.rotulo_valor)}</p>' if p.rotulo_valor else "") +
                      f'<p class="c-rodape"><span class="c-quem">{_e(p.quem_decide)}</span>{_link_rastro(p.id)}</p></article>')
         h.append("</div></section>")
     h.append("</div></section>")
@@ -724,6 +870,8 @@ def _tela_contratado(pn: Painel) -> str:
     for l in pn.lojistas:
         rot, cls = SITUACAO[l["situacao"]]
         cnpj = f'<code class="c-cnpj">{_e(_cnpj_fmt(l["cnpj"]))}</code>' if l["cnpj"] else ""
+        if l["situacao"] == "sem_contrato":
+            cnpj += f'<span class="t-rotulo">{_e(ROTULO_VALOR["SEM_CONTRATO_VIGENTE"])}</span>'
         h.append(f'<tr data-situacao="{l["situacao"]}" data-id="{_e(l["id"])}" data-planilha="{_num(l["planilha"])}" data-aplicada="{_num(l["aplicada"])}" data-divergencia="{_num(l["divergencia"])}">'
                  f'<th scope="row"><span class="t-nome">{_e(l["nome"])}</span>{cnpj}</th><td class="n num">{l["vendas"]}</td>'
                  f'<td class="n num">{brl(l["volume"])}</td><td class="n num">{brl(l["planilha"])}</td><td class="n num">{brl(l["aplicada"])}</td>'
@@ -783,7 +931,8 @@ def _tela_notas(pn: Painel) -> str:
 def _dados_json(pn: Painel) -> str:
     regras_usadas = sorted({s["regra"] for s in pn.saidas.values() if s["regra"]}
                            | {m.group(1) for r in pn.rastro for m in [REGRA_NA_NOTA_RE.search(r.get("nota", ""))] if m}
-                           | {g["regra"] for g in pn.fechadas})
+                           | {g["regra"] for g in pn.fechadas if g["regra"]}
+                           | {r["regra"] for g in pn.fechadas for r in g["regras"]})
     dados = {
         "rastro": {"cols": pn.rastro_cab, "rows": [[r.get(c, "") or "" for c in pn.rastro_cab] for r in pn.rastro]},
         "saidas": pn.saidas,
@@ -848,8 +997,8 @@ def renderizar(pn: Painel) -> tuple[str, int]:
     return pagina, len(dados.encode("utf-8"))
 
 
-def gerar_painel(saida: Path, dados: Path, regras_path: Path) -> tuple[Path, int]:
-    pn = carregar(Path(saida), Path(dados), Path(regras_path))
+def gerar_painel(saida: Path, dados: Path, regras_path: Path, hipoteses_path: Path | None = None) -> tuple[Path, int]:
+    pn = carregar(Path(saida), Path(dados), Path(regras_path), Path(hipoteses_path) if hipoteses_path else None)
     pagina, tamanho_json = renderizar(pn)
     destino = Path(saida) / "painel.html"
     with open(destino, "w", encoding="utf-8", newline="\n") as f:

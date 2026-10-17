@@ -37,10 +37,12 @@ def _escrever(caminho: Path, linhas: list[dict], colunas: list[str]) -> None:
         w.writerows(linhas)
 
 
-def _copiar_saida(destino: Path) -> Path:
+def _copiar_saida(destino: Path, rascunhos: bool = True) -> Path:
     destino.mkdir(parents=True, exist_ok=True)
     for c in SAIDA.glob("*.csv"):
         shutil.copy(c, destino / c.name)
+    if rascunhos and (SAIDA / "rascunhos").is_dir():
+        shutil.copytree(SAIDA / "rascunhos", destino / "rascunhos")
     return destino
 
 
@@ -276,13 +278,13 @@ def test_campos_opcionais_aparecem_quando_existem(tmp_path):
     alerta = {"id_saida": "PEN-ALERTA_ANTECIPACAO-X", "tipo": "ALERTA_ANTECIPACAO", "ref_origem": "AN1",
               "valor_brl": "100.00", "motivo": "antecipação acima do vendido", "quem_decide": "Helena + comercial"}
     _escrever(pasta / "pendencias.csv", pend + [alerta], list(pend[0].keys()))
-    (pasta / "rascunhos").mkdir()
+    (pasta / "rascunhos").mkdir(exist_ok=True)
     (pasta / "rascunhos" / "contestacao_orbe.md").write_text("rascunho", encoding="utf-8")
 
     caminho, _ = gerar_painel(pasta, DADOS, REGRAS)
     p = _abrir(caminho)
     grupos = {a["data-grupo"]: a for a in p.com("data-grupo")}
-    assert "cobrar_orbe" in grupos and "devolver_lojista" in grupos
+    assert "recuperar_orbe" in grupos and "devolver_lojista" in grupos
     devolver = Decimal(grupos["devolver_lojista"]["data-total"])
     assert devolver >= abs(Decimal(casa["valor_brl"]))
     texto = caminho.read_text(encoding="utf-8")
@@ -292,10 +294,80 @@ def test_campos_opcionais_aparecem_quando_existem(tmp_path):
     assert cartao["data-soma"] == "0"
 
 
-def test_sem_campos_opcionais_as_secoes_somem(painel):
-    _, caminho, _, p = painel
+def test_sem_campos_opcionais_as_secoes_somem(tmp_path):
+    """Saída sem natureza, sem valor_a_devolver_brl, sem ALERTA_* e sem rascunhos/: gera, e as seções somem."""
+    pasta = _copiar_saida(tmp_path / "saida", rascunhos=False)
+    divs = _ler(pasta / "divergencias_taxa.csv")
+    colunas = [c for c in divs[0] if c not in ("natureza", "valor_a_devolver_brl")]
+    _escrever(pasta / "divergencias_taxa.csv", [{c: d[c] for c in colunas} for d in divs], colunas)
+    pend = [l for l in _ler(pasta / "pendencias.csv") if not l["tipo"].upper().startswith("ALERTA")]
+    _escrever(pasta / "pendencias.csv", pend, list(pend[0].keys()))
+    caminho, _ = gerar_painel(pasta, DADOS, REGRAS)
     texto = caminho.read_text(encoding="utf-8")
-    if not any(l["tipo"].upper().startswith("ALERTA") for l in _ler(SAIDA / "pendencias.csv")):
-        assert 'class="alertas"' not in texto
-    if not (SAIDA / "rascunhos").exists():
-        assert "rascunhos/" not in texto
+    p = _abrir(caminho)
+    assert 'class="alertas"' not in texto
+    assert "rascunhos/" not in texto
+    grupos = {a["data-grupo"]: a for a in p.com("data-grupo")}
+    assert "recuperar_orbe" not in grupos  # sem natureza, nada se afirma sobre a Orbe
+    divergencias = [l for l in pend if l["tipo"] == "DIVERGENCIA_CHECKOUT"]
+    assert Decimal(grupos["devolver_lojista"]["data-total"]) == sum(abs(Decimal(l["valor_brl"])) for l in divergencias)
+
+
+def test_custo_para_a_tarvo_e_devolver_menos_recuperar(painel):
+    """Toda divergência de checkout volta ao lojista (Q-A, Q-U 4), pelo valor a devolver; recuperar = parte contrato_orbe."""
+    pasta, _, _, p = painel
+    divs = [d for d in _ler(pasta / "divergencias_taxa.csv") if d["linha_negocio"] == "CHECKOUT"]
+    devolver = sum(Decimal(d["valor_a_devolver_brl"]) for d in divs)
+    recuperar = sum(Decimal(d["valor_a_devolver_brl"]) for d in divs if d["natureza"] == "contrato_orbe")
+    (custo,) = p.com("data-custo")
+    assert Decimal(custo["data-devolver"]) == devolver
+    assert Decimal(custo["data-recuperar"]) == recuperar
+    assert Decimal(custo["data-custo"]) == devolver - recuperar
+    grupos = {a["data-grupo"]: a for a in p.com("data-grupo")}
+    assert Decimal(grupos["devolver_lojista"]["data-total"]) == devolver
+    assert Decimal(grupos["recuperar_orbe"]["data-total"]) == 0  # não soma: é o mesmo valor que volta ao lojista
+    assert Decimal(grupos["recuperar_orbe"]["data-a-parte"]) == recuperar
+    # as pendências de divergência carregam o mesmo valor a devolver (o kanban usa valor_brl)
+    pend = [l for l in _ler(pasta / "pendencias.csv") if l["tipo"] == "DIVERGENCIA_CHECKOUT"]
+    assert sum(Decimal(l["valor_brl"]) for l in pend) == devolver
+    itens = [a for a in p.com("data-item", secao="visao")]
+    assert {a["data-item"] for a in itens} >= {l["id_saida"] for l in pend}
+
+
+def test_premissas_do_hipoteses_com_a_contagem_do_resumo(painel):
+    _, _, _, p = painel
+    from tarvo.painel import ler_hipoteses
+
+    hip = ler_hipoteses(RAIZ / "HIPOTESES.md")
+    tabela = Counter(l["status"] for l in hip["linhas"])
+    assert tabela == Counter({k: v for k, v in hip["contagem_resumo"].items() if v})  # o Resumo bate com a tabela
+    assert hip["substituidas"] == hip["substituidas_resumo"]
+    assert len(hip["linhas"]) + hip["substituidas"] == hip["total_resumo"]
+    for a in p.com("data-hip-status"):
+        assert int(a["data-qtd"]) == tabela.get(a["data-hip-status"], 0)
+    listadas = {a["data-hipotese"] for a in p.com("data-hipotese")}
+    assert listadas == {l["id"] for l in hip["linhas"] if l["status"] == "ASSUMO"}
+
+
+def test_fechadas_por_regra_agrupadas(painel):
+    pasta, _, _, p = painel
+    cartoes = p.com("data-fechada", secao="decisoes")
+    lancs = [l for l in _ler(pasta / "lancamentos_classificados.csv") if l["metodo"] in ("REGRA", "IA")]
+    assert sum(int(a["data-qtd"]) for a in cartoes if a["data-fechada"] == "classificacao") == len(lancs)
+    rastro = _ler(pasta / "rastro.csv")
+    exc = Counter(r["id_saida"] for r in rastro if r["id_saida"].startswith("EXC-"))
+    assert sorted(int(a["data-qtd"]) for a in cartoes if a["data-fechada"] == "exclusao") == sorted(exc.values())
+    (coluna,) = [a for a in p.com("data-coluna") if a["data-coluna"] == "regra"]
+    assert int(coluna["data-qtd"]) == len(cartoes)
+
+
+def test_atlas_rotulo_de_referencia(painel):
+    _, caminho, _, _ = painel
+    texto = caminho.read_text(encoding="utf-8")
+    assert texto.count("taxa cobrada pela Orbe (referência); comissão a definir pelo comercial") >= 3  # visão, kanban, tabela
+
+
+def test_nenhum_caminho_local_no_html(painel):
+    _, caminho, _, _ = painel
+    texto = caminho.read_text(encoding="utf-8")
+    assert not re.search(r"[A-Za-z]:[\\/]+Users", texto)
