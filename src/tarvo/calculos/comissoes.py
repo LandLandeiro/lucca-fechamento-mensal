@@ -39,6 +39,7 @@ class ComissaoTransacao:
     taxa_contratada: Decimal
     comissao: Decimal
     nota: str
+    fonte_taxa: str = ""  # de onde veio a taxa contratada (linha da planilha ou regra)
 
 
 @dataclass
@@ -129,7 +130,7 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
             continue
         com = truncar(t.valor_bruto * enc.taxa)
         nota = "; ".join(x for x in (nota, enc.fonte) if x)
-        res.por_transacao[t.ref_origem] = ComissaoTransacao(t, cnpj, enc.taxa, com, nota)
+        res.por_transacao[t.ref_origem] = ComissaoTransacao(t, cnpj, enc.taxa, com, nota, enc.fonte)
 
     por_id = {t.ref_origem: t for t in transacoes}
     for t in reversoes:
@@ -148,7 +149,7 @@ def comissao_checkout(transacoes: list[TransacaoOrbe], cadastro: Cadastro, regra
             continue
         base = res.por_transacao[ref]
         res.por_transacao[t.ref_origem] = ComissaoTransacao(
-            t, base.cnpj, base.taxa_contratada, -base.comissao, f"anula a antecipação {ref}"
+            t, base.cnpj, base.taxa_contratada, -base.comissao, f"anula a antecipação {ref}", base.fonte_taxa
         )
 
     _marcar_estornadas(res)
@@ -170,7 +171,7 @@ def _marcar_estornadas(res: ResultadoCheckout) -> None:
             marca = f"estornada em {e.transacao.data_movimento.isoformat()} por {e.transacao.ref_origem}"
             res.por_transacao[venda.transacao.ref_origem] = ComissaoTransacao(
                 venda.transacao, venda.cnpj, venda.taxa_contratada, venda.comissao,
-                "; ".join(x for x in (venda.nota, marca) if x),
+                "; ".join(x for x in (venda.nota, marca) if x), venda.fonte_taxa,
             )
 
 
@@ -190,6 +191,12 @@ def _agregar(res: ResultadoCheckout, cadastro: Cadastro) -> None:
             "comissao_brl": totais[cnpj],
             "qtd_transacoes": qtd[cnpj],
         })
+    res.comissoes.sort(key=ordem_comissao)
+
+
+def ordem_comissao(linha: dict) -> tuple:
+    """Ordem determinística da saída: comissão decrescente, depois CNPJ."""
+    return (-linha["comissao_brl"], linha["cnpj"])
 
 
 def _linha_rastro(id_saida: str, t: TransacaoOrbe, valor: Decimal, taxa: Decimal | None, nota: str) -> dict:

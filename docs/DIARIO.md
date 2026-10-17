@@ -47,3 +47,8 @@ Log cronológico: hora, etapa, o que foi feito, como foi verificado, commit.
 - **Incidente (registrado para MOMENTOS):** no teste de mutação, usei `git checkout --` para desfazer a troca, mas ele voltou o `comissoes.py` ao esqueleto da E0, que era a última versão commitada. Restaurei pela cópia feita antes da mutação e rodei os testes de novo (50 passed). Lição: mutação só com backup explícito, nunca com `git checkout` em arquivo não commitado.
 - **Achado:** a Casa do Estudante fecha em −5,50, não em 0 (estorno de venda de agosto, fora da condição especial). Levado ao Lucca.
 - **Commit:** `E1+E2: nível mínimo — comissão checkout com rastro e validador`.
+
+### ~21h40 · Decisões do mínimo e momentos de IA
+- **Feito:** Lucca manteve Casa −5,50 e aprovou `COM-<cnpj>-CHECKOUT` e as colunas extras. Saída em ordem determinística (comissão decrescente, depois CNPJ; rastro por `id_saida` e linha). Registrada a conferência independente do Lucca (outra sessão, sem ver o código: 21 lojistas no centavo, 207.031,31, 57 pendentes, 1.943 linhas). `PROMPTS/MOMENTOS.md` com 3 entradas. A separação fatos/contas das obrigações de 08/2026 já estava feita (commit `56da90a`).
+- **Verificado:** `pytest`: 51 passed (novo teste de ordem); duas execuções seguidas geram `rastro.csv` com o mesmo hash.
+- **Commit:** `decisões do mínimo e momentos de IA`.

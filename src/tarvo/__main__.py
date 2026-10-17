@@ -76,7 +76,7 @@ def executar(dados: Path, saida: Path, regras_path: Path) -> dict:
         {
             "comissoes_por_lojista.csv": checkout.comissoes,
             "pendencias.csv": [pendencia_para_linha(p) for p in pendencias],
-            "rastro.csv": checkout.rastro,
+            "rastro.csv": sorted(checkout.rastro, key=lambda l: (l["id_saida"], l["linha_arquivo"], l["ref_origem"])),
         },
         saida,
     )

@@ -122,6 +122,13 @@ def test_toda_linha_em_um_lugar_so(orbe, checkout):
     assert calculadas | pendentes == {t.ref_origem for t in orbe.transacoes}
 
 
+def test_ordem_deterministica_comissao_desc_depois_cnpj(checkout):
+    chaves = [(-c["comissao_brl"], c["cnpj"]) for c in checkout.comissoes]
+    assert chaves == sorted(chaves)
+    ordem = [c["cnpj"] for c in checkout.comissoes]
+    assert ordem.index("08780784000120") < ordem.index("20987545000140")  # Campus 9.335,56 antes de Vela 9.315,05
+
+
 def test_totais_conferem_com_a_exploracao(checkout):
     # Conferência independente (docs/EXPLORACAO.md, centavos inteiros em outro programa):
     # Σ valor_taxa 231.880,36 − Atlas 7.876,05 − Casa cobrado 15.391,27 + Casa contratado (−5,50)

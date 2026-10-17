@@ -2,8 +2,8 @@
 
 > Painel atualizado ao fim de cada etapa. Última atualização: 16/10 ~21h30 (E1 + E2).
 
-**Nível atual:** **Mínimo** (comissão CHECKOUT por lojista + rastro + validador), falta só a conferência manual do Lucca
-**Próximo passo:** Lucca confere 2 lojistas à mão (sugestão: Rota Global e Oxford Prep, ver `saida/rastro.csv`) e decide sobre a Casa do Estudante (−5,50, ver abaixo). Depois, E4: comissão REMESSA.
+**Nível atual:** **Mínimo — conferido** (comissão CHECKOUT por lojista + rastro + validador)
+**Próximo passo:** E5a: divergências de checkout.
 
 ## Mínimo
 
@@ -12,7 +12,8 @@
 - [x] `comissoes_por_lojista.csv` — CHECKOUT
 - [x] `rastro.csv` das comissões CHECKOUT (1943/1943 linhas da Orbe, cada uma exatamente uma vez: COM-… ou PEN-…)
 - [x] Validador (soma do rastro = total; formato; cobertura das linhas da Orbe); falha = código 1
-- [ ] 2 lojistas conferidos à mão (Lucca). Já feito: conferência independente do total contra a exploração (ver Números)
+- [x] **Conferência do mínimo:** um script independente do Lucca (outra sessão de IA, sem ver este código) recalculou do zero e bateu os 21 lojistas no centavo: total 207.031,31, 57 transações em pendência, 1.943 linhas. Também bate com a exploração (ver Números)
+- [x] Saída em ordem determinística: comissão decrescente, depois CNPJ; rastro por `id_saida` e linha
 
 ## Alvo
 
@@ -40,4 +41,5 @@
 - **Pendências: 1**, a Atlas Idiomas (EC 1076801732): 57 transações, R$ 7.876,05 cobrados pela Orbe (informativo); quem decide: comercial
 - **Validador: OK**
 - Conferência independente (exploração em outro programa, centavos inteiros): Σ `valor_taxa` 231.880,36 − Atlas 7.876,05 − Casa cobrado 15.391,27 + Casa contratado −5,50 − divergências de taxa (Rota 1.546,28 + Bridge 29,95) = **207.031,31** ✓
-- **Atenção, Casa do Estudante = −5,50 (não 0):** as 118 transações de setembro dão 0 (condição especial). O estorno TX88445133 (L433) é de uma venda de 21/08, fora da vigência 2026-09-01–2026-12-31; pela regra das 20:06 usa a taxa de 21/08 (débito 1,49%) → −5,50. Pela regra das 20:47 (negativo não emite), vira pendência na E6
+- **Casa do Estudante = −5,50 (decidido, mantido):** as 118 transações de setembro dão 0 (condição especial). O estorno TX88445133 (L433) é de uma venda de 21/08, fora da vigência 2026-09-01–2026-12-31; pela regra das 20:06 usa a taxa de 21/08 (débito 1,49%) → −5,50. Correto pelas regras 20:06 e 20:47; na E6 vira pendência para a Helena (negativo não emite nota)
+- `ref_origem` no rastro = `id_transacao` em todas as linhas (COM- e PEN-); a linha física vai na coluna extra `linha_arquivo`
