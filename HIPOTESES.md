@@ -122,6 +122,7 @@ Fonte única dos textos: `docs/FINANCEIRO_SLACK.md` (copiado do Slack sem ediç�
 | P38 | Valor da devolução | Q-AH | Lucca · 12:44 | Helena · 12:50 | respondida | `divergencias.valor_a_devolver` CONFIRMADO (D79) |
 | P39 | Casa: data-base da antecipação | Q-AI | David Deodato · 13:19 | Helena · 13:34 | respondida | `checkout.data_base_antecipacao` CONFIRMADO (D92): as 4 antecipações da Casa ficam isentas pela data delas; caso-ouro AN88445172 |
 | P40 | O 06 vem todo mês? Id repetido? | Q-AJ | Lucca · 13:19 | Helena · 13:34 | respondida | `orbe.mes_do_ajuste_tardio` CONFIRMADO, opção `--fechamento-anterior-aprovado` (H56, D91); id repetido segue ASSUMO, com aceite |
+| P41 | Bandeira diferente no estorno | Q-AK | Turma do Barulho · 13:35 | Helena · 14:08 | respondida | `checkout.bandeira_no_estorno` CONFIRMADO (D93): os 7 estornos do 06 seguem pela referência, sem pendência nem aviso; caso-ouro TX88447011 |
 
 **Nota de autocorreção (Q-F, item 1):** na minha pergunta, os rótulos de modalidade estão trocados. 2,49/2,99/3,59% são as faixas **crédito à vista / 2–6x / 7–12x** da planilha (o débito é 1,49%). A resposta não muda: o contrato não mudou. O código compara por modalidade direto na planilha.
 

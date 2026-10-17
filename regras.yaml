@@ -200,6 +200,12 @@ checkout:
       vínculo com as vendas antecipadas: a base disponível é o valor_bruto da linha
       fala (Q-D a): 'A antecipação entra na mesma nota'
     pergunta_ref: null
+  bandeira_no_estorno:      # D93
+    valor: "a bandeira não entra na taxa: o estorno se liga à venda pela referência (id_referencia), mesmo com bandeira diferente; sem pendência nem aviso"
+    status: CONFIRMADO
+    aprovado_por: "Helena"   # Q-S: regra de fechamento = Helena
+    fonte: "Slack Helena 14:08 (Q-AK): 'Bandeira não muda a taxa para a gente. A Orbe às vezes troca a bandeira no estorno; não precisa contestar nem abrir pendência. Sigam com o vínculo pela referência, como vocês fizeram.' Caso: 7 estornos do 06 (ex.: TX88447011 VISA → TX88413573 AMEX)"
+    pergunta_ref: P41
   data_base_antecipacao:    # D92
     valor: >-
       a taxa contratada (e a condição especial, como a isenção da Casa) da ANTECIPACAO vale pela data da própria

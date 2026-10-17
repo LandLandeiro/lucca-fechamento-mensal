@@ -10,9 +10,10 @@ from pathlib import Path
 
 import pytest
 
+from tarvo.__main__ import executar
 from tarvo.formatos import centavos, modo_arredondamento
 from tarvo.regras import carregar_regras, valor_da_regra
-from conftest import RAIZ
+from conftest import DADOS, RAIZ
 
 # (caso, fala da Helena, onde está o teste)
 CASOS = [
@@ -47,6 +48,9 @@ CASOS = [
     ("AN88445172 e as outras 3 antecipações da Casa: isentas pela data da antecipação",
      "Q-AI 13:34: 'Vale pela data da antecipação.'",
      "test_casos_ouro::test_antecipacao_da_casa_isenta_pela_data_dela"),
+    ("TX88447011 (e os outros 6 estornos do 06 com bandeira trocada): sem pendência nem aviso",
+     "Q-AK 14:08: 'Bandeira não muda a taxa para a gente.'",
+     "test_casos_ouro::test_bandeira_trocada_no_estorno_nao_abre_pendencia"),
 ]
 
 
@@ -87,3 +91,34 @@ def test_antecipacao_da_casa_isenta_pela_data_dela(checkout):
         assert (c.taxa_contratada, c.comissao) == (Decimal("0"), Decimal("0.00"))
     an = antecipacoes["AN88445172"]
     assert (an.transacao.valor_bruto, an.transacao.valor_taxa) == (Decimal("4937.92"), Decimal("103.69"))
+
+
+BANDEIRA_TROCADA = ["TX88447011", "TX88447030", "TX88447044", "TX88447057", "TX88447070", "TX88447093", "TX88447109"]
+
+
+@pytest.fixture(scope="module")
+def fechamento(tmp_path_factory):
+    pasta = tmp_path_factory.mktemp("casos_ouro")
+    return pasta, executar(DADOS, pasta, RAIZ / "regras.yaml")
+
+
+def _linhas(pasta, nome):
+    import csv
+    with open(pasta / nome, encoding="utf-8", newline="") as f:
+        return list(csv.DictReader(f, delimiter=";"))
+
+
+@pytest.mark.caso_ouro
+def test_bandeira_trocada_no_estorno_nao_abre_pendencia(fechamento):
+    """Q-AK (Helena 14:08): 'Bandeira não muda a taxa para a gente. A Orbe às vezes troca a bandeira no estorno; não
+    precisa contestar nem abrir pendência. Sigam com o vínculo pela referência, como vocês fizeram.'
+    TX88447011 (06, VISA) estorna TX88413573 (01, AMEX, débito de 03/09 na Maple): −420,77 × 1,49% = −6,27."""
+    pasta, resumo = fechamento
+    textos = [str(a) for a in resumo["avisos"]]
+    for nome in ("pendencias.csv", "divergencias_taxa.csv", "contestacao_ponte.csv"):
+        conteudo = (pasta / nome).read_text(encoding="utf-8")
+        assert not any(i in conteudo for i in BANDEIRA_TROCADA), nome
+    assert not any(i in a for i in BANDEIRA_TROCADA for a in textos)
+    (estorno,) = [l for l in _linhas(pasta, "rastro.csv") if l["ref_origem"] == "TX88447011" and l["id_saida"].startswith("COM-")]
+    assert (estorno["id_saida"], estorno["valor"], estorno["taxa_contratada_pct"]) == ("COM-34671260000100-CHECKOUT", "-6.27", "1.49")
+    assert estorno["nota"].startswith("estorno de TX88413573 (venda de 2026-09-03)")
