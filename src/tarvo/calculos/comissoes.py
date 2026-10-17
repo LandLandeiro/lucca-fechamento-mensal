@@ -12,7 +12,7 @@ CHECKOUT (regras usadas, todas de `regras.yaml`):
 - checkout.estorno (CONFIRMADO 20:06): estorno pela taxa contratada vigente na data da
   venda original;
 - cadastro.lojista_sem_contrato_vigente (CONFIRMADO 20:24): não fatura → pendência;
-- cadastro.condicao_especial_casa_do_estudante (CONFIRMADO 20:49): via cadastro.taxa_contratada.
+- cadastro.condicoes_especiais (CONFIRMADO 20:49, Casa; lista, D61): via cadastro.taxa_contratada.
 
 Toda linha da Orbe termina em exatamente um lugar: no rastro de uma comissão (COM-…) ou
 no rastro de uma pendência (PEN-…). O validador confere isso.

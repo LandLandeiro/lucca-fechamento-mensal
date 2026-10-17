@@ -20,7 +20,7 @@ from decimal import Decimal
 
 from tarvo.formatos import FormatoInvalido, cnpj_valido, data_br, normalizar_cnpj  # noqa: F401 (reexport)
 from tarvo.modelo import Aviso, Lojista, TaxaContratada
-from tarvo.regras import valor_da_regra
+from tarvo.regras import RegraInvalida, valor_da_regra
 
 _RE_VIG_DATA = re.compile(r"^(\d{2}/\d{2}/\d{4})$")
 _RE_VIG_ATE = re.compile(r"^até (\d{2}/\d{2}/\d{4})$", re.IGNORECASE)
@@ -230,22 +230,43 @@ def linha_vigente(cadastro: Cadastro, cnpj: str, data_ref: date) -> tuple[TaxaCo
     return candidatas[0][0], f"planilha R{candidatas[0][0].linha_planilha}"
 
 
+CHAVE_CONDICOES = "cadastro.condicoes_especiais"
+_LINHA_DO_GRUPO = {"MDR": "CHECKOUT", "ANTECIPACAO": "CHECKOUT", "REMESSA": "REMESSA"}
+_CAMPOS_CONDICAO = ("id", "cnpj", "linhas_negocio", "taxa", "vigencia", "fonte")
+
+
 def _condicao_especial(cnpj: str, coluna: str, data_ref: date, regras: dict) -> TaxaEncontrada | None:
-    chave = "cadastro.condicao_especial_casa_do_estudante"
-    cond = valor_da_regra(regras, chave)
-    if str(cond["cnpj"]) != cnpj:
-        return None
-    vig = Vigencia(_como_data(cond["vigencia"]["inicio"]), _como_data(cond["vigencia"]["fim"]))
-    if not vig.contem(data_ref):
-        return None
     mapa = valor_da_regra(regras, "taxas.coluna_por_produto")
-    if coluna == mapa.get("REMESSA"):
-        return None  # "Remessa segue normal" (Helena 20:49): a condição vale só para MDR e antecipação
-    grupo = "ANTECIPACAO" if coluna == mapa.get("ANTECIPACAO") else "MDR"
-    taxas = cond["taxa_contratada"]
-    if grupo not in taxas:
+    grupo = "REMESSA" if coluna == mapa.get("REMESSA") else "ANTECIPACAO" if coluna == mapa.get("ANTECIPACAO") else "MDR"
+    return condicao_especial(regras, cnpj, grupo, data_ref)
+
+
+def condicao_especial(regras: dict, cnpj: str, grupo: str, data_ref: date) -> TaxaEncontrada | None:
+    """Taxa de `cadastro.condicoes_especiais` (D61) para o CNPJ, o grupo (MDR | ANTECIPACAO | REMESSA) e a data.
+
+    None = nenhuma condição vale (segue a planilha). Duas ou mais vigentes ao mesmo tempo → taxa None com o
+    motivo (vira pendência; o código não escolhe)."""
+    achadas = []
+    for i, cond in enumerate(valor_da_regra(regras, CHAVE_CONDICOES) or []):
+        faltando = [c for c in _CAMPOS_CONDICAO if c not in cond]
+        if faltando:
+            raise RegraInvalida(f"{CHAVE_CONDICOES}[{i}]: faltam campos {faltando}")
+        desconhecidos = set(cond["taxa"]) - set(_LINHA_DO_GRUPO)
+        if desconhecidos:
+            raise RegraInvalida(f"{CHAVE_CONDICOES}[{cond['id']}]: grupo de taxa desconhecido {sorted(desconhecidos)}")
+        if str(cond["cnpj"]) != cnpj or grupo not in cond["taxa"] or _LINHA_DO_GRUPO[grupo] not in cond["linhas_negocio"]:
+            continue
+        vig = Vigencia(_como_data(cond["vigencia"]["inicio"]), _como_data(cond["vigencia"]["fim"]))
+        if vig.contem(data_ref):
+            achadas.append((cond, vig))
+    if not achadas:
         return None
-    return TaxaEncontrada(Decimal(str(taxas[grupo])), f"regras.yaml {chave} ({grupo}, {vig.inicio}–{vig.fim})", cond)
+    if len(achadas) > 1:
+        return TaxaEncontrada(None, f"{len(achadas)} condições especiais vigentes em {data_ref.isoformat()} "
+                                    f"({', '.join(c['id'] for c, _ in achadas)}): o código não escolhe")
+    cond, vig = achadas[0]
+    return TaxaEncontrada(Decimal(str(cond["taxa"][grupo])),
+                          f"regras.yaml {CHAVE_CONDICOES}[{cond['id']}] ({grupo}, {vig.inicio}–{vig.fim})", cond)
 
 
 def _como_data(v) -> date:

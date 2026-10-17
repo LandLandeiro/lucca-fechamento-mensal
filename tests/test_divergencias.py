@@ -54,7 +54,7 @@ def test_casa_do_estudante_tudo_que_a_orbe_cobrou(divs):
     d = _div(divs, "AN88445802")
     assert d["diferenca_brl"] == Decimal("1206.58")
     assert d["comissao_contratada"] == 0 and d["taxa_contratada_pct"] == 0
-    assert "condicao_especial_casa_do_estudante" in d["motivo"]
+    assert "condicoes_especiais[casa_do_estudante_2026]" in d["motivo"]
 
 
 def test_casa_estorno_de_agosto_e_par_de_setembro_nao_listam(divs):
@@ -137,3 +137,56 @@ def test_uma_pendencia_por_lojista_para_decidir(divs):
         assert sum(r["valor"] for r in linhas) == p.valor_brl
         cnpj = pid.rsplit("-", 1)[1]
         assert set(p.ref_origem.split("|")) == {d["ref_origem"] for d in divs.linhas if d["cnpj"] == cnpj}
+
+
+def _com_condicoes(regras, *itens):
+    import copy
+    r = copy.deepcopy(regras)
+    r["cadastro.condicoes_especiais"]["valor"] = r["cadastro.condicoes_especiais"]["valor"] + list(itens)
+    return r
+
+
+ROTA = "95927868000148"
+ITEM_ROTA = {"id": "rota_teste", "cnpj": ROTA, "linhas_negocio": ["CHECKOUT"], "taxa": {"MDR": 0.0359},
+             "vigencia": {"inicio": "2026-09-12", "fim": "2026-12-31"}, "fonte": "teste"}
+
+
+def test_segunda_condicao_especial_e_so_um_item_no_regras(cadastro, regras):
+    """D61: uma condição nova é um item da lista em regras.yaml; o código não muda (o README promete isso)."""
+    from datetime import date
+    from tarvo.cadastro import taxa_contratada
+    r = _com_condicoes(regras, ITEM_ROTA)
+    enc = taxa_contratada(cadastro, ROTA, "Créd. 2-6x", date(2026, 9, 20), r)
+    assert enc.taxa == Decimal("0.0359") and "condicoes_especiais[rota_teste]" in enc.fonte
+    assert taxa_contratada(cadastro, ROTA, "Créd. 2-6x", date(2026, 9, 5), r).fonte.startswith("planilha")  # antes da vigência
+    assert taxa_contratada(cadastro, ROTA, "Antecipação", date(2026, 9, 20), r).fonte.startswith("planilha")  # grupo fora do item
+    casa = taxa_contratada(cadastro, "00520815000100", "Débito", date(2026, 9, 20), regras)
+    assert casa.taxa == 0 and casa.condicao["quem_decide_divergencia"] == "Helena + comercial"
+
+
+def test_duas_condicoes_vigentes_nao_escolhe(cadastro, regras):
+    from datetime import date
+    from tarvo.cadastro import taxa_contratada
+    r = _com_condicoes(regras, ITEM_ROTA, {**ITEM_ROTA, "id": "rota_teste_2", "taxa": {"MDR": 0.03}})
+    enc = taxa_contratada(cadastro, ROTA, "Débito", date(2026, 9, 20), r)
+    assert enc.taxa is None and "2 condições especiais vigentes" in enc.fonte
+
+
+def test_condicao_especial_de_remessa(cadastro, regras):
+    """Grupo REMESSA (spread contratado) também vem da lista, antes da planilha."""
+    from datetime import date
+    from tarvo.cadastro import condicao_especial
+    item = {"id": "mundo_aberto_teste", "cnpj": "17217888000111", "linhas_negocio": ["REMESSA"], "taxa": {"REMESSA": 0.015},
+            "vigencia": {"inicio": "2026-09-01", "fim": "2026-09-30"}, "fonte": "teste"}
+    enc = condicao_especial(_com_condicoes(regras, item), "17217888000111", "REMESSA", date(2026, 9, 10))
+    assert enc.taxa == Decimal("0.015")
+    assert condicao_especial(regras, "00520815000100", "REMESSA", date(2026, 9, 10)) is None  # Casa: "Remessa segue normal"
+
+
+def test_item_sem_campo_obrigatorio_e_erro(cadastro, regras):
+    from datetime import date
+    from tarvo.cadastro import taxa_contratada
+    from tarvo.regras import RegraInvalida
+    r = _com_condicoes(regras, {k: v for k, v in ITEM_ROTA.items() if k != "fonte"})
+    with pytest.raises(RegraInvalida, match="faltam campos"):
+        taxa_contratada(cadastro, ROTA, "Débito", date(2026, 9, 20), r)

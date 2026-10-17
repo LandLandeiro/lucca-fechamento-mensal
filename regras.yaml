@@ -365,19 +365,26 @@ cadastro:
     status: CONFIRMADO
     fonte: "Slack Helena 20:24 ('Não fatura a Atlas até o comercial confirmar')"
     pergunta_ref: P04
-  condicao_especial_casa_do_estudante:
+  # D61: condições comerciais fora da planilha, uma por item. Uma condição nova = um item novo (o código não muda).
+  # Campos: id, cnpj, linhas_negocio (CHECKOUT e/ou REMESSA), taxa (fração por grupo: MDR = débito, crédito,
+  # parcelado e Pix; ANTECIPACAO; REMESSA = spread contratado), vigencia {inicio, fim}, fonte; opcionais para a
+  # pendência de divergência (D53): descricao, quem_decide_divergencia, citacao, citacao_fonte.
+  # Grupo que o item não traz segue a planilha (ex.: a remessa da Casa). Duas condições vigentes para o mesmo
+  # CNPJ, grupo e data → taxa indefinida (pendência), nunca escolha.
+  condicoes_especiais:
     valor:
-      cnpj: "00520815000100"
-      taxa_contratada: {MDR: 0, ANTECIPACAO: 0}   # todas as colunas de MDR (débito, crédito, parcelado, Pix) e antecipação
-      vigencia: {inicio: 2026-09-01, fim: 2026-12-31}
-      remessa: "normal (spread da planilha)"
-      cobrado_pela_orbe: "tudo é divergência"
-      descricao: "tarifa zero no checkout por acordo do comercial"
-      quem_decide_divergencia: "Helena + comercial"
-      citacao: "Ninguém avisou a Orbe, então ela cobrou. O que foi cobrado eu devolvo ao lojista, junto com o comercial."
-      citacao_fonte: "Helena 20:49, Q-F 2"
+      - id: casa_do_estudante_2026
+        cnpj: "00520815000100"
+        linhas_negocio: [CHECKOUT]   # "Remessa segue normal"
+        taxa: {MDR: 0, ANTECIPACAO: 0}
+        vigencia: {inicio: 2026-09-01, fim: 2026-12-31}
+        fonte: "Slack Helena 20:49 (Q-F 2); planilha: comentário A13, obs R13"
+        descricao: "tarifa zero no checkout por acordo do comercial"
+        quem_decide_divergencia: "Helena + comercial"
+        citacao: "Ninguém avisou a Orbe, então ela cobrou. O que foi cobrado eu devolvo ao lojista, junto com o comercial."
+        citacao_fonte: "Helena 20:49, Q-F 2"
     status: CONFIRMADO
-    fonte: "Slack Helena 20:49 (planilha: comentário A13, obs R13)"
+    fonte: "Slack Helena 20:49 (Casa do Estudante: 'tarifa zerada no checkout de setembro a dezembro ... Vale para MDR e antecipação. Remessa segue normal.')"
     pergunta_ref: P07
   renegociacao_rota_global:
     valor: "contrato não mudou: os +0,50 p.p. desde 12/09 são divergência"

@@ -33,7 +33,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from decimal import Decimal
 
-from tarvo.cadastro import Cadastro, linha_vigente
+from tarvo.cadastro import Cadastro, condicao_especial, linha_vigente
 from tarvo.calculos.comissoes import ComissaoTransacao, ResultadoCheckout
 from tarvo.calculos.remessa import ClassificacaoRemessa, modo_participacao, participacao
 from tarvo.formatos import centavos, fmt_dinheiro, fmt_pct, modo_arredondamento, nome_mes
@@ -220,12 +220,18 @@ def divergencias_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: 
     excesso: dict[str, list[tuple[OperacaoPonte, Decimal]]] = {}
     candidatas = [(op, cnpj, False) for op, cnpj in cls.elegiveis] + [(op, cnpj, True) for op, cnpj in cls.negativos]
     for op, cnpj, negativo in sorted(candidatas, key=lambda x: x[0].linha_planilha):
+        especial = condicao_especial(regras, cnpj, "REMESSA", op.data_contratacao)  # D61: antes da planilha
         linha, motivo_linha = linha_vigente(cadastro, cnpj, op.data_contratacao)
         bruto = linha.taxas.get(coluna) if linha is not None else None
-        if linha is None:
+        if especial is not None:
+            if especial.taxa is None:
+                res.pendencias.append(_pend(op, "REMESSA_SPREAD_INDEFINIDO", f"spread contratado: {especial.fonte}"))
+                continue
+            contratado, fonte = especial.taxa, especial.fonte
+        elif linha is None:
             res.pendencias.append(_pend(op, "REMESSA_SPREAD_INDEFINIDO", f"spread contratado: {motivo_linha}"))
             continue
-        if isinstance(bruto, Decimal):
+        elif isinstance(bruto, Decimal):
             contratado, fonte = bruto, f"planilha R{linha.linha_planilha} col. {coluna!r}"
         elif bruto is None or bruto.strip().lower() == "padrão":
             contratado = spread_padrao
