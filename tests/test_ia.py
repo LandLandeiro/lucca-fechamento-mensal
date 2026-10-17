@@ -96,7 +96,7 @@ def test_ii_iii_conta_inexistente_ou_confianca_baixa_viram_humano(tmp_path, caso
     r, _, lan, pend = _rodar(tmp_path, caso, ClienteFalso(responder))
     assert r["erros_validacao"] == []
     for k in SOBRAS:
-        assert lan[k]["metodo"] == "HUMANO" and lan[k]["conta_codigo"] == "", k
+        assert (lan[k]["metodo"], lan[k]["conta_codigo"], lan[k]["confianca"]) == ("HUMANO", "", "0.00"), k
         p = pend[f"PEN-IA_REPROVADA-{k}"]
         assert item in p["motivo"] and p["quem_decide"] == "analista (Lucca)"
 

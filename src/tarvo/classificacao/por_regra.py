@@ -9,6 +9,10 @@ Nenhuma regra cita número de linha: o mesmo arquivo de regras serve para outubr
 O lado do lançamento vem do sinal do movimento (D12): saída → crédito no banco e débito na
 contrapartida; entrada → o inverso. Linha sem regra → metodo HUMANO, conta vazia, pendência
 SEM_REGRA (a IA tenta depois, em por_ia). Nada some.
+
+`confianca` nunca vazia (D54): REGRA = 1.00; HUMANO com conta = 1.00 (decisão registrada em
+`decisoes_humanas`); HUMANO sem conta = 0.00 (ninguém decidiu ainda: está em pendencias.csv);
+IA = a confiança da IA, em 2 casas.
 """
 
 from __future__ import annotations
@@ -98,7 +102,7 @@ def classificar_por_regra(
         if achou is None:
             motivo = "; ".join(motivos) or "nenhum padrão de classificacao_extratos casa com a descrição"
             res.sem_regra.append((lan, motivo))
-            res.linhas.append(_linha(ida, lan, "", "HUMANO", None, "", "", conta_banco))
+            res.linhas.append(_linha(ida, lan, "", "HUMANO", Decimal("0"), "", "", conta_banco))
             pid = f"PEN-SEM_REGRA-{banco}-{lan.ref_origem}"
             res.pendencias.append(Pendencia(pid, "SEM_REGRA", lan.ref_origem, lan.valor,
                                             f"{banco} {lan.data.isoformat()} {lan.descricao!r}: sem regra ({motivo}); "

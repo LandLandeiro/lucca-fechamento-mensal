@@ -1,7 +1,7 @@
 """Decisões humanas por linha (`decisoes_humanas` em `regras.yaml`): não são regras.
 
 Cada decisão vale só para a linha exata (banco, ref_origem, data, descrição e valor iguais).
-A linha sai com metodo HUMANO, a conta decidida, confiança vazia e `regra_aplicada` =
+A linha sai com metodo HUMANO, a conta decidida, confiança 1.00 (decisão registrada, D54) e `regra_aplicada` =
 `decisoes_humanas.<chave>`; a pendência SEM_REGRA dela sai da lista. Decisão da competência que
 não acha a sua linha vira aviso (nunca se aplica a outra linha). Roda antes da IA: linha
 decidida não vai para a IA. Decisão com `substituida` (ex.: L28/L69, que a regra passou a cobrir na
@@ -36,7 +36,7 @@ def aplicar_decisoes_humanas(classif: list, regras: dict, competencia: tuple[int
             usadas.add(chave)
             c.sem_regra.remove((lan, motivo))
             linha = next(l for l in c.linhas if (l["banco"], l["ref_origem"]) == (lan.banco, lan.ref_origem))
-            linha.update({"conta_codigo": v["conta"], "metodo": "HUMANO", "confianca": None,
+            linha.update({"conta_codigo": v["conta"], "metodo": "HUMANO", "confianca": Decimal("1"),
                           "regra_aplicada": chave, "status_regra": regras[chave]["status"],
                           "lado_contrapartida": "D" if lan.valor < 0 else "C"})
             if v.get("lojista_cnpj"):

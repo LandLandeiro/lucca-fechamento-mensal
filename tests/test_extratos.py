@@ -416,3 +416,32 @@ def test_setembro_tem_linha_de_rendimento(regras):
     assert valor_da_regra(regras, "classificacao_extratos.conferencias")["resgate_acima_do_aplicado"] == \
         "SALDO_APLICADO_ANTERIOR_SE_HA_RENDIMENTO"
 
+
+
+def test_confianca_nunca_vazia(saida, tmp_path):
+    """D54: REGRA = 1.00; HUMANO com conta (decisão registrada) = 1.00; HUMANO sem conta = 0.00; IA = a da IA.
+    O validador recusa confiança vazia ou fora de 0–1."""
+    from tarvo.saida.validador import validar_saida
+    pasta, _ = saida
+    lan = _csv(pasta, "lancamentos_classificados.csv")
+    assert all(l["confianca"] == "1.00" for l in lan)  # setembro: tudo por regra
+    for p in pasta.iterdir():
+        (tmp_path / p.name).write_bytes(p.read_bytes())
+
+    def adulterar(linhas):
+        i = linhas[0].index("confianca")
+        for l in linhas[1:]:
+            if l[0] == "LAN-AURORA-L9":
+                l[i] = ""
+            if l[0] == "LAN-AURORA-L10":
+                l[i] = "1.20"
+        return linhas
+    _reescrever(tmp_path / "lancamentos_classificados.csv", adulterar)
+    erros = validar_saida(tmp_path, contas_lancaveis=None, refs_extratos={})
+    assert any("LAN-AURORA-L9: confiança ''" in e for e in erros)
+    assert any("LAN-AURORA-L10: confiança '1.20'" in e for e in erros)
+
+
+def test_humano_sem_conta_tem_confianca_zero(regras, cadastro, plano):
+    r = classificar_por_regra([_lanc("PIX ENVIADO FORNECEDOR DESCONHECIDO", "-10.00")], {}, plano, regras, cadastro, (2026, 9))
+    assert (r.linhas[0]["metodo"], r.linhas[0]["conta_codigo"], r.linhas[0]["confianca"]) == ("HUMANO", "", Decimal("0"))

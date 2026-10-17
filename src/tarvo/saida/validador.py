@@ -350,7 +350,8 @@ def _extratos(
 ) -> list[str]:
     """Lançamentos dos extratos: cada linha exatamente uma vez (LAN-…); Σ valor por banco = saldo
     final − saldo inicial do próprio extrato (quando o extrato traz os dois); conta usada existe e é
-    lançável; REGRA/IA com conta, HUMANO sem."""
+    lançável; REGRA/IA com conta; HUMANO com conta só por decisão explícita; confiança sempre preenchida (D54):
+    0.00–1.00, REGRA = 1.00, HUMANO com conta = 1.00, HUMANO sem conta = 0.00."""
     erros: list[str] = []
     lan = dados.get("lancamentos_classificados.csv")
     if lan is None:
@@ -377,12 +378,16 @@ def _extratos(
         conta, metodo = l.get("conta_codigo", ""), l.get("metodo", "")
         if metodo in ("REGRA", "IA") and not conta:
             erros.append(f"{l['id_saida']}: método {metodo} sem conta")
-        if metodo == "IA" and not _RE_DINHEIRO.match(l.get("confianca") or ""):
-            erros.append(f"{l['id_saida']}: método IA sem confiança")
+        confianca = l.get("confianca") or ""
+        if not (_RE_DINHEIRO.match(confianca) and Decimal("0") <= Decimal(confianca) <= Decimal("1")):
+            erros.append(f"{l['id_saida']}: confiança {confianca!r} fora de 0.00–1.00 (nunca vazia, D54)")
+        else:
+            esperada = {"REGRA": "1.00", "HUMANO": "1.00" if conta else "0.00"}.get(metodo)
+            if esperada and confianca != esperada:
+                erros.append(f"{l['id_saida']}: método {metodo} {'com' if conta else 'sem'} conta e confiança {confianca}"
+                             f" (esperada {esperada}, D54)")
         if metodo == "HUMANO" and conta and not (l.get("regra_aplicada") or "").startswith("decisoes_humanas."):
             erros.append(f"{l['id_saida']}: método HUMANO com conta {conta} sem decisão explícita (decisoes_humanas no regras.yaml)")
-        if metodo == "HUMANO" and l.get("confianca"):
-            erros.append(f"{l['id_saida']}: método HUMANO com confiança {l['confianca']}")
         if conta and contas is not None and conta not in contas:
             erros.append(f"{l['id_saida']}: conta {conta} não existe ou não aceita lançamento (ANALITICA e ACEITA_LANCTO=S)")
     return erros
