@@ -1,5 +1,9 @@
 # Tarvo · fechamento de setembro/2026
 
+[![CI](https://github.com/LandLandeiro/tarvo-fechamento/actions/workflows/ci.yml/badge.svg)](https://github.com/LandLandeiro/tarvo-fechamento/actions/workflows/ci.yml)
+
+**O que o CI garante (a cada push):** o fechamento roda do zero num ambiente limpo, em Windows e Linux, com Python 3.12 e 3.14; os testes passam; e a saída gerada é idêntica, byte a byte, à commitada em `saida/`, sem chave de API (a IA responde pelo `cache_ia/`).
+
 > Desafio Barte AI · Hackathon de AI Services · 16 e 17/10/2026 · time: [NOME DO TIME] (Lucca Rocha Landeiro)
 
 ## O problema (em 2 frases)

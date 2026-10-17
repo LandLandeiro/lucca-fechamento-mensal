@@ -127,3 +127,8 @@ Log cronológico: hora, etapa, o que foi feito, como foi verificado, commit.
 - **Feito:** metade do excesso por operação (709,46; sem linha de arredondamento); escritor sem `;` em campo (`;` → `,`) e validador recusando `;` em qualquer CSV; `divergencias.data_referencia_vigencia` removida (coberta pela Q-B); validador conferindo a origem de toda linha do rastro contra as quatro fontes; teste de saldo negativo do Aurora (Q-M). AUDITORIA, CONFORMIDADE, STATUS, HIPOTESES (H34), regras (texto do excesso) atualizados.
 - **Verificado:** testes novos primeiro (4 falharam; o do saldo negativo já passava e fica como proteção), depois a correção. `pytest`: 172 passed. CLI: exit 0, validador OK. `scripts/auditar_saida.py`: 0 violações, 0 avisos. Comissões, divergências, notas e lançamentos iguais; só a EXCESSO_REMESSA (+0,03) e textos mudaram. Reexecução: hashes iguais. "Rastro de 100%" marcado no STATUS.
 - **Commit:** `decisões da auditoria: excesso por operação, sem ';' em campo, origem de todo o rastro`.
+
+### 17/10 ~09h30 · CI no GitHub Actions (D46)
+- **Feito:** `.github/workflows/ci.yml` (push; Ubuntu e Windows × Python 3.12 e 3.14; instala, testa, roda o fechamento sem chave com `TARVO_SEM_REDE=1`, `git diff --exit-code saida/`); selo e o que o CI garante no topo do README.
+- **Verificado:** ver o resultado das 4 execuções no próximo registro.
+- **Commit:** `CI no GitHub Actions: Windows e Linux, 3.12 e 3.14, saída idêntica sem chave`.

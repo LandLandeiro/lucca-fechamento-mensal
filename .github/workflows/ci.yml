@@ -1,0 +1,44 @@
+# CI: o fechamento roda do zero (Linux e Windows, Python 3.12 e 3.14), sem chave de API,
+# e a saída gerada tem que ser idêntica à commitada. Nenhum segredo neste workflow.
+name: CI
+
+on: push
+
+permissions:
+  contents: read
+
+jobs:
+  fechamento:
+    name: ${{ matrix.os }} · Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.12", "3.14"]
+    env:
+      TARVO_SEM_REDE: "1"  # IA só pelo cache_ia/ commitado: nunca rede, nunca chave
+    defaults:
+      run:
+        shell: bash  # também no Windows (Git Bash): para no primeiro comando que falhar
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Instalar dependências e o pacote
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -e .
+
+      - name: Testes
+        run: python -m pytest
+
+      - name: Fechamento (sem chave de API, IA pelo cache)
+        run: python -m tarvo --dados data --saida saida
+
+      - name: Saída idêntica à commitada
+        run: git diff --exit-code --stat saida/
