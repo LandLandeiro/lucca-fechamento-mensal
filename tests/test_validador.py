@@ -27,7 +27,7 @@ def _reescrever(caminho: Path, transformar):
 
 def _copia(saida, tmp_path):
     pasta, _ = saida
-    for p in pasta.iterdir():
+    for p in pasta.glob("*.csv"):
         (tmp_path / p.name).write_bytes(p.read_bytes())
     return tmp_path
 
@@ -179,7 +179,7 @@ def test_cnpj_e_decimal_fora_do_formato_sao_erro(saida, tmp_path):
 
 
 def _copiar(pasta, destino):
-    for p in pasta.iterdir():
+    for p in pasta.glob("*.csv"):
         (destino / p.name).write_bytes(p.read_bytes())
 
 

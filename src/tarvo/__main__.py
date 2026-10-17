@@ -37,6 +37,7 @@ from tarvo.modelo import Aviso, Pendencia
 from tarvo.pendencias import consolidar_pendencias, ler_pendencias_anteriores, pendencia_para_linha, refs_das_pendencias
 from tarvo.regras import RegraInvalida, RegraPendente, carregar_regras, valor_da_regra
 from tarvo.saida.escritor import escrever_saida
+from tarvo.saida.rascunhos import gerar_rascunhos
 from tarvo.saida.validador import validar_saida
 
 PADRAO_ORBE = "01_orbe_relatorio_comissoes_*.csv"
@@ -242,6 +243,8 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         },
         saida,
     )
+    rascunhos = gerar_rascunhos(saida, divs, contestacao.linhas, competencia,  # D68 (Q-T 2, Q-X 1)
+                                valor_da_regra(regras, "ponte.tomador_nf_remessa")["nome"])
     refs_esperadas = {
         orbe.arquivo: {(t.ref_origem, t.linha_arquivo) for t in orbe.transacoes},
         **({orbe_ant.arquivo: {(t.ref_origem, t.linha_arquivo) for _, ts in retomadas for t in ts}} if retomadas else {}),
@@ -310,6 +313,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         "competencia": competencia,
         "lancamentos": lancamentos,
         "arquivos_saida": sorted(p.name for p in saida.glob("*.csv")),
+        "rascunhos": rascunhos,
         "fontes_rastro": fontes_rastro,
     }
 
@@ -520,6 +524,8 @@ def _imprimir_resumo(r: dict, saida: Path) -> None:
     print(f"  os 6 do fechamento: {', '.join(obrig)}")
     if extras:
         print(f"  extras: {', '.join(extras)}")
+    if r["rascunhos"]:
+        print(f"  rascunhos de contestação para a Helena revisar (rascunhos/): {', '.join(r['rascunhos'])}")
     print(linha)
 
 

@@ -65,6 +65,7 @@ Arquivos **extras** (além dos 6 do case):
 |---|---|
 | `contestacao_ponte.csv` | uma linha por operação que a Helena contesta com a Ponte (valor e motivo) |
 | `sugestoes_regra.csv` | vínculos que a IA acertou e o código provou, propostos como regra para o mês seguinte |
+| `rascunhos/` | rascunhos de contestação para a Helena revisar e enviar: um por contraparte e lojista (`orbe_rota_global.md`, `ponte_mundo_aberto.md`, `ponte_spreads_negativos.md`, `ponte_duplicata.md`), cada um com assunto, texto, total e a lista anexa em `.csv`; sem IA. Casa e Bridge não têm rascunho para a Orbe (devolução ao lojista) |
 | `pendencias_resolvidas.csv` | só com `--pendencias-anteriores`: pendências do mês anterior resolvidas neste mês |
 
 ## Como rodar do zero

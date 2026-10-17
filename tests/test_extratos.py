@@ -230,7 +230,7 @@ def _reescrever(caminho, f):
 def test_validador_extratos_recusa(saida, tmp_path, aurora, meridiano, plano):
     from tarvo.saida.validador import validar_saida
 
-    for p in saida[0].iterdir():
+    for p in saida[0].glob("*.csv"):
         (tmp_path / p.name).write_bytes(p.read_bytes())
 
     def adulterar(linhas):
@@ -352,7 +352,7 @@ def test_validador_recusa_humano_com_conta_sem_decisao(saida, tmp_path):
     import csv as _csvmod
     from tarvo.saida.validador import validar_saida
     pasta, _ = saida
-    for p in pasta.iterdir():
+    for p in pasta.glob("*.csv"):
         (tmp_path / p.name).write_bytes(p.read_bytes())
     caminho = tmp_path / "lancamentos_classificados.csv"
     with open(caminho, encoding="utf-8", newline="") as f:
@@ -425,7 +425,7 @@ def test_confianca_nunca_vazia(saida, tmp_path):
     pasta, _ = saida
     lan = _csv(pasta, "lancamentos_classificados.csv")
     assert all(l["confianca"] == "1.00" for l in lan)  # setembro: tudo por regra
-    for p in pasta.iterdir():
+    for p in pasta.glob("*.csv"):
         (tmp_path / p.name).write_bytes(p.read_bytes())
 
     def adulterar(linhas):
