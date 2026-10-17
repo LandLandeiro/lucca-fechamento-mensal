@@ -33,7 +33,7 @@
 
 - 40 regras: CONFIRMADO 19 · SEI 11 · ASSUMO 7 · PENDENTE 3 (`divergencias.data_referencia_vigencia`, `remessa.arredondamento_participacao`, `contabil.padroes_de_descricao`, este último preenchido na E6)
 - Nenhum bloqueio de regra para o mínimo (comissão CHECKOUT)
-- Em aberto: `docs/FINANCEIRO_SLACK.md` não está no disco → textos literais (Q-A…Q-G) e o mapeamento P01–P10 → Q no HIPOTESES ainda pendentes
+- HIPOTESES com os textos literais do financeiro (Q-A…Q-G → P01–P11), fonte `docs/FINANCEIRO_SLACK.md`
 
 ## Números atuais
 
