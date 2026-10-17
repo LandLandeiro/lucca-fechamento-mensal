@@ -137,3 +137,9 @@ Log cronológico: hora, etapa, o que foi feito, como foi verificado, commit.
 - **Feito:** `dependencies` no `pyproject.toml` (iguais ao `requirements.txt`, mantido); README e CI só com `pip install -e .`.
 - **Verificado:** venv novo, só `pip install -e .`: dependências importam e `pytest` 172 passed.
 - **Commit:** `dependências no pyproject: pip install -e . instala tudo`.
+
+### 17/10 ~10h00–10h30 · Prova de outubro (parcial: parado antes de corrigir)
+- **Feito:** varredura de datas fixas em `src/`; `tests/fixtures/gerar_outubro.py` (determinístico) gera `tests/fixtures/outubro/` (DADO SINTÉTICO DE TESTE: setembro deslocado um mês, ids com o mês renumerados, + EC novo, estorno da Bridge de venda de 05/09, TED de 300 mil em 01/10, PIX da EduAbroad); `tests/test_outubro.py` (8 testes, ponta a ponta). Nenhuma linha do código da solução mudou.
+- **Verificado (item c, todos ✅):** exit 0 e validador OK; competência 10/2026 nas 21 notas; Casa com taxa contratada 0 nas 119 linhas; EC novo → PEN-EC_SEM_CADASTRO-EC1099000001 (71,87), sem quebrar; estorno TX89500001 da Bridge pela taxa antiga 2,59% (−37,86; pela nova seria −32,01), sem divergência; 7 lançamentos da EduAbroad por REGRA (alias), 0 linhas para a IA; TED de 300 mil por REGRA (`meridiano.mesma_titularidade`, 1.1.09.001). `pytest`: 180 passed.
+- **Falhou (item a):** duas strings com mês fixo no código: `conferencias.py` ("cai no Meridiano em 01/10 [...] conferir no extrato de outubro", quem decide "analista (conferir em outubro)") e `divergencias.py` ("A nota de setembro sai pelo realizado"). Na saída de outubro, a pendência L92 diz "conferir em outubro". Parado para o Lucca decidir antes de corrigir; itens d e f não feitos. Em `regras.yaml`, `resgate_acima_do_aplicado: SALDO_APLICADO_ANTERIOR` é premissa de setembro (D36) que vale em todo mês.
+- **Commit:** `fixture e teste de outubro (dado sintético), sem mudar o código da solução`.
