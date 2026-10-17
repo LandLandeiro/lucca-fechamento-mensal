@@ -73,6 +73,37 @@ def test_linha_da_orbe_sumida_e_erro(saida, tmp_path, orbe):
     assert any("sem rastro nem pendência" in e for e in erros)
 
 
+def _conservacao(orbe):
+    return {orbe.arquivo: {t.ref_origem: t.valor_taxa for t in orbe.transacoes}}
+
+
+def test_conservacao_quebra_se_divergencia_sumir(saida, tmp_path, orbe):
+    from tarvo.saida.validador import validar_saida
+
+    pasta = _copia(saida, tmp_path)
+    alvo = "DIV-TX88423647"
+    _reescrever(pasta / "divergencias_taxa.csv", lambda ls: [l for l in ls if l[0] != alvo])
+    _reescrever(pasta / "rastro.csv", lambda ls: [l for l in ls if l[0] != alvo])
+    erros = validar_saida(pasta, valor_taxa_orbe=_conservacao(orbe))
+    assert any("conservação CHECKOUT" in e and "diferença 66.28" in e for e in erros)
+
+
+def test_divergencia_de_linha_pendente_e_erro(saida, tmp_path, orbe):
+    from tarvo.saida.validador import validar_saida
+
+    pasta = _copia(saida, tmp_path)
+
+    def apontar_atlas(linhas):
+        for l in linhas[1:]:
+            if l[0] == "DIV-TX88423647":
+                l[2] = "AN88445637"  # antecipação da Atlas (em pendência)
+        return linhas
+
+    _reescrever(pasta / "rastro.csv", apontar_atlas)
+    erros = validar_saida(pasta, valor_taxa_orbe=_conservacao(orbe))
+    assert any("não está em nenhuma comissão" in e for e in erros)
+
+
 def test_cnpj_e_decimal_fora_do_formato_sao_erro(saida, tmp_path):
     from tarvo.saida.validador import validar_saida
 

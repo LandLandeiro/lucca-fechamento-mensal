@@ -129,7 +129,8 @@ def fmt_dinheiro(valor: Decimal) -> str:
     """Decimal → '374.08' (ponto decimal, 2 casas). Exige valor já em centavos."""
     if valor != valor.quantize(CENTAVO):
         raise ValueError(f"valor com fração de centavo na saída: {valor}")
-    return f"{valor.quantize(CENTAVO):.2f}"
+    q = valor.quantize(CENTAVO)
+    return "0.00" if q == 0 else f"{q:.2f}"  # sem "-0.00" (zero negativo: −1.021,01 × 0)
 
 
 def fmt_pct(fracao: Decimal) -> str:

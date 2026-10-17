@@ -55,8 +55,22 @@ def _ler(caminho: Path, erros: list[str]) -> list[dict] | None:
         return list(leitor)
 
 
-def validar_saida(pasta: Path, refs_esperadas: dict[str, set[str]] | None = None) -> list[str]:
-    """Devolve a lista de erros encontrados (vazia = saída válida)."""
+PREFIXOS_COBERTURA = ("COM-", "PEN-")  # onde cada linha de origem tem que aparecer exatamente uma vez
+
+
+def validar_saida(
+    pasta: Path,
+    refs_esperadas: dict[str, set[str]] | None = None,
+    valor_taxa_orbe: dict[str, dict[str, Decimal]] | None = None,
+) -> list[str]:
+    """Devolve a lista de erros encontrados (vazia = saída válida).
+
+    - `refs_esperadas` {arquivo: refs}: cada ref aparece exatamente uma vez no rastro de um
+      número COM-… ou PEN-… (DIV-… reaponta as mesmas linhas e não conta).
+    - `valor_taxa_orbe` {arquivo: {ref: valor_taxa}}, lido da fonte: conservação do checkout,
+      Σ valor_taxa das linhas em COM-…-CHECKOUT = Σ comissão CHECKOUT + Σ divergências CHECKOUT;
+      e toda divergência aponta só linhas que estão numa comissão.
+    """
     erros: list[str] = []
     dados: dict[str, list[dict]] = {}
     for nome in COLUNAS:
@@ -106,9 +120,15 @@ def validar_saida(pasta: Path, refs_esperadas: dict[str, set[str]] | None = None
     for ids in sorted(set(somas) - set(reportados)):
         erros.append(f"rastro.csv: id_saida {ids} não existe em nenhum arquivo de saída")
 
+    if valor_taxa_orbe:
+        erros.extend(_conservacao_checkout(dados, valor_taxa_orbe))
+
     if refs_esperadas:
         for arquivo, esperadas in refs_esperadas.items():
-            vistas = Counter(l["ref_origem"] for l in dados["rastro.csv"] if l.get("arquivo_origem") == arquivo)
+            vistas = Counter(
+                l["ref_origem"] for l in dados["rastro.csv"]
+                if l.get("arquivo_origem") == arquivo and l["id_saida"].startswith(PREFIXOS_COBERTURA)
+            )
             faltando = sorted(esperadas - set(vistas))
             repetidas = sorted(r for r, n in vistas.items() if n > 1)
             estranhas = sorted(set(vistas) - esperadas)
@@ -118,4 +138,34 @@ def validar_saida(pasta: Path, refs_esperadas: dict[str, set[str]] | None = None
                 erros.append(f"{arquivo}: {len(repetidas)} linhas contadas mais de uma vez (ex.: {repetidas[:5]})")
             if estranhas:
                 erros.append(f"{arquivo}: {len(estranhas)} ref_origem no rastro que não existem na fonte (ex.: {estranhas[:5]})")
+    return erros
+
+
+def _conservacao_checkout(dados: dict[str, list[dict]], valor_taxa_orbe: dict[str, dict[str, Decimal]]) -> list[str]:
+    erros: list[str] = []
+    rastro = dados["rastro.csv"]
+    com_ids = {l["id_saida"] for l in dados.get("comissoes_por_lojista.csv", []) if l["linha_negocio"] == "CHECKOUT"}
+    div_ids = {l["id_saida"] for l in dados.get("divergencias_taxa.csv", []) if l["linha_negocio"] == "CHECKOUT"}
+    soma_com = sum((Decimal(l["comissao_brl"]) for l in dados.get("comissoes_por_lojista.csv", [])
+                    if l["id_saida"] in com_ids), Decimal("0"))
+    soma_div = sum((Decimal(l["diferenca_brl"]) for l in dados.get("divergencias_taxa.csv", [])
+                    if l["id_saida"] in div_ids), Decimal("0"))
+    soma_fonte = Decimal("0")
+    refs_com: set[tuple[str, str]] = set()
+    for l in rastro:
+        if l["id_saida"] in com_ids:
+            fonte = valor_taxa_orbe.get(l["arquivo_origem"], {})
+            if l["ref_origem"] not in fonte:
+                erros.append(f"conservação: {l['ref_origem']} no rastro de {l['id_saida']} não existe na fonte")
+                continue
+            soma_fonte += fonte[l["ref_origem"]]
+            refs_com.add((l["arquivo_origem"], l["ref_origem"]))
+    for l in rastro:
+        if l["id_saida"] in div_ids and (l["arquivo_origem"], l["ref_origem"]) not in refs_com:
+            erros.append(f"{l['id_saida']}: aponta {l['ref_origem']}, que não está em nenhuma comissão (pendência?)")
+    if soma_fonte != soma_com + soma_div:
+        erros.append(
+            f"conservação CHECKOUT: Σ valor_taxa Orbe {soma_fonte} ≠ Σ comissão {soma_com} + Σ divergências {soma_div}"
+            f" (diferença {soma_fonte - soma_com - soma_div})"
+        )
     return erros
