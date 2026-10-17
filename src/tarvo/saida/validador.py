@@ -174,6 +174,10 @@ def validar_saida(
         if nat not in _NATUREZA_POR_LINHA.get(l.get("linha_negocio"), ()):
             erros.append(f"divergencias_taxa.csv:{i} {l['id_saida']}: natureza {nat!r} fora de "
                          f"{list(_NATUREZA_POR_LINHA.get(l.get('linha_negocio'), ()))}")
+        if l.get("linha_negocio") == "CHECKOUT":  # D71: a devolver = cobrado pela Orbe − comissão contratada
+            if _d(l.get("valor_a_devolver_brl")) != _d(l.get("valor_taxa_orbe")) - _d(l.get("comissao_contratada"))                     or not _RE_DINHEIRO.match(l.get("valor_a_devolver_brl") or ""):
+                erros.append(f"divergencias_taxa.csv:{i} {l['id_saida']}: valor_a_devolver_brl {l.get('valor_a_devolver_brl')!r} ≠ "
+                             f"valor_taxa_orbe − comissao_contratada")
     if "notas_a_emitir.csv" in dados:
         erros.extend(_notas(dados))
     if (pasta / "contestacao_ponte.csv").exists():

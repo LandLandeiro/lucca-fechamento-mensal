@@ -125,9 +125,9 @@ def test_uma_pendencia_por_lojista_para_decidir(divs):
     Casa (condição especial do comercial): Helena + comercial, com a fala dela da Q-F 2."""
     pend = {p.id_saida: p for p in divs.pendencias}
     assert {(k, p.valor_brl, p.quem_decide) for k, p in pend.items()} == {
-        ("PEN-DIVERGENCIA_CHECKOUT-00520815000100", Decimal("15397.42"), "Helena + comercial"),
-        ("PEN-DIVERGENCIA_CHECKOUT-95927868000148", Decimal("1546.28"), "Helena"),
-        ("PEN-DIVERGENCIA_CHECKOUT-22224579000109", Decimal("29.95"), "Helena + comercial"),  # D63: condição não informada
+        ("PEN-DIVERGENCIA_CHECKOUT-00520815000100", Decimal("15396.77"), "Helena + comercial"),  # D71: valor a devolver
+        ("PEN-DIVERGENCIA_CHECKOUT-95927868000148", Decimal("1545.86"), "Helena"),
+        ("PEN-DIVERGENCIA_CHECKOUT-22224579000109", Decimal("29.94"), "Helena + comercial"),  # D63: condição não informada
     }
     casa = pend["PEN-DIVERGENCIA_CHECKOUT-00520815000100"]
     assert "O que foi cobrado eu devolvo ao lojista, junto com o comercial." in casa.motivo
@@ -203,7 +203,7 @@ def test_natureza_de_cada_divergencia(divs):
                            "95927868000148": {"contrato_orbe"}}
     bridge = {p.id_saida: p for p in divs.pendencias}["PEN-DIVERGENCIA_CHECKOUT-22224579000109"]
     assert "A Bridge foi avisada alguns dias depois de 15/09" in bridge.motivo and "Não há o que cobrar da Orbe" in bridge.motivo
-    assert "Devolver 29.95 ao lojista" in bridge.motivo and "data do aviso em aberto" in bridge.motivo.lower()
+    assert "Devolver 29.94 ao lojista" in bridge.motivo and "data do aviso em aberto" in bridge.motivo.lower()
 
 
 def test_natureza_da_remessa(divr_saida):
@@ -250,9 +250,14 @@ def test_orbe_cobrando_abaixo_do_contrato_vira_pendencia(regras):
     from datetime import date
     from tarvo.calculos.divergencias import ResultadoDivergencias, _pendencias_por_lojista
     res = ResultadoDivergencias()
+    from tarvo.calculos.comissoes import ComissaoTransacao
+    from tarvo.modelo import TransacaoOrbe
+    tx = TransacaoOrbe("TXN1", 2, date(2026, 10, 5), "1074504011", "ROTA", "VENDA", "PIX", 1, None, Decimal("1000"),
+                       Decimal("0.89"), Decimal("8.90"), Decimal("991.10"), None, None, "o.csv")
     res.linhas = [{"id_saida": "DIV-TXN1", "cnpj": "95927868000148", "ref_origem": "TXN1", "diferenca_brl": Decimal("-12.34"),
-                   "natureza": "contrato_orbe", "lojista": "Rota", "data": date(2026, 10, 5)}]
-    res.rastro = [{"id_saida": "DIV-TXN1", "ref_origem": "TXN1", "valor": Decimal("-12.34")}]
+                   "valor_a_devolver_brl": Decimal("-12.34"), "natureza": "contrato_orbe", "lojista": "Rota",
+                   "data": date(2026, 10, 5)}]
+    res.itens_por_div = {"DIV-TXN1": [ComissaoTransacao(tx, "95927868000148", Decimal("0.0213"), Decimal("21.24"), "")]}
     _pendencias_por_lojista(res, {}, regras)
     (p,) = res.pendencias
     assert p.valor_brl == Decimal("-12.34") and "12.34 a menos" in p.motivo and p.quem_decide == "Helena"
@@ -263,3 +268,17 @@ def test_estorno_da_casa_usa_a_taxa_de_21_08_sem_isencao(checkout):
     c = checkout.por_transacao["TX88445133"]
     assert c.transacao.data_venda_original == date(2026, 8, 21) and c.condicao is None
     assert c.taxa_contratada > 0 and c.fonte_taxa.startswith("planilha R13")
+
+
+def test_valor_a_devolver_separado_da_diferenca_da_q_h(divs):
+    """D71: diferenca_brl segue a Q-H c (bruto × (aplicada − contratada)); valor_a_devolver_brl = valor cobrado pela
+    Orbe − comissão contratada (o lojista recebeu o líquido, Q-U 4). Casa: 15.397,42 × 15.396,77 (116 linhas; o par
+    TX88441917/TX88446763, venda e estorno do mês, se anula e não é listado: são as 118 do cálculo linha a linha)."""
+    tot = {}
+    for d in divs.linhas:
+        a = tot.setdefault(d["cnpj"], [0, Decimal(0), Decimal(0)])
+        a[0] += 1; a[1] += d["diferenca_brl"]; a[2] += d["valor_a_devolver_brl"]
+        assert d["valor_a_devolver_brl"] == d["valor_taxa_orbe"] - d["comissao_contratada"]
+    assert tot == {"00520815000100": [116, Decimal("15397.42"), Decimal("15396.77")],
+                   "95927868000148": [79, Decimal("1546.28"), Decimal("1545.86")],
+                   "22224579000109": [5, Decimal("29.95"), Decimal("29.94")]}

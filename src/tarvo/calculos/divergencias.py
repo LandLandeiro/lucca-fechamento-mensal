@@ -50,6 +50,7 @@ class ResultadoDivergencias:
     rastro: list[dict] = field(default_factory=list)
     pendencias: list[Pendencia] = field(default_factory=list)  # DIVERGENCIA_CHECKOUT, uma por lojista (D53)
     rastro_pendencias: list[dict] = field(default_factory=list)
+    itens_por_div: dict[str, list[ComissaoTransacao]] = field(default_factory=dict)  # DIV-… → transações do grupo
     grupos_zerados: int = 0  # vendas divergentes cujo estorno zerou a diferença (não listadas)
     residuo: Decimal = ZERO  # Σ (valor_taxa − comissão − divergência da linha): truncamento da Orbe
     linhas_com_residuo: int = 0
@@ -73,6 +74,7 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
     valor_da_regra(regras, "divergencias.tratamento")
     valor_da_regra(regras, "divergencias.estorno_de_venda_divergente")
     valor_da_regra(regras, "divergencias.criterio_checkout")
+    valor_da_regra(regras, "divergencias.valor_a_devolver")  # D71
     modo = modo_arredondamento(valor_da_regra(regras, "checkout.arredondamento_comissao_contratada"))
     ligados = ("ESTORNO", "REVERSAO ANTECIPACAO") if valor_da_regra(
         regras, "divergencias.reversao_liquida_com_antecipacao") else ("ESTORNO",)
@@ -125,12 +127,15 @@ def divergencias_checkout(checkout: ResultadoCheckout, cadastro: Cadastro, regra
             "valor_bruto": sum((c.transacao.valor_bruto for c in itens), ZERO),
             "comissao_contratada": sum((c.comissao for c in itens), ZERO),
             "valor_taxa_orbe": sum((c.transacao.valor_taxa for c in itens), ZERO),
+            # D71: o que o lojista perdeu de fato (a Orbe liquida o líquido, Q-U 4): valor cobrado − comissão contratada
+            "valor_a_devolver_brl": sum((c.transacao.valor_taxa - c.comissao for c in itens), ZERO),
             "direcao": "COBROU_A_MAIS" if liquido > 0 else "COBROU_A_MENOS",
             "liquida_com": ", ".join(outros),
             "natureza": natureza,
             "motivo": motivo,
             "decisao": decisao,
         })
+        res.itens_por_div[id_divergencia(cabeca_id)] = itens
         for c, d in zip(itens, difs):
             item = ItemRastro(id_divergencia(cabeca_id), c.transacao.arquivo_origem, c.transacao.ref_origem, d)
             res.rastro.append({
@@ -176,16 +181,13 @@ def _pendencias_por_lojista(res: ResultadoDivergencias, condicoes: dict[str, dic
     por_cnpj: dict[str, list[dict]] = {}
     for l in res.linhas:
         por_cnpj.setdefault(l["cnpj"], []).append(l)
-    rastro_por_div: dict[str, list[dict]] = {}
-    for r in res.rastro:
-        rastro_por_div.setdefault(r["id_saida"], []).append(r)
     nat = valor_da_regra(regras, "divergencias.natureza")
     grupos: dict[tuple[str, str], list[dict]] = {}
     for cnpj, divs in por_cnpj.items():
         for d in divs:
             grupos.setdefault((cnpj, d["natureza"]), []).append(d)
     for (cnpj, natureza), divs in sorted(grupos.items()):
-        total = sum((d["diferenca_brl"] for d in divs), ZERO)
+        total = sum((d["valor_a_devolver_brl"] for d in divs), ZERO)  # D71: valor a devolver, não a diferença da Q-H c
         cond = next((condicoes[d["id_saida"]] for d in divs if condicoes.get(d["id_saida"])), None)
         nome, n = divs[0]["lojista"], len(divs)
         datas = sorted(d["data"] for d in divs)
@@ -221,7 +223,14 @@ def _pendencias_por_lojista(res: ResultadoDivergencias, condicoes: dict[str, dic
         res.pendencias.append(Pendencia(pid, "DIVERGENCIA_CHECKOUT", "|".join(d["ref_origem"] for d in divs), total,
                                         " ".join(texto.split()), quem))
         for d in divs:
-            res.rastro_pendencias.extend({**r, "id_saida": pid} for r in rastro_por_div[d["id_saida"]])
+            for c in res.itens_por_div[d["id_saida"]]:
+                res.rastro_pendencias.append({
+                    "id_saida": pid, "arquivo_origem": c.transacao.arquivo_origem, "ref_origem": c.transacao.ref_origem,
+                    "valor": c.transacao.valor_taxa - c.comissao, "linha_arquivo": c.transacao.linha_arquivo,
+                    "tipo_lancamento": c.transacao.tipo_lancamento, "valor_bruto": c.transacao.valor_bruto,
+                    "taxa_contratada_pct": c.taxa_contratada,
+                    "nota": f"a devolver: valor cobrado pela Orbe {c.transacao.valor_taxa} − comissão contratada {c.comissao}",
+                })
 
 
 @dataclass
