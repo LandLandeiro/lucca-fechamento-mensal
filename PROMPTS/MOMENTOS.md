@@ -1,6 +1,6 @@
 # Momentos que importaram
 
-Os 4 mais fortes, no formato do case: o que pedi, o que a IA devolveu e o que fiz com isso. Os dois primeiros são momentos em que a IA errou ou me levou para o lugar errado.
+Quatro momentos, no formato do case: o que pedi, o que a IA devolveu e o que fiz com isso. Os dois primeiros são momentos em que a IA errou ou me levou para o lugar errado.
 
 ## 1. A IA concluiu "truncar como a Orbe"; a Helena disse que a Tarvo não trunca, e a correção foi uma linha
 
@@ -18,12 +18,7 @@ Os 4 mais fortes, no formato do case: o que pedi, o que a IA devolveu e o que fi
 - **Pedi** a revisão do rascunho do Checkpoint 1, escrito com a IA do planejamento, antes de postar. **A IA do código** conferiu cada afirmação contra a saída e apontou: "todos os totais foram conferidos por um script independente" (a conferência independente cobria comissões, divergências e notas, não os extratos) e "cada resposta do financeiro mudou um valor, não o programa" (falso para Q-J, Q-K e Q-L).
 - **O que fiz:** corrigi o rascunho antes de postar (e acrescentei o status SEI/ASSUMO/CONFIRMADO nas hipóteses); depois pedi a auditoria completa da saída (`docs/AUDITORIA.md`), que achou mais um erro real de R$ 0,03 (D45).
 
-## 4. Verificação cruzada: outra sessão de IA, sem ver o código, recalculou do zero
-
-- **Pedi**, em outra sessão de IA que não via este código, um script que recalculasse do zero comissões, divergências, remessa e notas. **Bateu no centavo** em todas essas etapas: 207.031,31 com truncamento (registrada no commit `3f83a5a`) e, depois da correção da Helena, 207.039,73, 16.973,65, 39.543,45 e as 21 notas (commit `cc7022d`). São os números de antes do arquivo 06 (ajustes tardios, D75); com ele, a comissão de checkout é 203.735,34 e as notas, 243.284,29.
-- **O que fiz:** só aceitei cada etapa depois de bater. Quando a minha previsão não bateu (16 pendências esperadas × 15 calculadas, na E6b), a IA mostrou o porquê antes do commit, e o número ficou como estava.
-
-## 5. Quanto devolver: a fórmula da Helena ficou, e o valor a devolver virou outra coluna
+## 4. Quanto devolver: a fórmula da Helena ficou, e o valor a devolver virou outra coluna
 
 - **O que aconteceu:** a pendência da Casa pedia para devolver R$ 15.397,42, o valor da divergência pela fórmula da Q-H c (bruto × (taxa aplicada − contratada)). A resposta da Helena a uma pergunta de outro time no canal (Q-U 4, Turma do Barulho) mostrou o problema: *"A Orbe já liquida o líquido"*, então o lojista perdeu exatamente o que a Orbe descontou acima do contrato, que é o `valor_taxa` truncado menos a comissão contratada. A diferença era o centavo de truncamento da Orbe: Casa 15.396,77, Rota 1.545,86, Bridge 29,94.
 - **Pedi** para trocar o valor da divergência. **A IA parou antes de implementar:** a troca contrariava a Q-H c, uma resposta CONFIRMADO da Helena (*"O valor da divergência eu quero como valor bruto × (taxa aplicada − contratada)"*), e sugeriu separar os dois valores.
