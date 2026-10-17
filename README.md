@@ -21,9 +21,31 @@ Lê os arquivos de `data/` exatamente como chegam e gera, em `saida/`:
 
 ## Como rodar do zero
 
-[preencher: pré-requisitos, instalação, comando único]
+**Pré-requisito:** Python **3.12 ou mais novo** (python.org; testado com 3.12.10) e Git. No Windows, o `python` que vem no PATH sem instalação é só um atalho da Microsoft Store (`Python was not found ...`, código 9009): instale o Python e chame o executável instalado, como abaixo.
 
-Chaves necessárias: `ANTHROPIC_API_KEY` em `.env.local` (modelo em `.env.example`). [dizer se roda sem chave]
+No PowerShell, a partir de uma pasta qualquer:
+
+```powershell
+git clone <url-do-repositório> tarvo-fechamento
+cd tarvo-fechamento
+
+# 1. ambiente (troque o caminho se instalou o Python em outro lugar; com o "py launcher": py -3.12 -m venv .venv)
+& "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe" -m venv .venv
+
+# 2. dependências + o próprio pacote (o código fica em src/; sem o "-e ." o "python -m tarvo" não acha o módulo)
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -e .
+
+# 3. fechamento (comando único) e testes
+.\.venv\Scripts\python.exe -m tarvo --dados data --saida saida
+.\.venv\Scripts\python.exe -m pytest
+```
+
+- Rode **na raiz do repositório**: o padrão de `--regras` é `regras.yaml` relativo à pasta atual. De outra pasta, passe os três caminhos: `--dados <pasta> --saida <pasta> --regras <repo>\regras.yaml`. Caminhos com espaço e acento funcionam (entre aspas).
+- Os comandos usam `.\.venv\Scripts\python.exe` direto, sem `Activate.ps1`: num Windows limpo a política de execução do PowerShell costuma bloquear o script de ativação.
+- Saída esperada: lista de comissões, divergências, notas, lançamentos e pendências, terminando em `VALIDADOR: OK`, código de saída 0 (1 = saída inválida; 2 = erro de entrada). Os CSVs vão para `--saida`; o resultado é determinístico (mesmo hash a cada execução, em qualquer pasta).
+
+Chaves necessárias: **nenhuma para rodar hoje.** A classificação por IA (sobras dos extratos) ainda não está ligada; quando estiver, ela vai ler `ANTHROPIC_API_KEY` de `.env.local` (modelo em `.env.example`).
 
 ## Como a analista usa em outubro
 
