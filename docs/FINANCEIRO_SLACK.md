@@ -145,7 +145,7 @@ Texto copiado do Slack sem edição em 16/10/2026. Horários em -03.
 
 ---
 
-## Q-J · Theo Garcia · resposta 21:45 · nota de remessa e excesso da Mundo Aberto
+## Q-J · Theo · resposta 21:45 · nota de remessa e excesso da Mundo Aberto
 
 **Pergunta:** sobre o excesso de spread da Mundo Aberto na nota de remessa (texto da pergunta não copiado aqui; consultar o Slack).
 
@@ -294,7 +294,7 @@ Copiadas do `#duvidas-hackathon-ai` sem edição (incorporadas de `docs/_novas_r
 ---
 
 ## Ainda sem resposta (17/10 ~11h20, como registrado nessa hora)
-- Theo Garcia 11:16: (1) Bridge/Mundo Aberto — cobra-se da contraparte se a condição está na planilha mesmo sem aviso?; (2) critério do alerta de antecipação (só lojista sem vendas antes do mês?); (3) valor da contestação do spread negativo (Spread R$ −687,52 ou diferença até o contrato −1.351,87).
+- Theo 11:16: (1) Bridge/Mundo Aberto — cobra-se da contraparte se a condição está na planilha mesmo sem aviso?; (2) critério do alerta de antecipação (só lojista sem vendas antes do mês?); (3) valor da contestação do spread negativo (Spread R$ −687,52 ou diferença até o contrato −1.351,87).
 - Desbravadores 11:07: como vem o ajuste de contestação no relatório da Ponte e como entra na nota.
 - Leandro (Barte) encaminhou 11:04: pacote de outubro; ref_origem com "|"; quem_decide comparado por texto?; pendência de acompanhamento conta como alarme falso?
 
@@ -319,10 +319,10 @@ Copiadas do `#duvidas-hackathon-ai` sem edição (lidas no Slack às 13h30, perg
 
 ---
 
-## Q-AA · Theo Garcia · 11:16 · resposta 11:37 (aviso × contrato, alerta, spread negativo)
+## Q-AA · Theo · 11:16 · resposta 11:37 (aviso × contrato, alerta, spread negativo)
 
 **Pergunta:**
-> [financeiro] Theo Garcia: três perguntas de regra, com exemplo.
+> [financeiro] Theo: três perguntas de regra, com exemplo.
 >
 > 1. Quando a contraparte não foi avisada. Na Casa a senhora disse que a Orbe cobrou certo pela planilha, porque ninguém avisou, e por isso não se cobra da Orbe. Dois casos ficam no meio:
 > (a) Bridge: a planilha já dizia 2,19% a partir de 15/09, mas a Orbe só foi avisada dias depois e cobrou 2,59% em 5 vendas de 15 a 18/09 (R$ 29,95, ex.: TX88428053).
@@ -334,7 +334,7 @@ Copiadas do `#duvidas-hackathon-ai` sem edição (lidas no Slack às 13h30, perg
 > 3. Spread negativo. Na pendência de contestação com a Ponte, o valor de cada operação é o spread negativo do relatório (ex.: PC-0926-0210, −R$ 687,52) ou a diferença até o spread do contrato (1,5% sobre a PTAX, −R$ 1.351,87)?
 
 **Resposta (11:37):**
-> *[Financeiro] Resposta para Theo Garcia*
+> *[Financeiro] Resposta para Theo*
 > 1. *O que decide é o contrato, não o aviso.* A Bridge tem aditivo assinado (2,19% a partir de 15/09). A Mundo Aberto tem o 1,20% negociado e registrado desde julho. Nos dois casos a contraparte cobrou diferente de uma condição contratada. Isso é divergência: eu contesto com a Orbe e com a Ponte, e o lojista é ressarcido. O aviso atrasado é problema nosso de processo, mas não muda quem deve.
 >  A Casa é outra coisa. É uma concessão do comercial, fora do contrato, para segurar o cliente. A Orbe cobrou o que estava contratado. Quem abriu mão da receita fomos nós, então a devolução sai do nosso bolso.
 > 2. *A antecipação é sobre a agenda inteira do lojista*, inclusive parcelas de vendas de meses anteriores que o relatório de setembro não traz. Por isso a comparação com as vendas do mês acende lojista demais. O que me preocupa é lojista novo, sem histórico, antecipando alto. Não temos um limite definido. O critério é de vocês: escrevam no `HIPOTESES.md`.
