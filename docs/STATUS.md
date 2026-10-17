@@ -1,9 +1,9 @@
 # Status
 
-> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 13:10 (D71–D74 e documentação para a entrega).
+> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 14:50 (auditoria independente das regras e teste das regras, D85–D90).
 
 **Nível atual:** **Alvo** (todos os 6 CSVs gerados e validados); os 184 lançamentos por REGRA (D52); IA só para nome que nenhuma regra reconhece
-**Próximo passo:** README (problema em 2 frases), números velhos do HIPOTESES (H02, H11, H19), pitch; rever H51 e H53 se o Theo (11:16) tiver resposta.
+**Próximo passo:** trazer o painel para a main (instrução do Lucca a seguir); Checkpoint 2 às 16:00.
 
 ## Mínimo
 
@@ -35,6 +35,18 @@
 - [x] **Rastro de 100% dos números** (17/10 ~09h15, D45): o validador recusa número sem rastro ou com soma diferente, e linha do rastro de qualquer `id_saida` que não exista na fonte (id_transacao, Nº Operação + linha, L<n>, FITID + linha); auditoria independente com 0 violações (`docs/AUDITORIA.md`)
 - [x] Auditoria independente da saída (`scripts/auditar_saida.py`, sem importar o pacote): formato sem violação; coerência com 1 achado (o −0,03 acima); matriz de conformidade Q-A…Q-M em `docs/CONFORMIDADE.md`
 - [x] **Roda em outubro sem mudar código** (17/10, D48–D50): `tests/test_outubro.py` (12 testes, no CI) fecha um mês sintético gerado de setembro (`tests/fixtures/gerar_outubro.py`, datas +1 mês, EC novo, estorno da Bridge de venda de 05/09, TED de 300 mil em 01/10, PIX da EduAbroad). Resultado: exit 0, validador OK, auditoria 0 violações; competência 10/2026; Casa com taxa 0; EC novo vira pendência; estorno pela taxa antiga (2,59%); EduAbroad por REGRA (nome da Orbe); 1 aporte de nome novo vai para a IA mockada e é aceito pela prova da soma; TED de 300 mil por REGRA; nenhuma pendência cita "setembro". Com `--pendencias-anteriores`, a L92 de setembro sai resolvida
+
+## 17/10 tarde: auditoria independente das regras e teste das regras (D85–D90)
+
+- [x] Auditoria independente das regras (ponto 2 do Manuel): `docs/auditoria_regras/`. Notas 243.284,29, Ponte 39.543,45, devolução e lançamentos iguais no centavo; 0 diferenças altas; as médias tratadas abaixo ou explicadas no README de lá
+- [x] D85: devolução da Casa com tipo próprio `DEVOLUCAO_CONCESSAO_COMERCIAL`; as 118 linhas com decisão "Helena + comercial"
+- [x] D86: estorno de venda cobrada acima do contrato com rótulo próprio (`ESTORNO_DE_VENDA_ACIMA_DO_CONTRATO`), não "cobrou a menos"
+- [x] D87: PIX de 18.240 da Ponte Aérea vira `ACOMPANHAMENTO_APORTE`, com a Q-N 5 e o próximo passo
+- [x] D88: rascunho da Orbe com o valor a recuperar e, ao lado, a fórmula da Q-H c (Rota 1.546,28 / Bridge 29,95)
+- [x] D89: sem o 06, aviso informativo
+- [x] D90: toda regra CONFIRMADO cita a fala literal (34 ganharam a citação, sem mudar status); `aurora.orbe_recebivel` volta a ASSUMO
+- [x] Casos-ouro: 13 testes com os valores da Helena (`pytest -m caso_ouro`); `docs/TESTE_DAS_REGRAS.md`
+- Números: iguais aos da D75–D84. Só muda o `status_regra` de 21 linhas em `lancamentos_classificados.csv` (CONFIRMADO → ASSUMO)
 
 ## 17/10 tarde: arquivo 06 e respostas Q-Z a Q-AH (D75–D84)
 
@@ -86,8 +98,9 @@
 
 ## Regras (`regras.yaml`)
 
-- 93 entradas: CONFIRMADO 45 · ASSUMO 36 · SEI 12 · PENDENTE 0; toda CONFIRMADO com `aprovado_por` (Q-S, D69). Novas em 17/10 de manhã (D53–D61) e à tarde (D63–D69): `divergencias.natureza`, `checkout.alerta_antecipacao`, `remessa.cnpj_fora_da_planilha`, `notas.discriminacao.CHECKOUT_COMPLEMENTO_ANTERIOR`, além das da manhã; `divergencias.estorno_de_venda_divergente` virou CONFIRMADO (Q-N 3)
-- **Q-K (22:33):** a conferência do repasse não prevê desconto (D38). **Q-L (22:34):** contestação com a Ponte por motivo (D39). **Q-M (22:34):** `orbe_recebivel` CONFIRMADO; saldo negativo do Aurora (conta garantida) e conciliação da Orbe por parcela ficam de fora
+- 99 entradas: CONFIRMADO 48 · ASSUMO 38 · SEI 13 · PENDENTE 0 (17/10 14:50); toda CONFIRMADO com `aprovado_por` (Q-S, D69) e com uma fala literal do canal (teste, D90). Antes:
+  93 entradas: CONFIRMADO 45 · ASSUMO 36 · SEI 12 · PENDENTE 0; toda CONFIRMADO com `aprovado_por` (Q-S, D69). Novas em 17/10 de manhã (D53–D61) e à tarde (D63–D69): `divergencias.natureza`, `checkout.alerta_antecipacao`, `remessa.cnpj_fora_da_planilha`, `notas.discriminacao.CHECKOUT_COMPLEMENTO_ANTERIOR`, além das da manhã; `divergencias.estorno_de_venda_divergente` virou CONFIRMADO (Q-N 3)
+- **Q-K (22:33):** a conferência do repasse não prevê desconto (D38). **Q-L (22:34):** contestação com a Ponte por motivo (D39). **Q-M (22:34):** `orbe_recebivel` CONFIRMADO, de volta a ASSUMO na D90 ("Conta por conta eu não valido", Q-Y); saldo negativo do Aurora (conta garantida) e conciliação da Orbe por parcela ficam de fora
 - **Q-H (21:13) corrigiu o ASSUMO de truncar (D09):** arredondamento comum (meio para longe do zero) por linha na comissão, nas divergências e nos 50% da remessa (D27). Q-I (21:14): contas das obrigações de agosto e despesas diretas CONFIRMADO. Q-J (21:45): nota de remessa pelo realizado + pendência da nossa metade do excesso
 - HIPOTESES com os textos literais do financeiro (Q-A…Q-M → P01–P17), fonte `docs/FINANCEIRO_SLACK.md`
 
@@ -135,12 +148,12 @@ Todos conferidos no centavo contra a previsão independente do Lucca antes do co
 ### Pendências e validador
 
 - **Pendências de checkout, remessa e notas: 11** (sem a provisão do mês, retirada na D78)
-  - **DIVERGENCIA_CHECKOUT (D53), uma por lojista, pelo valor a devolver (D71, CONFIRMADO na D79):** Casa 118 transações, **15.396,77**, "Helena + comercial", só devolver; Rota 87, **1.545,86**, Helena, devolver e recuperar da Orbe; Bridge 5, **29,94**, Helena, devolver e recuperar da Orbe (D76). Detalhe em `divergencias_taxa.csv`
+  - **DIVERGENCIA_CHECKOUT (D53), uma por lojista, pelo valor a devolver (D71, CONFIRMADO na D79):** Casa 118 transações, **15.396,77**, "Helena + comercial", só devolver (tipo próprio `DEVOLUCAO_CONCESSAO_COMERCIAL` desde a D85); Rota 87, **1.545,86**, Helena, devolver e recuperar da Orbe; Bridge 5, **29,94**, Helena, devolver e recuperar da Orbe (D76). Detalhe em `divergencias_taxa.csv`
   - **ALERTA_ANTECIPACAO (D66, D73), Atlas:** exposição máxima de **124.235,32** em 15/09; quem decide: Helena + comercial
   - Atlas Idiomas (EC 1076801732): 57 transações, R$ 7.876,05 cobrados pela Orbe (informativo); quem decide: comercial
   - **NF_NEGATIVA, Casa do Estudante −5,50:** não emite nota; linha não nula TX88445133 (L433), estorno de venda de 2026-08-21; quem decide: Helena
   - **CONFERENCIA_REPASSE, R$ 39.543,45 (faturado):** conferir o TED da Ponte quando cair (previsto 06/10); total do relatório 78.073,59, que inclui 4 spreads negativos (−1.834,05) e a duplicata PC-0926-0162 (821,88), ambos em contestação; sem prever desconto (Q-K, D38); quem decide: Helena
-  - **CONTESTACAO_PONTE (Q-L, D39), quem decide: Helena:** Mundo Aberto acima de 1,20%, 23 operações, **1.418,85**; spreads negativos, 4 operações, **−1.834,05** (Spread R$; −3.565,98 contra o contrato); duplicata PC-0926-0162 (R77), **821,88**. Lista por operação em `contestacao_ponte.csv`
+  - **CONTESTACAO_PONTE (Q-L, D39), quem decide: Helena:** Mundo Aberto acima de 1,20%, 23 operações, **1.418,85**; spreads negativos, 4 operações, **−3.565,98** (o que pedir à Ponte, até o contrato; −1.834,05 é o Spread R$ do relatório, D80); duplicata PC-0926-0162 (R77), **821,88**. Lista por operação em `contestacao_ponte.csv`
   - **EXCESSO_REMESSA, Mundo Aberto R$ 709,46** (Σ por operação de round(50% × divergência), Q-H b, D45): a nota sai pelo realizado; a nossa metade sai no mês em que a Ponte devolver a diferença; quem decide: Helena
 - **Validador: OK** (formato; rastro fecha por `id_saida`; cada linha da Orbe e do anexo exatamente uma vez em COM-/PEN-/EXC-; conservação do checkout com divergência recalculada da fonte e resíduo por linha ≤ 1 centavo onde as taxas são iguais; conservação da remessa; comissão de cada operação = metade do spread; notas = comissões; nenhuma nota ≤ 0; Σ `contestacao_ponte.csv` por pendência = valor da pendência)
 - `ref_origem` no rastro = `id_transacao` (Orbe) ou `Nº Operação` (Ponte); a linha física vai na coluna extra `linha_arquivo`
@@ -151,7 +164,7 @@ Todos conferidos no centavo contra a previsão independente do Lucca antes do co
 - **MERIDIANO: 100 linhas, todas por regra.** Sem saldo inicial no OFX (inicial implícito 204.118,03, D34). Regras: aporte_lojista 64 (inclui os 5 da EduAbroad, D52), liquidacao_ponte 21, mesma_titularidade 3, aplicação 3, resgate 3, tarifa 2, repasse_comissao_ponte 1, seguro 1, IOF 1, rendimento_aplicacao 1 (H37)
 - **Sem regra: 0.** Histórico: até a D52, os 7 da EduAbroad iam para a IA (resposta real em `cache_ia/`: 5 aceitos pela prova da soma, 394.222,69; 2 barrados e decididos pelo Lucca, D44). A D52 mostrou que a regra resolvia: `cache_ia/` fica como registro dessa execução
 - **Transferências:** L12 → MRD2026090107, L44 → MRD2026090274, L58 → MRD2026090454 (mesmo dia); **L92 (−300.000,00) sem par → pendência em trânsito (cai em 01/10)**
-- **Aportes × Ponte:** 14 lojistas; Ponte Aérea com +18.240,00 = PIX MRD2026090425 sem operação → pendência; EduAbroad conferida por regra: aportes = operações (394.222,69); Bagagem fecha (duplicata conta uma vez)
+- **Aportes × Ponte:** 14 lojistas; Ponte Aérea com +18.240,00 = PIX MRD2026090425 sem operação → acompanhamento (remessa de outubro, Q-N 5, D87); EduAbroad conferida por regra: aportes = operações (394.222,69); Bagagem fecha (duplicata conta uma vez)
 - **Aplicação × resgate (FIFO):** resgate MRD2026090254 (09/09, 162.128,00) excede em **392,00** a aplicação de 05/09 → saldo aplicado anterior a 01/09, linha inteira em 1.1.02.001, sem pendência (D36); os outros dois resgates cabem no saldo aplicado
-- **Pendências dos extratos: 4** (PIX sem identificação 7.350,00, devolução Mundo Aberto 12.400,00, transferência em trânsito −300.000,00, aporte sem operação 18.240,00; a provisão do mês saiu na D78). **Total no `pendencias.csv`: 15** (+ 3 divergências de checkout por lojista, D53, alerta de antecipação da Atlas, D66, Atlas sem contrato, nota negativa da Casa, conferência do TED, excesso da Mundo Aberto, 3 contestações com a Ponte). Saldo negativo do Aurora: conta garantida, não é pendência (Q-M)
+- **Pendências dos extratos: 4** (PIX sem identificação 7.350,00, devolução Mundo Aberto 12.400,00, transferência em trânsito −300.000,00, acompanhamento do aporte de 18.240,00 (D87); a provisão do mês saiu na D78). **Total no `pendencias.csv`: 15** (+ 3 divergências de checkout por lojista, D53, alerta de antecipação da Atlas, D66, Atlas sem contrato, nota negativa da Casa, conferência do TED, excesso da Mundo Aberto, 3 contestações com a Ponte). Saldo negativo do Aurora: conta garantida, não é pendência (Q-M)
 
