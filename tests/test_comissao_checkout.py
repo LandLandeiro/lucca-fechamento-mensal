@@ -169,3 +169,36 @@ def test_meses_empatados_e_erro_de_entrada():
                              Decimal("0.99"), None, None, "o.csv")
     with pytest.raises(CompetenciaAmbigua):
         separar_competencia([t("A", date(2026, 9, 1)), t("B", date(2026, 8, 31))])
+
+
+def test_alerta_de_antecipacao_so_para_a_atlas(orbe, cadastro, regras):
+    """D66 (Q-N 6): Atlas, sem histórico, antecipou 179.592,82 em 15/09 com 55.357,50 vendidos até a data.
+    Lojistas com histórico (Oxford, Kiwi, Dublin, Canguru, Mundo Aberto) não alertam: a antecipação deles cobre
+    recebíveis de meses anteriores, que não estão nos dados."""
+    from decimal import Decimal
+    from tarvo.calculos.alertas import alerta_antecipacao
+    r = alerta_antecipacao(orbe.transacoes, cadastro, (2026, 9), regras)
+    (p,) = r.pendencias
+    assert (p.id_saida, p.valor_brl, p.quem_decide) == ("PEN-ALERTA_ANTECIPACAO-EC1076801732", Decimal("124235.32"), "Helena + comercial")
+    assert "179592.82 até 2026-09-15" in p.motivo and "55357.50 vendidos" in p.motivo and "Q-N 6" in p.motivo
+    assert sum(l["valor"] for l in r.rastro) == p.valor_brl
+    assert set(p.ref_origem.split("|")) == {l["ref_origem"] for l in r.rastro}
+
+
+def test_alerta_vale_para_lojista_novo_da_planilha(orbe, cadastro, regras):
+    """Lojista com vigência só a partir do mês também é 'sem histórico'; com estorno de venda de mês anterior, não."""
+    import copy
+    from dataclasses import replace
+    from datetime import date
+    from decimal import Decimal
+    from tarvo.calculos.alertas import alerta_antecipacao
+    from tarvo.cadastro import Vigencia
+    canguru = "53857560000123"
+    cad = copy.deepcopy(cadastro)
+    cad.linhas_por_cnpj[canguru] = [(l, Vigencia(date(2026, 9, 1), None)) for l, _ in cad.linhas_por_cnpj[canguru]]
+    ts = [t for t in orbe.transacoes if t.cod_estabelecimento == "1061760196"]
+    r = alerta_antecipacao(ts, cad, (2026, 9), regras)
+    assert [p.id_saida for p in r.pendencias] == [f"PEN-ALERTA_ANTECIPACAO-{canguru}"]  # 31.765,12 em 01/09 × 1.934,10
+    estorno_antigo = replace(ts[0], ref_origem="TXE", tipo_lancamento="ESTORNO", valor_bruto=Decimal("-1.00"),
+                             data_venda_original=date(2026, 8, 20))
+    assert alerta_antecipacao(ts + [estorno_antigo], cad, (2026, 9), regras).pendencias == []

@@ -115,7 +115,9 @@ Se uma regra mudar (taxa nova, nome novo de lojista no extrato, feriado do ano s
 
 ## Limitações conhecidas
 
-[preencher]
+- **Alerta de antecipação só para lojista sem histórico** (D66). A antecipação pode cobrir recebíveis de meses anteriores, que não estão nos dados; checar todos os lojistas exige a agenda de recebíveis da Orbe. Com o critério do mês inteiro, o alerta seria alarme falso em 5 lojistas. Com mais tempo: ler a agenda de recebíveis. Se a pergunta do Theo (11:16) for respondida, o critério é revisto.
+- **Conciliação Orbe × banco parcela por parcela fica de fora** (Q-M): os créditos da Orbe no Aurora são só classificados, até haver a agenda de recebíveis.
+- **Dia útil só com os feriados nacionais por lei de 2026** (D59): Carnaval, Sexta-feira Santa e Corpus Christi não entram, e 2027 precisa ser acrescentado no `regras.yaml`.
 
 ## Organização do repositório
 

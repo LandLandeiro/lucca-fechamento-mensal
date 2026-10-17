@@ -171,6 +171,24 @@ checkout:
     status: CONFIRMADO
     fonte: "Slack Helena 20:06"
     pergunta_ref: P10
+  alerta_antecipacao:       # D66; rever se a pergunta do Theo (11:16) sobre o critério for respondida
+    valor:
+      criterio: >-
+        só lojista sem histórico (sem vigência na planilha antes do mês e sem nenhuma linha com data_venda_original
+        anterior ao mês): alerta na primeira data em que a antecipação acumulada no mês passa das vendas acumuladas
+        até a data; valor = antecipado − vendido nessa data
+      quem_decide: "Helena + comercial"
+      citacao: "Isso não deveria acontecer. A antecipação é sobre o que o lojista já vendeu, e a gente não tem trava para isso. Coloquem como alerta: quem precisa saber sou eu e o comercial, e ainda mais com a Atlas sem contrato assinado."
+      citacao_fonte: "Helena 09:44, Q-N 6"
+    status: ASSUMO
+    autor: Lucca
+    fonte: >-
+      decisão Lucca 17/10 (D66) sobre a Q-N 6. Motivo do recorte: para lojista com histórico a antecipação cobre
+      recebíveis de meses anteriores, que não estão nos dados; o critério do mês inteiro daria alarme falso em 5
+      lojistas (Oxford Prep, Kiwi Experience, Dublin Hub, Canguru, Mundo Aberto), e a Helena pediu 'não receber
+      alarme de centavo' (Q-G, 20:58). Checar todos exige a agenda de recebíveis da Orbe. Em setembro: só a Atlas
+      (179.592,82 antecipados em 15/09 × 55.357,50 vendidos até a data)
+    pergunta_ref: null
 
 notas:
   estrutura_nf_checkout:

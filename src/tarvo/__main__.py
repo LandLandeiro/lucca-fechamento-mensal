@@ -16,6 +16,7 @@ from pathlib import Path
 
 from tarvo.cadastro import adicionar_nomes_orbe, montar_cadastro, normalizar_nome
 from tarvo.calculos.comissoes import CompetenciaAmbigua, comissao_checkout, ordem_comissao, separar_competencia
+from tarvo.calculos.alertas import alerta_antecipacao
 from tarvo.calculos.contestacao import contestacao_ponte
 from tarvo.calculos.divergencias import divergencias_checkout, divergencias_remessa
 from tarvo.calculos.notas import conferencia_repasse, notas_a_emitir
@@ -99,6 +100,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     competencia = sep.competencia
     checkout = comissao_checkout(sep.dentro, cadastro, regras)
     divergencias = divergencias_checkout(checkout, cadastro, regras)
+    alertas = alerta_antecipacao(sep.dentro, cadastro, competencia, regras)  # D66: só avisa, não muda número
 
     arq_ponte = achar_unico(dados, PADRAO_PONTE)
     mail = ler_email(arq_ponte)
@@ -203,13 +205,13 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
     lancamentos = [l for c in classif for l in c.linhas]
 
     pendencias = consolidar_pendencias(
-        checkout.pendencias, sep.pendencias, divergencias.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura,
+        checkout.pendencias, sep.pendencias, divergencias.pendencias, alertas.pendencias, remessa.pendencias, div_remessa.pendencias, pend_leitura,
         notas.pendencias, pend_repasse,
         div_remessa.pendencias_derivadas, contestacao.pendencias, *[c.pendencias for c in classif], conf.pendencias,
     )
     divs = divergencias.linhas + div_remessa.linhas
     rastro = sorted(
-        checkout.rastro + sep.rastro + divergencias.rastro + divergencias.rastro_pendencias + remessa.rastro + div_remessa.rastro
+        checkout.rastro + sep.rastro + alertas.rastro + divergencias.rastro + divergencias.rastro_pendencias + remessa.rastro + div_remessa.rastro
         + notas.rastro + notas.rastro_pendencias + rastro_repasse + div_remessa.rastro_pendencias + contestacao.rastro
         + [l for c in classif for l in c.rastro + c.rastro_pendencias] + conf.rastro_pendencias,
         key=lambda l: (l["id_saida"], l["linha_arquivo"], l["ref_origem"]),
