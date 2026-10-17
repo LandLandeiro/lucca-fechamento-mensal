@@ -51,7 +51,8 @@ def formatar(coluna: str, valor: object) -> str:
         return valor.isoformat()
     if isinstance(valor, float):
         raise TypeError(f"float na saída (coluna {coluna}): use Decimal")
-    return str(valor)
+    # D45: nenhum ';' dentro de campo (o separador é ';'; um split ingênuo não pode desalinhar as colunas)
+    return str(valor).replace(";", ",")
 
 
 def escrever_csv(caminho: Path, linhas: list[dict]) -> Path:

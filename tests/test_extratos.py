@@ -339,3 +339,18 @@ def test_validador_recusa_humano_com_conta_sem_decisao(saida, tmp_path):
     plano = set(contas_lancaveis(ler_plano_contas(next(DADOS.glob("04_*")))))
     erros = validar_saida(tmp_path, contas_lancaveis=plano)
     assert any("LAN-AURORA-L28" in e and "sem decisão explícita" in e for e in erros)
+
+
+def test_saldo_negativo_do_aurora_nao_vira_pendencia(saida):
+    """Q-M (Helena 22:34): o saldo negativo é a conta garantida do Aurora; não é pendência."""
+    pasta, r = saida
+    aurora = r["extratos"]["leituras"][0]
+    saldo, minimo = aurora.saldo_inicial, aurora.saldo_inicial
+    for lan in aurora.lancamentos:
+        saldo += lan.valor
+        minimo = min(minimo, saldo)
+    assert minimo < 0  # o caso existe em setembro
+    pend = _csv(pasta, "pendencias.csv")
+    assert not any("saldo" in p["tipo"].lower() or "garantida" in p["motivo"].lower() or "saldo negativo" in p["motivo"].lower()
+                   for p in pend)
+

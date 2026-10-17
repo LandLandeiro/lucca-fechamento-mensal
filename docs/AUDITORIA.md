@@ -1,5 +1,31 @@
 # Auditoria antes do Checkpoint 1
 
+## Resultado final, depois das decisões do Lucca (17/10 ~09h15, D45)
+
+| # | Item | Resultado |
+|---|---|---|
+| 1 | Matriz de conformidade (Q-A…Q-M) | ✅ 13 de 13 (`docs/CONFORMIDADE.md`) |
+| 2 | Formato contra `docs/case.md` | ✅ nenhuma violação; nenhum `;` dentro de campo em nenhum CSV (antes: 1.153 campos, 10 deles no `motivo` de `pendencias.csv`) |
+| 3 | Coerência entre arquivos | ✅ 4.984 de 4.984 linhas do rastro existem na fonte |
+| 4 | Regras ASSUMO por R$ | listadas no item 4 abaixo (o item 7 da tabela 4a saiu: virou por operação) |
+| 5 | "Rastro de 100% dos números" | ✅ **marcado no STATUS**: o validador agora confere a origem de toda linha do rastro |
+
+`scripts/auditar_saida.py` na saída nova: **0 violações, 0 avisos.** O que mudou:
+
+| Decisão | O que foi feito | Teste |
+|---|---|---|
+| 1. Metade do excesso por operação | `PEN-EXCESSO_REMESSA-17217888000111` = Σ round(50% × divergência) das 23 operações = **709,46** (era 709,43); a linha `arredondamento` de −0,03 saiu do rastro | `test_pendencia_metade_do_excesso_da_mundo_aberto` |
+| 2. Nenhum `;` dentro de campo | o escritor troca `;` por `,` em todo texto (quoting padrão do `csv` mantido); o validador recusa `;` dentro de campo em qualquer CSV da pasta | `test_nenhum_ponto_e_virgula_dentro_de_campo`, `test_validador_recusa_ponto_e_virgula_em_campo` |
+| 3. `divergencias.data_referencia_vigencia` | removida do `regras.yaml`: coberta pela Q-B (`checkout.estorno`, taxa da data da venda original). Regras: 0 PENDENTE | `test_oxford_estorno_de_venda_de_agosto` (comportamento) |
+| 4. Origem de toda linha do rastro | o validador recebe todas as fontes (id_transacao da Orbe, Nº Operação + linha do anexo da Ponte, L<n> do Aurora, FITID + linha do Meridiano) e recusa qualquer linha do rastro, de qualquer `id_saida`, que não exista nelas | `test_validador_recusa_rastro_sem_linha_de_origem` |
+| 4. Saldo negativo do Aurora (Q-M) | teste prova que o saldo corrido fica negativo em setembro e que nenhuma pendência trata disso | `test_saldo_negativo_do_aurora_nao_vira_pendencia` |
+
+Números que não mudaram: comissões (207.039,73 e 39.543,45), divergências, notas, lançamentos e as outras 10 pendências; só a EXCESSO_REMESSA (+0,03) e textos (`;` → `,`).
+
+---
+
+## Auditoria inicial (17/10 ~09h, antes das decisões)
+
 > 17/10 ~09h, sobre a saída do commit `b651260` (`python -m tarvo --dados data --saida saida`). Só leitura do cálculo: nenhum número da saída mudou. Reproduzir: `.\.venv\Scripts\python.exe scripts\auditar_saida.py` (lê só `saida/` e `data/`, sem importar o pacote `tarvo`; sai com 1 se houver violação).
 > Antes de confiar no script, ele foi testado contra uma cópia estragada da saída (BOM, CRLF, vírgula decimal, data DD/MM/AAAA, CNPJ com DV errado, confiança 1,50, rastro que não fecha): **as 7 mutações foram acusadas** (12 violações). Na saída real: **1 violação** (item 3, C5).
 

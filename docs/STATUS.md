@@ -1,6 +1,6 @@
 # Status
 
-> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 ~08h45 (decisões da E6b parte 2).
+> Painel atualizado ao fim de cada etapa. Última atualização: 17/10 ~09h15 (decisões da auditoria).
 
 **Nível atual:** **Alvo** (todos os 6 CSVs gerados e validados); lançamentos por REGRA e IA verificada, sobras recusadas em HUMANO
 **Próximo passo:** README (outubro, limitações) e pitch.
@@ -32,13 +32,13 @@
 
 - [x] `pendencias.csv` com motivo e quem decide: 11 pendências (checkout, remessa, notas, extratos)
 - [x] Extra `contestacao_ponte.csv` (Q-L): 28 operações em 3 pendências CONTESTACAO_PONTE, pronto para a Helena mandar à Ponte
-- [ ] Rastro de 100% dos números: **quase** (auditoria de 17/10, `docs/AUDITORIA.md` item 5). O validador garante que os 478 números têm rastro com soma igual e que cada linha de origem aparece uma vez. Falta: (1) a linha `arredondamento` de −0,03 da PEN-EXCESSO_REMESSA não aponta para linha de origem; (2) o validador não confere a origem das linhas de `NF-`, `DIV-` da remessa e das pendências derivadas (hoje todas existem, conferido pelo `scripts/auditar_saida.py`)
+- [x] **Rastro de 100% dos números** (17/10 ~09h15, D45): o validador recusa número sem rastro ou com soma diferente, e linha do rastro de qualquer `id_saida` que não exista na fonte (id_transacao, Nº Operação + linha, L<n>, FITID + linha); auditoria independente com 0 violações (`docs/AUDITORIA.md`)
 - [x] Auditoria independente da saída (`scripts/auditar_saida.py`, sem importar o pacote): formato sem violação; coerência com 1 achado (o −0,03 acima); matriz de conformidade Q-A…Q-M em `docs/CONFORMIDADE.md`
 - [ ] Roda em outubro sem mudar código: arquivos achados por prefixo, competência lida do relatório da Ponte, vigências e regras lidas do `regras.yaml`; falta testar com um arquivo de outro mês
 
 ## Regras (`regras.yaml`)
 
-- 87 entradas: CONFIRMADO 44 · ASSUMO 30 · SEI 12 · PENDENTE 1 (`divergencias.data_referencia_vigencia`, sem uso). Novas: `classificacao.modelo_ia`, `classificacao.verificacao_ia`, `classificacao_extratos.aliases_lojista` e 2 `decisoes_humanas` (por linha, não são regras)
+- 86 entradas: CONFIRMADO 44 · ASSUMO 30 · SEI 12 · PENDENTE 0 (`divergencias.data_referencia_vigencia` removida: coberta pela Q-B, D45). Novas: `classificacao.modelo_ia`, `classificacao.verificacao_ia`, `classificacao_extratos.aliases_lojista` e 2 `decisoes_humanas` (por linha, não são regras)
 - **Q-K (22:33):** a conferência do repasse não prevê desconto (D38). **Q-L (22:34):** contestação com a Ponte por motivo (D39). **Q-M (22:34):** `orbe_recebivel` CONFIRMADO; saldo negativo do Aurora (conta garantida) e conciliação da Orbe por parcela ficam de fora
 - **Q-H (21:13) corrigiu o ASSUMO de truncar (D09):** arredondamento comum (meio para longe do zero) por linha na comissão, nas divergências e nos 50% da remessa (D27). Q-I (21:14): contas das obrigações de agosto e despesas diretas CONFIRMADO. Q-J (21:45): nota de remessa pelo realizado + pendência da nossa metade do excesso
 - HIPOTESES com os textos literais do financeiro (Q-A…Q-M → P01–P17), fonte `docs/FINANCEIRO_SLACK.md`
@@ -90,7 +90,7 @@ Todos conferidos no centavo contra a previsão independente do Lucca antes do co
   - **NF_NEGATIVA, Casa do Estudante −5,50:** não emite nota; linha não nula TX88445133 (L433), estorno de venda de 2026-08-21; quem decide: Helena
   - **CONFERENCIA_REPASSE, R$ 39.543,45 (faturado):** conferir o TED da Ponte quando cair (previsto 06/10); total do relatório 78.073,59, que inclui 4 spreads negativos (−1.834,05) e a duplicata PC-0926-0162 (821,88), ambos em contestação; sem prever desconto (Q-K, D38); quem decide: Helena
   - **CONTESTACAO_PONTE (Q-L, D39), quem decide: Helena:** Mundo Aberto acima de 1,20%, 23 operações, **1.418,85**; spreads negativos, 4 operações, **−1.834,05** (Spread R$; −3.565,98 contra o contrato); duplicata PC-0926-0162 (R77), **821,88**. Lista por operação em `contestacao_ponte.csv`
-  - **EXCESSO_REMESSA, Mundo Aberto R$ 709,43** (round(50% × 1.418,85)): a nota sai pelo realizado; a nossa metade sai no mês em que a Ponte devolver a diferença; quem decide: Helena
+  - **EXCESSO_REMESSA, Mundo Aberto R$ 709,46** (Σ por operação de round(50% × divergência), Q-H b, D45): a nota sai pelo realizado; a nossa metade sai no mês em que a Ponte devolver a diferença; quem decide: Helena
 - **Validador: OK** (formato; rastro fecha por `id_saida`; cada linha da Orbe e do anexo exatamente uma vez em COM-/PEN-/EXC-; conservação do checkout com divergência recalculada da fonte e resíduo por linha ≤ 1 centavo onde as taxas são iguais; conservação da remessa; comissão de cada operação = metade do spread; notas = comissões; nenhuma nota ≤ 0; Σ `contestacao_ponte.csv` por pendência = valor da pendência)
 - `ref_origem` no rastro = `id_transacao` (Orbe) ou `Nº Operação` (Ponte); a linha física vai na coluna extra `linha_arquivo`
 

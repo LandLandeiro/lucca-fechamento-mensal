@@ -199,11 +199,6 @@ divergencias:
     status: CONFIRMADO
     fonte: "Slack Helena 20:05 ('Isso eu decido, não vai automático')"
     pergunta_ref: P03
-  data_referencia_vigencia: # venda: data_movimento; estorno: data da venda original (20:06)
-    valor: null
-    status: PENDENTE
-    fonte: "01_orbe: estornos repetem a taxa da venda original (ex.: L1069 → L406)"
-    pergunta_ref: null
   estorno_de_venda_divergente:
     valor: >-
       divergência calculada por transação e líquida com os estornos dela (id_referencia) no mesmo mês;
@@ -279,8 +274,8 @@ remessa:
   excesso_cobrado_na_remessa:   # Q-J
     valor: >-
       a nota de remessa sai pelo realizado (o excesso entra); a nossa metade do excesso cobrado a mais
-      (round(participação × divergência COBROU_A_MAIS do lojista)) vira pendência para a Helena, a ajustar
-      no mês em que a Ponte devolver a diferença ao lojista
+      (Σ por operação de round(participação × divergência COBROU_A_MAIS), Q-H b/d, D45) vira pendência para
+      a Helena, a ajustar no mês em que a Ponte devolver a diferença ao lojista
     status: CONFIRMADO
     fonte: "Slack Helena 21:45 (Q-J): 'Entra. A nota de setembro sai pelo realizado ... Se a Ponte devolver a diferença para a Mundo Aberto, a nossa metade sai no mês em que o ajuste acontecer. Deixar como pendência para mim é o caminho certo.'"
     pergunta_ref: P13

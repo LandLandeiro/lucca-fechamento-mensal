@@ -238,7 +238,9 @@ def divergencias_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: 
 
     for cnpj, itens in sorted(excesso.items()):
         total_div = sum((d for _, d in itens), ZERO)
-        metade = participacao(total_div, fracao, modo_part)
+        # Q-H (b)/(d): metade de cada operação, arredondada, depois soma (D45)
+        partes = [(op, participacao(d, fracao, modo_part)) for op, d in itens]
+        metade = sum((v for _, v in partes), ZERO)
         pid = f"PEN-EXCESSO_REMESSA-{cnpj}"
         res.pendencias_derivadas.append(Pendencia(
             pid, "EXCESSO_REMESSA", ", ".join(id_divergencia(o.ref_origem) for o, _ in itens[:3])
@@ -248,19 +250,11 @@ def divergencias_remessa(cls: ClassificacaoRemessa, cadastro: Cadastro, regras: 
             f"em que a Ponte devolver a diferença ao lojista",
             "Helena",
         ))
-        partes = [(op, participacao(d, fracao, modo_part)) for op, d in itens]
         for op, v in partes:
             res.rastro_pendencias.append({
                 "id_saida": pid, "arquivo_origem": op.arquivo_origem, "ref_origem": op.ref_origem, "valor": v,
                 "linha_arquivo": op.linha_planilha, "tipo_lancamento": "REMESSA", "spread_brl": op.spread_brl,
                 "nota": "nossa metade da divergência da operação",
-            })
-        residuo = metade - sum((v for _, v in partes), ZERO)
-        if residuo:
-            res.rastro_pendencias.append({
-                "id_saida": pid, "arquivo_origem": itens[0][0].arquivo_origem, "ref_origem": "arredondamento",
-                "valor": residuo, "linha_arquivo": 0, "tipo_lancamento": "REMESSA",
-                "nota": "round(50% × total) − Σ round(50% × divergência por operação)",
             })
     return res
 

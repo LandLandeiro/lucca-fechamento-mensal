@@ -212,20 +212,24 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
         },
         saida,
     )
+    refs_esperadas = {
+        orbe.arquivo: {(t.ref_origem, t.linha_arquivo) for t in orbe.transacoes},
+        ponte.arquivo: {(o.ref_origem, o.linha_planilha) for o in ponte.operacoes},
+    }
+    refs_extratos = {ext.arquivo: {(l.ref_origem, ext.linhas_arquivo[l.ref_origem]) for l in ext.lancamentos}
+                     for ext in (aurora, meridiano)}
+    fontes_rastro = {**refs_esperadas, **refs_extratos}
     erros = validar_saida(
         saida,
-        refs_esperadas={
-            orbe.arquivo: {(t.ref_origem, t.linha_arquivo) for t in orbe.transacoes},
-            ponte.arquivo: {(o.ref_origem, o.linha_planilha) for o in ponte.operacoes},
-        },
+        refs_esperadas=refs_esperadas,
         fonte_orbe={orbe.arquivo: {t.ref_origem: (t.valor_taxa, t.valor_bruto, t.taxa_aplicada_pct / 100) for t in orbe.transacoes}},
         modo_checkout=modo_arredondamento(valor_da_regra(regras, "checkout.arredondamento_comissao_contratada")),
         spread_ponte={ponte.arquivo: {(o.ref_origem, o.linha_planilha): o.spread_brl for o in ponte.operacoes}},
         spread_declarado=ponte.totais_declarados.get("Spread total R$:"),
-        refs_extratos={ext.arquivo: {(l.ref_origem, ext.linhas_arquivo[l.ref_origem]) for l in ext.lancamentos}
-                       for ext in (aurora, meridiano)},
+        refs_extratos=refs_extratos,
         saldos_extratos={ext.banco: (ext.saldo_inicial, ext.saldo_final) for ext in (aurora, meridiano)},
         contas_lancaveis=set(plano),
+        fontes_rastro=fontes_rastro,
     )
     excl: dict[str, list] = {}
     for op, motivo, _ in cls_remessa.excluidas:
@@ -270,6 +274,7 @@ def executar(dados: Path, saida: Path, regras_path: Path, sem_ia: bool = False, 
             sum((d["diferenca_brl"] for d in divergencias.linhas), ZERO),
         ),
         "erros_validacao": erros,
+        "fontes_rastro": fontes_rastro,
     }
 
 

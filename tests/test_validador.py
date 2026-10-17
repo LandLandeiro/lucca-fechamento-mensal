@@ -176,3 +176,51 @@ def test_cnpj_e_decimal_fora_do_formato_sao_erro(saida, tmp_path):
     _reescrever(pasta / "comissoes_por_lojista.csv", adulterar)
     erros = validar_saida(pasta)
     assert any("CNPJ" in e for e in erros) and any("fora do formato 0.00" in e for e in erros)
+
+
+def _copiar(pasta, destino):
+    for p in pasta.iterdir():
+        (destino / p.name).write_bytes(p.read_bytes())
+
+
+def test_nenhum_ponto_e_virgula_dentro_de_campo(saida):
+    """D45: nenhum ';' dentro de campo em nenhum CSV de saída (um split(';') ingênuo não desalinha)."""
+    pasta = saida[0] if isinstance(saida, tuple) else saida
+    for p in pasta.glob("*.csv"):
+        with open(p, encoding="utf-8", newline="") as f:
+            for linha in csv.reader(f, delimiter=";"):
+                assert not any(";" in v for v in linha), p.name
+
+
+def test_validador_recusa_ponto_e_virgula_em_campo(saida, tmp_path):
+    pasta = saida[0] if isinstance(saida, tuple) else saida
+    _copiar(pasta, tmp_path)
+    caminho = tmp_path / "pendencias.csv"
+    with open(caminho, encoding="utf-8", newline="") as f:
+        linhas = list(csv.reader(f, delimiter=";"))
+    linhas[1][4] = "motivo; com ponto e vírgula"
+    with open(caminho, "w", encoding="utf-8", newline="") as f:
+        csv.writer(f, delimiter=";", lineterminator="\n").writerows(linhas)
+    from tarvo.saida.validador import validar_saida
+    assert any("pendencias.csv" in e and "';' dentro do campo" in e for e in validar_saida(tmp_path))
+
+
+def test_validador_recusa_rastro_sem_linha_de_origem(saida, tmp_path):
+    """D45: toda linha do rastro existe na fonte, inclusive em NF-, DIV- da remessa e pendências derivadas."""
+    from tarvo.__main__ import executar
+    from conftest import DADOS, RAIZ as R
+    pasta = tmp_path / "s"
+    r = executar(DADOS, pasta, R / "regras.yaml")
+    assert r["erros_validacao"] == []
+    caminho = pasta / "rastro.csv"
+    with open(caminho, encoding="utf-8", newline="") as f:
+        linhas = list(csv.reader(f, delimiter=";"))
+    i = next(i for i, l in enumerate(linhas) if l[0].startswith("PEN-CONTESTACAO_PONTE-"))
+    linhas[i][2] = "PC-9999-9999"
+    with open(caminho, "w", encoding="utf-8", newline="") as f:
+        csv.writer(f, delimiter=";", lineterminator="\n").writerows(linhas)
+    from tarvo.saida.validador import validar_saida as v
+    fontes = r["fontes_rastro"]
+    erros = v(pasta, fontes_rastro=fontes)
+    assert any("PC-9999-9999" in e and "não existe na fonte" in e for e in erros)
+

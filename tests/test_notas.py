@@ -133,13 +133,14 @@ def test_validador_recusa_contestacao_que_nao_fecha(saida, tmp_path):
 
 
 def test_pendencia_metade_do_excesso_da_mundo_aberto(saida):
-    # Q-J (Helena 21:45): round(50% × 1.418,85) = round(709,425) = 709,43
+    # Q-J (Helena 21:45) + Q-H (b): metade de cada operação, arredondada, depois soma = 709,46 (D45)
     pasta, _ = saida
     p = next(p for p in _csv(pasta, "pendencias.csv") if p["id_saida"] == "PEN-EXCESSO_REMESSA-17217888000111")
-    assert p["valor_brl"] == "709.43" and p["quem_decide"] == "Helena"
+    assert p["valor_brl"] == "709.46" and p["quem_decide"] == "Helena"
     assert "1418.85" in p["motivo"] and "sai pelo realizado" in p["motivo"]
     rastro = [l for l in _csv(pasta, "rastro.csv") if l["id_saida"] == p["id_saida"]]
-    assert sum(Decimal(l["valor"]) for l in rastro) == Decimal("709.43")
+    assert sum(Decimal(l["valor"]) for l in rastro) == Decimal("709.46")
+    assert len(rastro) == 23 and all(l["ref_origem"].startswith("PC-") for l in rastro)  # sem linha "arredondamento"
 
 
 def _reescrever(caminho, f):

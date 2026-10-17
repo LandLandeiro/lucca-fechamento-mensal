@@ -83,6 +83,7 @@ def validar_saida(
     refs_extratos: dict[str, set[tuple[str, int]]] | None = None,
     saldos_extratos: dict[str, tuple[Decimal | None, Decimal | None]] | None = None,
     contas_lancaveis: set[str] | None = None,
+    fontes_rastro: dict[str, set[tuple[str, int]]] | None = None,
 ) -> list[str]:
     """Devolve a lista de erros encontrados (vazia = saída válida).
 
@@ -94,6 +95,9 @@ def validar_saida(
       de truncamento (ver `_conservacao_checkout`); toda divergência aponta só linhas de comissão.
     - `spread_ponte` {arquivo: {(Nº, linha): Spread R$}}: conservação da remessa (ver
       `_conservacao_remessa`); `spread_declarado` = "Spread total R$" do próprio relatório.
+    - `fontes_rastro` {arquivo: {(ref_origem, linha)}} de todas as fontes: TODA linha do rastro (de
+      qualquer id_saida, inclusive NF-, DIV- e pendências derivadas) tem que existir na fonte (D45).
+    - Sempre: nenhum CSV da pasta tem ';' dentro de campo (D45).
     """
     erros: list[str] = []
     dados: dict[str, list[dict]] = {}
@@ -106,6 +110,20 @@ def validar_saida(
     if "rastro.csv" not in dados:
         erros.append("rastro.csv ausente: nenhum número tem rastro")
         return erros
+    for caminho in sorted(pasta.glob("*.csv")):
+        with open(caminho, encoding="utf-8", newline="") as f:
+            for i, linha in enumerate(csv.reader(f, delimiter=";"), start=1):
+                for v in linha:
+                    if ";" in v:
+                        erros.append(f"{caminho.name}:{i}: ';' dentro do campo {v[:60]!r}")
+    if fontes_rastro is not None:
+        for i, l in enumerate(dados["rastro.csv"], start=2):
+            fonte = fontes_rastro.get(l.get("arquivo_origem", ""))
+            n = int(l["linha_arquivo"]) if (l.get("linha_arquivo") or "").isdigit() else 0
+            if fonte is None:
+                erros.append(f"rastro.csv:{i} {l['id_saida']}: arquivo {l.get('arquivo_origem')!r} não é fonte do fechamento")
+            elif (l["ref_origem"], n) not in fonte:
+                erros.append(f"rastro.csv:{i} {l['id_saida']}: {l['ref_origem']} linha {n} não existe na fonte {l['arquivo_origem']}")
 
     reportados: dict[str, Decimal] = {}
     for nome, linhas in dados.items():
